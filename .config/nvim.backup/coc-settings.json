@@ -1,0 +1,72 @@
+{
+    "coc.preferences.formatOnSaveFiletypes": ["yaml",  "json", "python"],
+
+    // User defined snippets directory
+    "snippets.userSnippetsDirectory": "~/.config/nvim/snippets",
+
+    // Python config
+    "pyright.enable": true,
+    "python.venvPath": "/home/ani/miniconda3/envs",
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
+    "python.formatting.provider": "black",
+    "python.formatting.blackPath": "/usr/bin/black",
+
+    // C++ config
+    "languageserver": {
+        "ccls": {
+            "command": "ccls",
+            "filetypes": [
+                "c",
+                "cpp",
+                "cuda",
+                "objc",
+                "objcpp"
+            ],
+            "rootPatterns": [
+                ".ccls",
+                "compile_commands.json",
+                ".vim/",
+                ".git/",
+                ".hg/"
+            ],
+            "initializationOptions": {
+                "cache": {
+                    "directory": "/tmp/ccls"
+                },
+                "client": {
+                  "snippetSupport": true
+                }
+            }
+        }
+    },
+
+    // Symbols
+    "suggest.completionItemKindLabels": {
+        "method": "  ",
+        "function": "  ",
+        "variable": "  ",
+        "field": "  ",
+        "typeParameter": "  ",
+        "constant": "  ",
+        "class": "  ",
+        "interface": "  ",
+        "struct": "  ",
+        "event": "  ",
+        "operator": "  ",
+        "module": "  ",
+        "property": "  ",
+        "enum": "  ",
+        "reference": "  ",
+        "keyword": "  ",
+        "file": "  ",
+        "folder": "  ",
+        "color": "  ",
+        "unit": "  ",
+        "snippet": "  ",
+        "text": "  ",
+        "constructor": "  ",
+        "value": "  ",
+        "enumMember": "  "
+      },
+}
