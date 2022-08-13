@@ -47,11 +47,30 @@ COMPLETION_WAITING_DOTS="true"
 
 # Must define before zsh-vi-mode for these to work
 bindkey '^ ' autosuggest-accept
+# ctrl+enter is mapped to ctrl+space, enter in kitty config
+# as work around to mapping ctrl+enter directly to autosuggest-execute
 
 # Plugins
-plugins=(git zsh-autosuggestions sudo zsh-vi-mode dirhistory zsh-syntax-highlighting)
+# TODO decide if keeping python plugin
+plugins=(
+    git
+    python
+    sudo 
+    dirhistory
+    zsh-autosuggestions
+    zsh-syntax-highlighting
+    zsh-vi-mode 
+)
 
 source $ZSH/oh-my-zsh.sh
+
+# jk to switch to command mode 
+ZVM_VI_ESCAPE_BINDKEY=jk
+
+# Alt+L will clear screen, bound in kitty config rather than .zshrc
+
+# Switching between Insert and Normal mode have less timeout but not too low so that jk works
+ZVM_KEYTIMEOUT=0.1
 
 ########################
 ###### Oh My Zsh #######
@@ -68,23 +87,6 @@ setopt HIST_FIND_NO_DUPS
 # Don't add duplicates to hist file
 setopt HIST_IGNORE_DUPS
 
-
-# Vim
-
-# jk to switch to command mode 
-ZVM_VI_ESCAPE_BINDKEY=jk
-
-# Alt + l to clear screen in insert + normal mode
-function clear_screen() {
-    clear
-}
-zvm_define_widget clear_screen
-
-zvm_bindkey vicmd '^[l' clear_screen
-zvm_bindkey viins '^[l' clear_screen
-
-# Switching between Insert and Normal mode have less timeout but not too low so that jk works
-ZVM_KEYTIMEOUT=0.1
 
 
 # TODO: set up bat preview: https://github.com/junegunn/fzf#preview-window
