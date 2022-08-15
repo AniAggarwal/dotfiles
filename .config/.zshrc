@@ -35,7 +35,8 @@ unset __conda_setup
 export ZSH="$HOME/.oh-my-zsh"
 
 # More themes link: https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="robbyrussell"
+# johnathan
+ZSH_THEME=""
 
 # Using case insensitive completion
 CASE_SENSITIVE="false"
@@ -49,6 +50,7 @@ COMPLETION_WAITING_DOTS="true"
 bindkey '^ ' autosuggest-accept
 # ctrl+enter is mapped to ctrl+space, enter in kitty config
 # as work around to mapping ctrl+enter directly to autosuggest-execute
+# Alt+L will clear screen, bound in kitty config rather than .zshrc
 
 # Plugins
 # TODO decide if keeping python plugin
@@ -62,15 +64,13 @@ plugins=(
     zsh-vi-mode 
 )
 
-source $ZSH/oh-my-zsh.sh
-
 # jk to switch to command mode 
 ZVM_VI_ESCAPE_BINDKEY=jk
 
-# Alt+L will clear screen, bound in kitty config rather than .zshrc
-
 # Switching between Insert and Normal mode have less timeout but not too low so that jk works
 ZVM_KEYTIMEOUT=0.1
+
+source $ZSH/oh-my-zsh.sh
 
 ########################
 ###### Oh My Zsh #######
