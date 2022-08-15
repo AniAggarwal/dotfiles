@@ -87,6 +87,20 @@ setup_fzf() {
     ~/.fzf/install
 }
 
+setup_font() {
+    # https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode.zip
+    # ls | grep '.*Windows.*\.ttf' | xargs -d"\n" rm
+    # ls | grep -P '^((?!Mono).)*$' | xargs -d"\n" rm
+    # ls | grep '.*Fura.*' | xargs -d"\n" rm
+    # ls | grep '.*Retina.*' | xargs -d"\n" rm
+    # mkdir -p ~/.local/share/fonts
+    # move stuff to that ^ folder
+    # fc-cache -f -v
+    # confirm it work: fc-list | grep "Fira"
+    # remove original unpacked dir and zip files
+
+
+}
 
 
 # TODO parse arugments for which things to configure
