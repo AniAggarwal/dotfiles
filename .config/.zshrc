@@ -27,17 +27,6 @@ fi
 unset __conda_setup
 # <<< conda initialize <<<
 
-########################
-###### Oh My Zsh #######
-########################
-
-# oh-my-zsh set up
-export ZSH="$HOME/.oh-my-zsh"
-
-# More themes link: https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-# johnathan
-ZSH_THEME=""
-
 # Using case insensitive completion
 CASE_SENSITIVE="false"
 
@@ -45,15 +34,23 @@ CASE_SENSITIVE="false"
 ENABLE_CORRECTION="true"
 COMPLETION_WAITING_DOTS="true"
 
-
 # Must define before zsh-vi-mode for these to work
 bindkey '^ ' autosuggest-accept
 # ctrl+enter is mapped to ctrl+space, enter in kitty config
 # as work around to mapping ctrl+enter directly to autosuggest-execute
 # Alt+L will clear screen, bound in kitty config rather than .zshrc
 
+########################
+###### Oh My Zsh #######
+########################
+export ZSH="$HOME/.oh-my-zsh"
+
+# Not using theme as starship controls my prompt
+ZSH_THEME=""
+
 # Plugins
 # TODO decide if keeping python plugin
+# TODO decide if it is worth switching to smaller plugin manager
 plugins=(
     git
     python
@@ -76,17 +73,12 @@ source $ZSH/oh-my-zsh.sh
 ###### Oh My Zsh #######
 ########################
 
-########################
-##### User Defined #####
-########################
-
 # Append to hist file rather than overwrite
 setopt INC_APPEND_HISTORY
 # Ignore duplicates when using up/down arrow
 setopt HIST_FIND_NO_DUPS
 # Don't add duplicates to hist file
 setopt HIST_IGNORE_DUPS
-
 
 
 # TODO: set up bat preview: https://github.com/junegunn/fzf#preview-window
@@ -110,6 +102,5 @@ export EDITOR="/usr/bin/nvim"
 # Add local bin to PATH
 export PATH="$HOME/.local/bin:$PATH"
 
-########################
-##### User Defined #####
-########################
+# Set up starship prompt
+eval "$(starship init zsh)"
