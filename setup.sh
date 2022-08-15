@@ -61,6 +61,11 @@ setup_zsh() {
 
 }
 
+setup_starship() {
+    # curl -sS https://starship.rs/install.sh | sh
+
+}
+
 setup_conda() {
     # install dir: https://docs.conda.io/en/latest/miniconda.html#linux-installers
     # bash minoconda3-latest-linux-...-.sh
