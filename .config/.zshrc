@@ -1,10 +1,22 @@
-# Lines configured by zsh-newuser-install
 HISTFILE=~/.histfile
 HISTSIZE=10000
 SAVEHIST=10000
 setopt extendedglob nomatch
-bindkey -v
-# End of lines configured by zsh-newuser-install
+
+# Using case insensitive completion
+CASE_SENSITIVE="false"
+
+# Autocorrect commands
+ENABLE_CORRECTION="true"
+COMPLETION_WAITING_DOTS="false"
+
+# Append to hist file rather than overwrite
+setopt INC_APPEND_HISTORY
+# Ignore duplicates when using up/down arrow
+setopt HIST_FIND_NO_DUPS
+# Don't add duplicates to hist file
+setopt HIST_IGNORE_DUPS
+
 # The following lines were added by compinstall
 zstyle :compinstall filename '/home/ani/.zshrc'
 
@@ -27,19 +39,6 @@ fi
 unset __conda_setup
 # <<< conda initialize <<<
 
-# Using case insensitive completion
-CASE_SENSITIVE="false"
-
-# Autocorrect commands
-ENABLE_CORRECTION="true"
-COMPLETION_WAITING_DOTS="false"
-
-# Append to hist file rather than overwrite
-setopt INC_APPEND_HISTORY
-# Ignore duplicates when using up/down arrow
-setopt HIST_FIND_NO_DUPS
-# Don't add duplicates to hist file
-setopt HIST_IGNORE_DUPS
 
 ########################
 ###### Oh My Zsh #######
@@ -87,6 +86,11 @@ function zvm_after_init() {
     [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh 
 
     bindkey '^ ' autosuggest-accept
+
+    # Aliases
+    if [ -f ~/.aliases ]; then
+        . ~/.aliases
+    fi
 }
 
 ########################
@@ -97,10 +101,6 @@ fpath+=/opt/conda-zsh-completion
 # Enable Conda autocomplete
 compinit
 
-# Aliases
-if [ -f ~/.aliases ]; then
-    . ~/.aliases
-fi
 
 # Use Neovim as default editor
 export EDITOR="/usr/bin/nvim"
