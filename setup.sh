@@ -72,6 +72,8 @@ setup_conda() {
     # bash minoconda3-latest-linux-...-.sh
 
     sudo git clone https://github.com/esc/conda-zsh-completion /opt/conda-zsh-completion
+    # conda init
+    # conda config --set changeps1 false
 }
 
 
