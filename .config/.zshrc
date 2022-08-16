@@ -32,13 +32,14 @@ CASE_SENSITIVE="false"
 
 # Autocorrect commands
 ENABLE_CORRECTION="true"
-COMPLETION_WAITING_DOTS="true"
+COMPLETION_WAITING_DOTS="false"
 
-# Must define before zsh-vi-mode for these to work
-bindkey '^ ' autosuggest-accept
-# ctrl+enter is mapped to ctrl+space, enter in kitty config
-# as work around to mapping ctrl+enter directly to autosuggest-execute
-# Alt+L will clear screen, bound in kitty config rather than .zshrc
+# Append to hist file rather than overwrite
+setopt INC_APPEND_HISTORY
+# Ignore duplicates when using up/down arrow
+setopt HIST_FIND_NO_DUPS
+# Don't add duplicates to hist file
+setopt HIST_IGNORE_DUPS
 
 ########################
 ###### Oh My Zsh #######
@@ -50,7 +51,6 @@ ZSH_THEME=""
 
 # Plugins
 # TODO decide if keeping python plugin
-# TODO decide if it is worth switching to smaller plugin manager
 plugins=(
     git
     python
@@ -61,29 +61,35 @@ plugins=(
     zsh-vi-mode 
 )
 
+
+# source $ZSH/oh-my-zsh.sh
+########################
+
+
+# TODO: set up bat preview: https://github.com/junegunn/fzf#preview-window
+
+########################
+####### Keybinds #######
+########################
+# ctrl+enter is mapped to ctrl+space, enter in kitty config
+# as work around to mapping ctrl+enter directly to autosuggest-execute
+# Alt+L will clear screen, bound in kitty config rather than .zshrc
+
 # jk to switch to command mode 
 ZVM_VI_ESCAPE_BINDKEY=jk
 
 # Switching between Insert and Normal mode have less timeout but not too low so that jk works
 ZVM_KEYTIMEOUT=0.1
 
-source $ZSH/oh-my-zsh.sh
+# run after init because zsh-vi-mode uses zvm instead of zle
+function zvm_after_init() {
+    # Use FZF's completion and keybinds
+    [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh 
+
+    bindkey '^ ' autosuggest-accept
+}
 
 ########################
-###### Oh My Zsh #######
-########################
-
-# Append to hist file rather than overwrite
-setopt INC_APPEND_HISTORY
-# Ignore duplicates when using up/down arrow
-setopt HIST_FIND_NO_DUPS
-# Don't add duplicates to hist file
-setopt HIST_IGNORE_DUPS
-
-
-# TODO: set up bat preview: https://github.com/junegunn/fzf#preview-window
-# Use FZF's completion and keybinds
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 # Add Conda autocomplete to path
 fpath+=/opt/conda-zsh-completion
@@ -102,5 +108,9 @@ export EDITOR="/usr/bin/nvim"
 # Add local bin to PATH
 export PATH="$HOME/.local/bin:$PATH"
 
+# Source oh-my-zsh at end to allow zsh-vi-mode keybinds to work
+source $ZSH/oh-my-zsh.sh
+
 # Set up starship prompt
 eval "$(starship init zsh)"
+
