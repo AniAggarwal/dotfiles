@@ -63,6 +63,7 @@ setup_zsh() {
 
 setup_starship() {
     # curl -sS https://starship.rs/install.sh | sh
+    # ln -s "$SCRIPT_DIR/.config/starship.toml" "$HOME/.config/"
 
 }
 
@@ -79,6 +80,7 @@ setup_apts() {
     sudo apt install powertop
     sudo apt install btop
     sudo apt install tree
+    sudo apt install ncdu
 
     # fzf, ranger, icat, etc.
 
