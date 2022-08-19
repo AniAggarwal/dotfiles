@@ -14,14 +14,15 @@ terminal-height: "100%"
 terminal-border: "0"
 
 # Show the boot menu
+
 + boot_menu {
-  left = 5%
-  top = 30%
+  left = 7%
+  top = 55%
   width = 30%
   height = 40%
-  item_font = "Deathrattle BB 32"
-  item_color = "#d90000"
-  selected_item_color = "#ffffff"
+  item_font = "DeathRattle BB Regular 48"
+  item_color = "#d60f10"
+  selected_item_color = "#d90000"
   icon_width = 64
   icon_height = 64
   item_icon_space = 36
@@ -48,5 +49,5 @@ terminal-border: "0"
   id = "__timeout__"
   text = "Booting in %d seconds"
   color = "#cccccc"
-  font = "DejaVu Sans Regular 32"
+  font = "DeathRattle BB Regular 48"
 }
