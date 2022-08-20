@@ -82,6 +82,7 @@ setup_apts() {
     sudo apt install btop
     sudo apt install tree
     sudo apt install ncdu
+    sudo apt install ripgrep
 
     # ranger, etc.
 
