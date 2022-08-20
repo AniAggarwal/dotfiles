@@ -33,8 +33,7 @@ setup_nvim() {
 
     # ln -s "$SCRIPT_DIR/.config/nvim/" "$HOME/.config/nvim"
 
-    # sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs \
-       https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+    # sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
     # Create conda env
     # ln ~/.config/nvim or whatever
 
@@ -84,10 +83,15 @@ setup_apts() {
     sudo apt install tree
     sudo apt install ncdu
 
-    # fzf, ranger, icat, etc.
+    # ranger, etc.
 
+}
+
+setup_bat() {
     sudo apt install bat
     ln -s /usr/bin/batcat $HOME/.local/bin/bat
+    ln -s $HOME/dotfiles/.config/bat $HOME/.config/bat
+    bat cache --build
 }
 
 
