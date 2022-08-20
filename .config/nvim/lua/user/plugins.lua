@@ -48,6 +48,19 @@ return packer.startup(function(use)
   use { "lunarvim/darkplus.nvim" }
   use { "folke/tokyonight.nvim" }
   use { "joshdick/onedark.vim" }
+  -- A lua alternative to look into monsonjeremy/onedark.nvim
+
+  -- Movement and Productivity
+  
+    use({
+        "kylechui/nvim-surround",
+        -- tag = "*", -- Use for stability; omit to use `main` branch for the latest features
+        config = function()
+            require("nvim-surround").setup({
+                -- Configuration here, or leave empty to use defaults
+            })
+        end
+    })
 
   -- use { "nvim-lua/plenary.nvim", commit = "968a4b9afec0c633bc369662e78f8c5db0eba249" } -- Useful lua functions used by lots of plugins
   -- use { "windwp/nvim-autopairs", commit = "fa6876f832ea1b71801c4e481d8feca9a36215ec" } -- Autopairs, integrates with both cmp and treesitter
