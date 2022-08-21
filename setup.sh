@@ -75,8 +75,13 @@ setup_conda() {
     # conda config --set changeps1 false
 }
 
+setup_nala() {
+    sudo apt update && sudo apt install nala
+    sudo nala fetch
+}
 
 setup_apts() {
+    # TODO make this use nala
     # Make this walk through to decide what to install
     sudo apt install powertop
     sudo apt install btop
