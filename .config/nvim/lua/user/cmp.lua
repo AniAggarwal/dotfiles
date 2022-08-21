@@ -20,9 +20,9 @@ end
 
 local kind_icons = {
 	Text = "",
-	Method = "",
-	Function = "",
-	Constructor = "",
+	Method = "m",
+	Function = "",
+	Constructor = "",
 	Field = "",
 	Variable = "",
 	Class = "",
@@ -33,7 +33,7 @@ local kind_icons = {
 	Value = "",
 	Enum = "",
 	Keyword = "",
-	Snippet = "",
+	Snippet = "",
 	Color = "",
 	File = "",
 	Reference = "",
@@ -82,6 +82,7 @@ cmp.setup({
 		["<C-b>"] = cmp.mapping(cmp.mapping.scroll_docs(-1), { "i", "c" }),
 		["<C-f>"] = cmp.mapping(cmp.mapping.scroll_docs(1), { "i", "c" }),
 		["<C-Space>"] = cmp.mapping(cmp.mapping.complete(), { "i", "c" }), -- manually ask for completion
+        
 
         -- Use ctrl+e to close popups
 		["<C-e>"] = cmp.mapping({
