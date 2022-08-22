@@ -135,6 +135,11 @@ _G.packer_plugins = {
     path = "/home/ani/.local/share/nvim/site/pack/packer/start/nvim-surround",
     url = "https://github.com/kylechui/nvim-surround"
   },
+  ["nvim-web-devicons"] = {
+    loaded = true,
+    path = "/home/ani/.local/share/nvim/site/pack/packer/start/nvim-web-devicons",
+    url = "https://github.com/kyazdani42/nvim-web-devicons"
+  },
   ["onedark.vim"] = {
     loaded = true,
     path = "/home/ani/.local/share/nvim/site/pack/packer/start/onedark.vim",
@@ -150,20 +155,30 @@ _G.packer_plugins = {
     path = "/home/ani/.local/share/nvim/site/pack/packer/start/plenary.nvim",
     url = "https://github.com/nvim-lua/plenary.nvim"
   },
+  ["telescope-fzf-native.nvim"] = {
+    loaded = true,
+    path = "/home/ani/.local/share/nvim/site/pack/packer/start/telescope-fzf-native.nvim",
+    url = "https://github.com/nvim-telescope/telescope-fzf-native.nvim"
+  },
+  ["telescope.nvim"] = {
+    loaded = true,
+    path = "/home/ani/.local/share/nvim/site/pack/packer/start/telescope.nvim",
+    url = "https://github.com/nvim-telescope/telescope.nvim"
+  },
   ["tokyonight.nvim"] = {
     loaded = true,
     path = "/home/ani/.local/share/nvim/site/pack/packer/start/tokyonight.nvim",
     url = "https://github.com/folke/tokyonight.nvim"
   },
-  ["vim-devicons"] = {
-    loaded = true,
-    path = "/home/ani/.local/share/nvim/site/pack/packer/start/vim-devicons",
-    url = "https://github.com/ryanoasis/vim-devicons"
-  },
   ["vim-illuminate"] = {
     loaded = true,
     path = "/home/ani/.local/share/nvim/site/pack/packer/start/vim-illuminate",
     url = "https://github.com/RRethy/vim-illuminate"
+  },
+  ["vim-kitty-navigator"] = {
+    loaded = true,
+    path = "/home/ani/.local/share/nvim/site/pack/packer/start/vim-kitty-navigator",
+    url = "https://github.com/knubie/vim-kitty-navigator"
   }
 }
 
