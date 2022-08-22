@@ -85,11 +85,24 @@ keymap("x", "<A-k>", ":move '<-2<CR>gv-gv", opts)
 
 
 -- Telescope
+keymap("n", "<leader>fr", ":Telescope resume<CR>", opts)
 keymap("n", "<leader>ff", ":Telescope find_files<CR>", opts)
 keymap("n", "<leader>ft", ":Telescope live_grep<CR>", opts)
 keymap("n", "<leader>fp", ":Telescope projects<CR>", opts)
 keymap("n", "<leader>fb", ":Telescope buffers<CR>", opts)
+keymap("n", "<leader>fc", ":Telescope commands<CR>", opts)
+keymap("n", "<leader>fl", ":Telescope current_buffer_fuzzy_find<CR>", opts)
 keymap("n", "<leader>fgs", ":Telescope git_status<CR>", opts)
+
+keymap("n", "<leader>fd", ":Telescope diagnostics<CR>", opts)
+keymap("n", "<leader>fs", ":Telescope lsp_document_symbols<CR>", opts)
+
+-- TODO look into using Telescope for marks and jumplist, treesitter, LSPs, diagnostics
+
+
+-- Trouble
+keymap("n", "gr", "<cmd>TroubleToggle lsp_references<CR>", opts)
+keymap("n", "gL", "<cmd>TroubleToggle document_diagnostics<CR>", opts)
 
 
 -- -- Git
