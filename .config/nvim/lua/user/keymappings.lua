@@ -33,7 +33,7 @@ keymap("n", "<S-l>", "<cmd>bnext<CR>", opts)
 keymap("n", "<S-h>", "<cmd>bprevious<CR>", opts)
 
 -- Clear highlights
-keymap("n", "<leader>h", "<cmd>nohlsearch<CR>", opts)
+keymap("n", "<leader>H", "<cmd>nohlsearch<CR>", opts)
 
 -- Close buffers
 keymap("n", "<S-q>", "<cmd>bdelete<CR>", opts)
@@ -77,12 +77,10 @@ keymap("v", "<A-j>", ":m .+1<CR>==", opts)
 keymap("x", "<A-j>", ":move '>+1<CR>gv-gv", opts)
 keymap("x", "<A-k>", ":move '<-2<CR>gv-gv", opts)
 
-
 -- Plugins --
 
 -- -- NvimTree
 -- keymap("n", "<leader>e", ":NvimTreeToggle<CR>", opts)
-
 
 -- Telescope
 keymap("n", "<leader>fr", ":Telescope resume<CR>", opts)
@@ -95,23 +93,35 @@ keymap("n", "<leader>fl", ":Telescope current_buffer_fuzzy_find<CR>", opts)
 keymap("n", "<leader>fgs", ":Telescope git_status<CR>", opts)
 
 keymap("n", "<leader>fd", ":Telescope diagnostics<CR>", opts)
-keymap("n", "<leader>fs", ":Telescope lsp_document_symbols<CR>", opts)
+keymap("n", "<leader>fs", ":Telescope lsp_document_symbols<CR>", opts) -- maybe use treesitter symbols instead
 
--- TODO look into using Telescope for marks and jumplist, treesitter, LSPs, diagnostics
-
+-- TODO look into using Telescope for marks and jumplist
 
 -- Trouble
 keymap("n", "gr", "<cmd>TroubleToggle lsp_references<CR>", opts)
 keymap("n", "gL", "<cmd>TroubleToggle document_diagnostics<CR>", opts)
 
+-- Git
+keymap("n", "]c", "<cmd>Gitsigns next_hunk<CR>", opts)
+keymap("n", "[c", "<cmd>Gitsigns prev_hunk<CR>", opts)
 
--- -- Git
--- keymap("n", "<leader>gg", "<cmd>lua _LAZYGIT_TOGGLE()<CR>", opts)
--- 
+keymap({ "n", "v" }, "<leader>hs", "<cmd>Gitsigns stage_hunk<CR>", opts)
+keymap({ "n", "v" }, "<leader>hr", "<cmd>Gitsigns reset_hunk<CR>", opts)
+keymap("n", "<leader>hS", "<cmd>Gitsigns stage_buffer<CR>", opts)
+
+keymap("n", "<leader>hu", "<cmd>Gitsigns undo_stage_hunk<CR>", opts)
+-- show full blame_line
+keymap("n", "<leader>hb", function()
+	package.loaded.gitsigns.blame_line({ full = true })
+end, opts)
+keymap("n", "<leader>hp", "<cmd>Gitsigns preview_hunk<CR>", opts)
+keymap("n", "<leader>hq", "<cmd>Gitsigns setqflist<CR>", opts)
+keymap("n", "<leader>hd", "<cmd>Gitsigns diffthis<CR>", opts)
+
 -- -- Comment
 -- keymap("n", "<leader>/", "<cmd>lua require('Comment.api').toggle_current_linewise()<CR>", opts)
 -- keymap("x", "<leader>/", '<ESC><CMD>lua require("Comment.api").toggle_linewise_op(vim.fn.visualmode())<CR>')
--- 
+--
 -- -- DAP
 -- keymap("n", "<leader>db", "<cmd>lua require'dap'.toggle_breakpoint()<cr>", opts)
 -- keymap("n", "<leader>dc", "<cmd>lua require'dap'.continue()<cr>", opts)

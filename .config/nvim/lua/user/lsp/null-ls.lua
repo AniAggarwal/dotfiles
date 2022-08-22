@@ -26,5 +26,8 @@ null_ls.setup({
 		diagnostics.flake8.with ({
 			command = "/home/ani/miniconda3/envs/nvim/bin/flake8",
 		}),
+
+        -- gitsigns intergration
+        null_ls.builtins.code_actions.gitsigns,
 	},
 })
