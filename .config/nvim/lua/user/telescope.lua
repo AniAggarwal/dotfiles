@@ -7,12 +7,10 @@ local actions = require("telescope.actions")
 
 telescope.setup({
 	defaults = {
-
 		prompt_prefix = " ",
 		selection_caret = " ",
 		path_display = { "smart" }, -- only display important part of file path
 		file_ignore_patterns = { ".git/" }, -- ignore file paths matching these regex
-
 		mappings = {
 			i = {
 				["<C-s>"] = actions.select_horizontal,
@@ -34,3 +32,4 @@ telescope.setup({
 })
 
 require("telescope").load_extension("fzf")
+require('telescope').load_extension('projects')

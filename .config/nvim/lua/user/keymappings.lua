@@ -29,8 +29,8 @@ keymap("n", "<C-Left>", "<cmd>vertical resize -2<CR>", opts)
 keymap("n", "<C-Right>", "<cmd>vertical resize +2<CR>", opts)
 
 -- Navigate buffers
-keymap("n", "<S-l>", "<cmd>bnext<CR>", opts)
-keymap("n", "<S-h>", "<cmd>bprevious<CR>", opts)
+keymap("n", "<S-l>", "<cmd>BufferLineCycleNext<CR>", opts)
+keymap("n", "<S-h>", "<cmd>BufferLineCyclePrev<CR>", opts)
 
 -- Clear highlights
 keymap("n", "<leader>H", "<cmd>nohlsearch<CR>", opts)
@@ -94,7 +94,6 @@ keymap("n", "<leader>fgs", ":Telescope git_status<CR>", opts)
 
 keymap("n", "<leader>fd", ":Telescope diagnostics<CR>", opts)
 keymap("n", "<leader>fs", ":Telescope lsp_document_symbols<CR>", opts) -- maybe use treesitter symbols instead
-
 -- TODO look into using Telescope for marks and jumplist
 
 -- Trouble
@@ -118,10 +117,10 @@ keymap("n", "<leader>hp", "<cmd>Gitsigns preview_hunk<CR>", opts)
 keymap("n", "<leader>hq", "<cmd>Gitsigns setqflist<CR>", opts)
 keymap("n", "<leader>hd", "<cmd>Gitsigns diffthis<CR>", opts)
 
--- -- Comment
--- keymap("n", "<leader>/", "<cmd>lua require('Comment.api').toggle_current_linewise()<CR>", opts)
--- keymap("x", "<leader>/", '<ESC><CMD>lua require("Comment.api").toggle_linewise_op(vim.fn.visualmode())<CR>')
---
+-- Bufferline
+keymap("n", "<M-l>", ":BufferLineMoveNext<CR>", opts)
+keymap("n", "<M-h>", ":BufferLineMovePrev<CR>", opts)
+
 -- -- DAP
 -- keymap("n", "<leader>db", "<cmd>lua require'dap'.toggle_breakpoint()<cr>", opts)
 -- keymap("n", "<leader>dc", "<cmd>lua require'dap'.continue()<cr>", opts)
