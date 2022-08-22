@@ -67,6 +67,7 @@ return packer.startup(function(use)
 	use({ "hrsh7th/cmp-nvim-lua" })
 
 	-- TODO: set up copilot with nvim-cmp: https://github.com/zbirenbaum/copilot-cmp
+	-- TODO: which-key
 
 	-- Snippet
 	use({ "L3MON4D3/LuaSnip" }) -- Snippet engine for cmp_luasnip
@@ -76,21 +77,25 @@ return packer.startup(function(use)
 	use({ "nvim-telescope/telescope.nvim" })
 	use({ "nvim-telescope/telescope-fzf-native.nvim", run = "make" }) -- for faster searching
 
+	-- Trouble
+	use({ "folke/trouble.nvim" }) -- Shows issues in panel
+
 	-- Movement and Productivity
 	use({ "https://github.com/knubie/vim-kitty-navigator", run = "cp ./*.py ~/.config/kitty/" }) -- for movement between kitty windows
+	use({ "kylechui/nvim-surround" })
+
+	-- Treesitter
 	use({
-		"kylechui/nvim-surround",
-		-- tag = "*", -- Use for stability; omit to use `main` branch for the latest features
-		config = function()
-			require("nvim-surround").setup({
-				-- Configuration here, or leave empty to use defaults
-			})
+		"nvim-treesitter/nvim-treesitter",
+		run = function()
+			require("nvim-treesitter.install").update({ with_sync = true })
 		end,
 	})
 
 	-- For later:
 	-- https://github.com/phaazon/hop.nvim
 	-- https://dev.to/kquirapas/neovim-on-steroids-vim-sneak-easymotion-hopnvim-4k17
+    -- https://github.com/lewis6991/spellsitter.nvim
 
 	-- use { "windwp/nvim-autopairs", commit = "fa6876f832ea1b71801c4e481d8feca9a36215ec" } -- Autopairs, integrates with both cmp and treesitter
 	-- use { "numToStr/Comment.nvim", commit = "2c26a00f32b190390b664e56e32fd5347613b9e2" }
@@ -104,12 +109,6 @@ return packer.startup(function(use)
 	-- use { "lewis6991/impatient.nvim", commit = "969f2c5c90457612c09cf2a13fee1adaa986d350" }
 	-- use { "lukas-reineke/indent-blankline.nvim", commit = "6177a59552e35dfb69e1493fd68194e673dc3ee2" }
 	-- use { "goolord/alpha-nvim", commit = "ef27a59e5b4d7b1c2fe1950da3fe5b1c5f3b4c94" }
-
-	-- -- Treesitter
-	-- use {
-	--   "nvim-treesitter/nvim-treesitter",
-	--   commit = "518e27589c0463af15463c9d675c65e464efc2fe",
-	-- }
 
 	-- -- Git
 	-- use { "lewis6991/gitsigns.nvim", commit = "c18e016864c92ecf9775abea1baaa161c28082c3" }
