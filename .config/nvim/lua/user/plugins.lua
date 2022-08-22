@@ -104,6 +104,7 @@ return packer.startup(function(use)
 	use({ "windwp/nvim-autopairs" }) -- Autopairs, integrates with both cmp and treesitter
 	use({ "numToStr/Comment.nvim" }) -- comment out easily
 	use({ "ahmedkhalf/project.nvim" }) -- easily move between projects
+	use { "lewis6991/impatient.nvim" } -- faster startuptime
 
 	-- For later:
 	-- https://github.com/phaazon/hop.nvim
@@ -111,7 +112,6 @@ return packer.startup(function(use)
 	-- https://github.com/lewis6991/spellsitter.nvim
 
 	-- use { "JoosepAlviste/nvim-ts-context-commentstring", commit = "88343753dbe81c227a1c1fd2c8d764afb8d36269" }
-	-- use { "lewis6991/impatient.nvim", commit = "969f2c5c90457612c09cf2a13fee1adaa986d350" }
 	-- use { "lukas-reineke/indent-blankline.nvim", commit = "6177a59552e35dfb69e1493fd68194e673dc3ee2" }
 	-- use { "goolord/alpha-nvim", commit = "ef27a59e5b4d7b1c2fe1950da3fe5b1c5f3b4c94" }
 
