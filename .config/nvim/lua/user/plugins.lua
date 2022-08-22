@@ -92,15 +92,16 @@ return packer.startup(function(use)
 		end,
 	})
 
+	-- Git
+	use({ "lewis6991/gitsigns.nvim" })
 
-
-	use { "windwp/nvim-autopairs" } -- Autopairs, integrates with both cmp and treesitter
-	use { "numToStr/Comment.nvim" } -- comment out easily
+	use({ "windwp/nvim-autopairs" }) -- Autopairs, integrates with both cmp and treesitter
+	use({ "numToStr/Comment.nvim" }) -- comment out easily
 
 	-- For later:
 	-- https://github.com/phaazon/hop.nvim
 	-- https://dev.to/kquirapas/neovim-on-steroids-vim-sneak-easymotion-hopnvim-4k17
-    -- https://github.com/lewis6991/spellsitter.nvim
+	-- https://github.com/lewis6991/spellsitter.nvim
 
 	-- use { "JoosepAlviste/nvim-ts-context-commentstring", commit = "88343753dbe81c227a1c1fd2c8d764afb8d36269" }
 	-- use { "kyazdani42/nvim-tree.lua", commit = "bdb6d4a25410da35bbf7ce0dbdaa8d60432bc243" }
