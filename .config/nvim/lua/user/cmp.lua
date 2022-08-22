@@ -47,30 +47,30 @@ local kind_icons = {
 }
 
 local source_names = {
-    nvim_lsp = "(LSP)",
-    emoji = "(Emoji)",
-    path = "(Path)",
-    calc = "(Calc)",
-    cmp_tabnine = "(Tabnine)",
-    vsnip = "(Snippet)",
-    luasnip = "(Snippet)",
-    buffer = "(Buffer)",
-    tmux = "(TMUX)",
+	nvim_lsp = "(LSP)",
+	emoji = "(Emoji)",
+	path = "(Path)",
+	calc = "(Calc)",
+	cmp_tabnine = "(Tabnine)",
+	vsnip = "(Snippet)",
+	luasnip = "(Snippet)",
+	buffer = "(Buffer)",
+	tmux = "(TMUX)",
 
--- Uncomment these and comment above to not display source names
---    nvim_lsp = "",
---    emoji = "",
---    path = "",
---    calc = "",
---    cmp_tabnine = "",
---    vsnip = "",
---    luasnip = "",
---    buffer = "",
---    tmux = "",
+	-- Uncomment these and comment above to not display source names
+	--    nvim_lsp = "",
+	--    emoji = "",
+	--    path = "",
+	--    calc = "",
+	--    cmp_tabnine = "",
+	--    vsnip = "",
+	--    luasnip = "",
+	--    buffer = "",
+	--    tmux = "",
 }
 
 cmp.setup({
-    -- Using luasnip as my snippet engine
+	-- Using luasnip as my snippet engine
 	snippet = {
 		expand = function(args)
 			luasnip.lsp_expand(args.body)
@@ -78,13 +78,11 @@ cmp.setup({
 	},
 
 	mapping = cmp.mapping.preset.insert({
-        -- TODO make these two work
 		["<C-b>"] = cmp.mapping(cmp.mapping.scroll_docs(-1), { "i", "c" }),
 		["<C-f>"] = cmp.mapping(cmp.mapping.scroll_docs(1), { "i", "c" }),
 		["<C-Space>"] = cmp.mapping(cmp.mapping.complete(), { "i", "c" }), -- manually ask for completion
-        
 
-        -- Use ctrl+e to close popups
+		-- Use ctrl+e to close popups
 		["<C-e>"] = cmp.mapping({
 			i = cmp.mapping.abort(),
 			c = cmp.mapping.close(),
@@ -92,7 +90,7 @@ cmp.setup({
 
 		-- Accept currently selected item. If none selected, `select` first item.
 		-- Set `select` to `false` to only confirm explicitly selected items.
-		["<CR>"] = cmp.mapping.confirm({ select = true }),
+		["<CR>"] = cmp.mapping.confirm({ select = false }),
 		["<Tab>"] = cmp.mapping(function(fallback)
 			if cmp.visible() then
 				cmp.select_next_item()
@@ -130,7 +128,7 @@ cmp.setup({
 			return vim_item
 		end,
 	},
-    -- Order matters: nvim_lsp is shown before nvim_lua in this case
+	-- Order matters: nvim_lsp is shown before nvim_lua in this case
 	sources = {
 		{ name = "nvim_lsp" },
 		{ name = "nvim_lua" },

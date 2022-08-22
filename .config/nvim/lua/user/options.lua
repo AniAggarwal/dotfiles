@@ -39,3 +39,4 @@ vim.opt.fillchars.eob=" "                       -- the char to fill the end of a
 vim.opt.shortmess:append "c"                    -- don't give |ins-completion-menu| messages, for example, "match 1 of 2".
 vim.opt.whichwrap:append("<,>,[,],h,l")
 vim.opt.spelllang = { 'en-us' }                 -- Use English for spelling suggestions
+vim.g.python3_host_prog = '/home/ani/miniconda3/envs/nvim/bin/python' -- Use nvim conda env
