@@ -55,13 +55,13 @@ return packer.startup(function(use)
 	use({ "moll/vim-bbye" }) -- allow buffers to be closed properly
 	use({ "nvim-lualine/lualine.nvim" }) -- status line
 
-	use { "goolord/alpha-nvim" } -- startup page
+	use({ "goolord/alpha-nvim" }) -- startup page
 
 	-- LSP
 	use({ "neovim/nvim-lspconfig" }) -- enable LSP
 	use({ "williamboman/nvim-lsp-installer" }) -- simple to use language server installer
 	use({ "jose-elias-alvarez/null-ls.nvim" }) -- for formatters and linters
-	use({ "RRethy/vim-illuminate" }) -- TODO: turn off illuminate on alpha, nvim-tree
+	use({ "RRethy/vim-illuminate" })
 	use({ "nvim-lua/plenary.nvim" }) -- Useful lua functions used by lots of plugins
 
 	-- Completion
@@ -73,7 +73,6 @@ return packer.startup(function(use)
 	use({ "hrsh7th/cmp-nvim-lua" })
 
 	-- TODO: set up copilot with nvim-cmp: https://github.com/zbirenbaum/copilot-cmp
-	-- TODO: which-key
 
 	-- Snippet
 	use({ "L3MON4D3/LuaSnip" }) -- Snippet engine for cmp_luasnip
@@ -105,7 +104,8 @@ return packer.startup(function(use)
 	use({ "windwp/nvim-autopairs" }) -- Autopairs, integrates with both cmp and treesitter
 	use({ "numToStr/Comment.nvim" }) -- comment out easily
 	use({ "ahmedkhalf/project.nvim" }) -- easily move between projects
-	use { "lewis6991/impatient.nvim" } -- faster startuptime
+	use({ "lewis6991/impatient.nvim" }) -- faster startuptime
+	use({"folke/which-key.nvim"})
 
 	-- For later:
 	-- https://github.com/phaazon/hop.nvim
