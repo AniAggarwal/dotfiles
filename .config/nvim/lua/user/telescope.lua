@@ -19,6 +19,12 @@ telescope.setup({
 				["<C-s>"] = actions.select_horizontal,
 			},
 		},
+		hidden = true,
+	},
+	pickers = {
+		find_files = {
+			find_command = { "rg", "--files", "--hidden", "--glob", "!.git/*" },
+		},
 	},
 	extensions = {
 		fzf = {
@@ -32,4 +38,4 @@ telescope.setup({
 })
 
 require("telescope").load_extension("fzf")
-require('telescope').load_extension('projects')
+require("telescope").load_extension("projects")
