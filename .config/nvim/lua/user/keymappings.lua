@@ -36,7 +36,7 @@ keymap("n", "<S-h>", "<cmd>bprevious<CR>", opts)
 keymap("n", "<leader>H", "<cmd>nohlsearch<CR>", opts)
 
 -- Close buffers
-keymap("n", "<S-q>", "<cmd>bdelete<CR>", opts)
+keymap("n", "<S-q>", "<cmd>Bdelete<CR>", opts)
 
 -- Better paste - pasting on highlighted texts keeps originally yanked text
 keymap("v", "p", '"_dP', opts)
