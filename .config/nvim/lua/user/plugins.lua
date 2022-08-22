@@ -53,14 +53,15 @@ return packer.startup(function(use)
 
 	use({ "akinsho/bufferline.nvim" }) -- Bufferline
 	use({ "moll/vim-bbye" }) -- allow buffers to be closed properly
+	use({ "nvim-lualine/lualine.nvim" }) -- status line
 
-	use({ "nvim-lualine/lualine.nvim" })
+	use { "goolord/alpha-nvim" } -- startup page
 
 	-- LSP
 	use({ "neovim/nvim-lspconfig" }) -- enable LSP
 	use({ "williamboman/nvim-lsp-installer" }) -- simple to use language server installer
 	use({ "jose-elias-alvarez/null-ls.nvim" }) -- for formatters and linters
-	use({ "RRethy/vim-illuminate" })
+	use({ "RRethy/vim-illuminate" }) -- TODO: turn off illuminate on alpha, nvim-tree
 	use({ "nvim-lua/plenary.nvim" }) -- Useful lua functions used by lots of plugins
 
 	-- Completion
@@ -113,7 +114,6 @@ return packer.startup(function(use)
 
 	-- use { "JoosepAlviste/nvim-ts-context-commentstring", commit = "88343753dbe81c227a1c1fd2c8d764afb8d36269" }
 	-- use { "lukas-reineke/indent-blankline.nvim", commit = "6177a59552e35dfb69e1493fd68194e673dc3ee2" }
-	-- use { "goolord/alpha-nvim", commit = "ef27a59e5b4d7b1c2fe1950da3fe5b1c5f3b4c94" }
 
 	-- -- DAP
 	-- use { "mfussenegger/nvim-dap", commit = "014ebd53612cfd42ac8c131e6cec7c194572f21d" }
