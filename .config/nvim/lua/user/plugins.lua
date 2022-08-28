@@ -72,7 +72,25 @@ return packer.startup(function(use)
 	use({ "hrsh7th/cmp-nvim-lsp" })
 	use({ "hrsh7th/cmp-nvim-lua" })
 
-	-- TODO: set up copilot with nvim-cmp: https://github.com/zbirenbaum/copilot-cmp
+    -- Github Copilot
+    use({"https://github.com/github/copilot.vim"})
+
+    -- Intergrate Github Copilot with nvim-cmp
+    -- This starts copilot server
+    use {
+      "zbirenbaum/copilot.lua",
+      event = {"VimEnter"},
+      config = function()
+        vim.defer_fn(function()
+          require("copilot").setup()
+        end, 100)
+      end,
+    }
+    -- This adds copilot to nvim-cmp
+    use {
+      "zbirenbaum/copilot-cmp",
+      module = "copilot_cmp",
+    }
 
 	-- Snippet
 	use({ "L3MON4D3/LuaSnip" }) -- Snippet engine for cmp_luasnip
@@ -90,15 +108,18 @@ return packer.startup(function(use)
 	use({ "kylechui/nvim-surround" })
 
 	-- Treesitter
-	use({
-		"nvim-treesitter/nvim-treesitter",
-		run = function()
-			require("nvim-treesitter.install").update({ with_sync = true })
-		end,
-	})
+    use { 'nvim-treesitter/nvim-treesitter', run = ':TSUpdate' }
+    -- Below is commented out as causing issues for now
+	-- use({
+	-- 	"nvim-treesitter/nvim-treesitter",
+	-- 	run = function()
+	-- 		require("nvim-treesitter.install").update({ with_sync = true })
+	-- 	end,
+	-- })
 
 	-- Git
-	use({ "lewis6991/gitsigns.nvim" })
+	use({ "lewis6991/gitsigns.nvim" }) -- show sings of git changes
+    use({"kdheepak/lazygit.nvim"}) -- lazygit popup window
 
 	use({ "kyazdani42/nvim-tree.lua" }) -- Explorer/tree on left side
 	use({ "windwp/nvim-autopairs" }) -- Autopairs, integrates with both cmp and treesitter
@@ -107,7 +128,7 @@ return packer.startup(function(use)
 	use({ "lewis6991/impatient.nvim" }) -- faster startuptime
 	use({"folke/which-key.nvim"})
 
-	-- For later:
+	-- TODO: For later:
 	-- https://github.com/phaazon/hop.nvim
 	-- https://dev.to/kquirapas/neovim-on-steroids-vim-sneak-easymotion-hopnvim-4k17
 	-- https://github.com/lewis6991/spellsitter.nvim
