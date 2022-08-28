@@ -47,6 +47,7 @@ local kind_icons = {
 }
 
 local source_names = {
+	copilot = "(COPILOT)",
 	nvim_lsp = "(LSP)",
 	emoji = "(Emoji)",
 	path = "(Path)",
@@ -130,6 +131,7 @@ cmp.setup({
 	},
 	-- Order matters: nvim_lsp is shown before nvim_lua in this case
 	sources = {
+		{ name = "copilot" },
 		{ name = "nvim_lsp" },
 		{ name = "nvim_lua" },
 		{ name = "luasnip" },
