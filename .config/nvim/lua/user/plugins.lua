@@ -72,25 +72,25 @@ return packer.startup(function(use)
 	use({ "hrsh7th/cmp-nvim-lsp" })
 	use({ "hrsh7th/cmp-nvim-lua" })
 
-    -- Github Copilot
-    use({"https://github.com/github/copilot.vim"})
+	-- Github Copilot
+	use({ "https://github.com/github/copilot.vim" })
 
-    -- Intergrate Github Copilot with nvim-cmp
-    -- This starts copilot server
-    use {
-      "zbirenbaum/copilot.lua",
-      event = {"VimEnter"},
-      config = function()
-        vim.defer_fn(function()
-          require("copilot").setup()
-        end, 100)
-      end,
-    }
-    -- This adds copilot to nvim-cmp
-    use {
-      "zbirenbaum/copilot-cmp",
-      module = "copilot_cmp",
-    }
+	-- Intergrate Github Copilot with nvim-cmp
+	-- This starts copilot server
+	use({
+		"zbirenbaum/copilot.lua",
+		event = { "VimEnter" },
+		config = function()
+			vim.defer_fn(function()
+				require("copilot").setup()
+			end, 100)
+		end,
+	})
+	-- This adds copilot to nvim-cmp
+	use({
+		"zbirenbaum/copilot-cmp",
+		module = "copilot_cmp",
+	})
 
 	-- Snippet
 	use({ "L3MON4D3/LuaSnip" }) -- Snippet engine for cmp_luasnip
@@ -105,32 +105,33 @@ return packer.startup(function(use)
 
 	-- Movement and Productivity
 	use({ "https://github.com/knubie/vim-kitty-navigator", run = "cp ./*.py ~/.config/kitty/" }) -- for movement between kitty windows
-	use({ "kylechui/nvim-surround" })
+	use({ "kylechui/nvim-surround" }) -- surround text with stuff
+	use({ "ggandor/leap.nvim" }) -- quick movement
+	use({ "tpope/vim-repeat" }) -- allow repeating commands
 
 	-- Treesitter
-    use { 'nvim-treesitter/nvim-treesitter', run = ':TSUpdate' }
-    -- Below is commented out as causing issues for now
+	use({ "nvim-treesitter/nvim-treesitter", run = ":TSUpdate" })
+	-- Below is commented out as causing issues for now
 	-- use({
 	-- 	"nvim-treesitter/nvim-treesitter",
 	-- 	run = function()
 	-- 		require("nvim-treesitter.install").update({ with_sync = true })
 	-- 	end,
 	-- })
+	use({ "lewis6991/spellsitter.nvim" }) -- spell checking
 
 	-- Git
 	use({ "lewis6991/gitsigns.nvim" }) -- show sings of git changes
-    use({"kdheepak/lazygit.nvim"}) -- lazygit popup window
+	use({ "kdheepak/lazygit.nvim" }) -- lazygit popup window
 
 	use({ "kyazdani42/nvim-tree.lua" }) -- Explorer/tree on left side
 	use({ "windwp/nvim-autopairs" }) -- Autopairs, integrates with both cmp and treesitter
 	use({ "numToStr/Comment.nvim" }) -- comment out easily
 	use({ "ahmedkhalf/project.nvim" }) -- easily move between projects
 	use({ "lewis6991/impatient.nvim" }) -- faster startuptime
-	use({"folke/which-key.nvim"})
+	use({ "folke/which-key.nvim" })
 
 	-- TODO: For later:
-	-- https://github.com/phaazon/hop.nvim
-	-- https://dev.to/kquirapas/neovim-on-steroids-vim-sneak-easymotion-hopnvim-4k17
 	-- https://github.com/lewis6991/spellsitter.nvim
 
 	-- use { "JoosepAlviste/nvim-ts-context-commentstring", commit = "88343753dbe81c227a1c1fd2c8d764afb8d36269" }
