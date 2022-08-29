@@ -159,6 +159,11 @@ _G.packer_plugins = {
     path = "/home/ani/.local/share/nvim/site/pack/packer/start/lazygit.nvim",
     url = "https://github.com/kdheepak/lazygit.nvim"
   },
+  ["leap.nvim"] = {
+    loaded = true,
+    path = "/home/ani/.local/share/nvim/site/pack/packer/start/leap.nvim",
+    url = "https://github.com/ggandor/leap.nvim"
+  },
   ["lualine.nvim"] = {
     loaded = true,
     path = "/home/ani/.local/share/nvim/site/pack/packer/start/lualine.nvim",
@@ -229,6 +234,11 @@ _G.packer_plugins = {
     path = "/home/ani/.local/share/nvim/site/pack/packer/start/project.nvim",
     url = "https://github.com/ahmedkhalf/project.nvim"
   },
+  ["spellsitter.nvim"] = {
+    loaded = true,
+    path = "/home/ani/.local/share/nvim/site/pack/packer/start/spellsitter.nvim",
+    url = "https://github.com/lewis6991/spellsitter.nvim"
+  },
   ["telescope-fzf-native.nvim"] = {
     loaded = true,
     path = "/home/ani/.local/share/nvim/site/pack/packer/start/telescope-fzf-native.nvim",
@@ -263,6 +273,11 @@ _G.packer_plugins = {
     loaded = true,
     path = "/home/ani/.local/share/nvim/site/pack/packer/start/vim-kitty-navigator",
     url = "https://github.com/knubie/vim-kitty-navigator"
+  },
+  ["vim-repeat"] = {
+    loaded = true,
+    path = "/home/ani/.local/share/nvim/site/pack/packer/start/vim-repeat",
+    url = "https://github.com/tpope/vim-repeat"
   },
   ["which-key.nvim"] = {
     loaded = true,
