@@ -1,3 +1,8 @@
+-- TODO:
+-- pressing ctrl-n should manually query completions with nvim-cmp popup
+-- copilot should give multiline suggessions
+
+
 -- Require cmp and luasnip are installed
 local cmp_status_ok, cmp = pcall(require, "cmp")
 if not cmp_status_ok then
