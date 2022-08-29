@@ -77,6 +77,15 @@ keymap("v", "<A-j>", ":m .+1<CR>==", opts)
 keymap("x", "<A-j>", ":move '>+1<CR>gv-gv", opts)
 keymap("x", "<A-k>", ":move '<-2<CR>gv-gv", opts)
 
+
+-- Command Mode --
+-- Use ctrl+h/j/k/l to move cursor
+-- TODO make this work
+keymap("c", "<C-h>", "<Left>", opts)
+keymap("c", "<C-j>", "<Down>", opts)
+keymap("c", "<C-k>", "<Up>", opts)
+keymap("c", "<C-l>", "<Right>", opts)
+
 -- Plugins --
 
 -- NvimTree
@@ -116,6 +125,9 @@ end, opts)
 keymap("n", "<leader>hp", "<cmd>Gitsigns preview_hunk<CR>", opts)
 keymap("n", "<leader>hq", "<cmd>Gitsigns setqflist<CR>", opts)
 keymap("n", "<leader>hd", "<cmd>Gitsigns diffthis<CR>", opts)
+
+-- LazyGit
+keymap("n", "<leader>hg", "<cmd>LazyGit<CR>", opts)
 
 -- Bufferline
 keymap("n", "<M-l>", ":BufferLineMoveNext<CR>", opts)
