@@ -88,6 +88,10 @@ keymap("c", "<C-l>", "<Right>", opts)
 
 -- Plugins --
 
+-- Comment
+-- TODO make this work
+-- keymap("n", "gcp", "yy <bar> gcc <bar> p", opts)
+
 -- NvimTree
 keymap("n", "<leader>e", ":NvimTreeToggle<CR>", opts)
 
