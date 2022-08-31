@@ -54,7 +54,7 @@ plugins=(
     git
     python
     sudo 
-    dirhistory
+    # dirhistory # causing issues with clone-in-kitty so removed for now
     zsh-autosuggestions
     zsh-syntax-highlighting
     zsh-vi-mode 
