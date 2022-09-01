@@ -1,7 +1,6 @@
-local status_ok, lsp_installer = pcall(require, "nvim-lsp-installer")
-if not status_ok then
-	return
-end
+-- TODO put in pcall
+require("mason").setup()
+require("mason-lspconfig").setup()
 
 local servers = {
 	"sumneko_lua",
@@ -14,10 +13,6 @@ local servers = {
 	"yamlls",
 	"jdtls",
 }
-
-lsp_installer.setup({
-	ensure_installed = servers,
-})
 
 local lspconfig_status_ok, lspconfig = pcall(require, "lspconfig")
 if not lspconfig_status_ok then
@@ -32,6 +27,7 @@ for _, server in pairs(servers) do
 		capabilities = require("user.lsp.handlers").capabilities,
 	}
 
+    -- TODO: my settings don't seem to apply
 	local require_ok, conf_opts = pcall(require, "user.lsp.settings." .. server)
 	if require_ok then
 		opts = vim.tbl_deep_extend("force", conf_opts, opts)

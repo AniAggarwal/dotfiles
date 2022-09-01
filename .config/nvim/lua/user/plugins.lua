@@ -59,10 +59,15 @@ return packer.startup(function(use)
 
 	-- LSP
 	use({ "neovim/nvim-lspconfig" }) -- enable LSP
-	use({ "williamboman/nvim-lsp-installer" }) -- simple to use language server installer
+    use { "williamboman/mason.nvim", "williamboman/mason-lspconfig.nvim" } -- grab lsp and similar
+    use({ "mfussenegger/nvim-dap" }) -- For debugger
 	use({ "jose-elias-alvarez/null-ls.nvim" }) -- for formatters and linters
 	use({ "RRethy/vim-illuminate" })
 	use({ "nvim-lua/plenary.nvim" }) -- Useful lua functions used by lots of plugins
+
+    -- TODO look into dapui later
+	-- use { "rcarriga/nvim-dap-ui", commit = "d76d6594374fb54abf2d94d6a320f3fd6e9bb2f7" }
+
 
 	-- Completion
 	use({ "hrsh7th/nvim-cmp" }) -- use nvim-cmp as completion engine
@@ -74,7 +79,6 @@ return packer.startup(function(use)
 
 	-- Github Copilot
 	use({ "https://github.com/github/copilot.vim" })
-
 	-- Intergrate Github Copilot with nvim-cmp
 	-- This starts copilot server
 	use({
@@ -111,13 +115,6 @@ return packer.startup(function(use)
 
 	-- Treesitter
 	use({ "nvim-treesitter/nvim-treesitter", run = ":TSUpdate" })
-	-- Below is commented out as causing issues for now
-	-- use({
-	-- 	"nvim-treesitter/nvim-treesitter",
-	-- 	run = function()
-	-- 		require("nvim-treesitter.install").update({ with_sync = true })
-	-- 	end,
-	-- })
 	use({ "lewis6991/spellsitter.nvim" }) -- spell checking
 
 	-- Git
@@ -130,17 +127,6 @@ return packer.startup(function(use)
 	use({ "ahmedkhalf/project.nvim" }) -- easily move between projects
 	use({ "lewis6991/impatient.nvim" }) -- faster startuptime
 	use({ "folke/which-key.nvim" })
-
-	-- TODO: For later:
-	-- https://github.com/lewis6991/spellsitter.nvim
-
-	-- use { "JoosepAlviste/nvim-ts-context-commentstring", commit = "88343753dbe81c227a1c1fd2c8d764afb8d36269" }
-	-- use { "lukas-reineke/indent-blankline.nvim", commit = "6177a59552e35dfb69e1493fd68194e673dc3ee2" }
-
-	-- -- DAP
-	-- use { "mfussenegger/nvim-dap", commit = "014ebd53612cfd42ac8c131e6cec7c194572f21d" }
-	-- use { "rcarriga/nvim-dap-ui", commit = "d76d6594374fb54abf2d94d6a320f3fd6e9bb2f7" }
-	-- use { "ravenxrz/DAPInstall.nvim", commit = "8798b4c36d33723e7bba6ed6e2c202f84bb300de" }
 
 	-- Automatically set up your configuration after cloning packer.nvim
 	-- Put this at the end after all plugins
