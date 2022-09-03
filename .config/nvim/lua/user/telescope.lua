@@ -1,3 +1,5 @@
+-- TODO: allow hidden files for live grep
+
 local status_ok, telescope = pcall(require, "telescope")
 if not status_ok then
 	return
