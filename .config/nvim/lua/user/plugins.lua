@@ -65,6 +65,8 @@ return packer.startup(function(use)
 	use({ "RRethy/vim-illuminate" })
 	use({ "nvim-lua/plenary.nvim" }) -- Useful lua functions used by lots of plugins
 
+    use({"mfussenegger/nvim-jdtls"}) -- allows full use of Java jdtls server
+
     -- TODO look into dapui later
 	-- use { "rcarriga/nvim-dap-ui", commit = "d76d6594374fb54abf2d94d6a320f3fd6e9bb2f7" }
 
@@ -91,6 +93,7 @@ return packer.startup(function(use)
 		end,
 	})
 	-- This adds copilot to nvim-cmp
+    -- TODO: turn off copilot virtual text and use nvim-cmp's instead
 	use({
 		"zbirenbaum/copilot-cmp",
 		module = "copilot_cmp",
