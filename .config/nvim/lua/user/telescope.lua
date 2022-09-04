@@ -27,11 +27,11 @@ telescope.setup({
 		find_files = {
 			find_command = { "rg", "--files", "--hidden", "--glob", "!.git/*" },
 		},
-        live_grep = {
-          additional_args = function ()
-            return { "--hidden" }
-          end
-        }
+		live_grep = {
+			additional_args = function()
+				return { "--hidden" }
+			end,
+		},
 	},
 	extensions = {
 		fzf = {
@@ -46,4 +46,4 @@ telescope.setup({
 
 require("telescope").load_extension("fzf")
 require("telescope").load_extension("projects")
-require('telescope').load_extension('lazygit')
+require("telescope").load_extension("lazygit")
