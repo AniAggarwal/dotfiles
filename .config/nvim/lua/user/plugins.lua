@@ -45,7 +45,7 @@ return packer.startup(function(use)
 
 	use({ "wbthomason/packer.nvim" }) -- Have packer manage itself
 
-	-- -- Colorschemes and looks
+	-- Colorschemes and looks
 	use({ "lunarvim/darkplus.nvim" })
 	use({ "folke/tokyonight.nvim" })
 	use({ "joshdick/onedark.vim" }) -- A lua alternative to look into monsonjeremy/onedark.nvim
@@ -57,19 +57,20 @@ return packer.startup(function(use)
 
 	use({ "goolord/alpha-nvim" }) -- startup page
 
+    use {'stevearc/dressing.nvim'} -- use nice ui for all vim.input and vim.select events
+
 	-- LSP
 	use({ "neovim/nvim-lspconfig" }) -- enable LSP
-    use { "williamboman/mason.nvim", "williamboman/mason-lspconfig.nvim" } -- grab lsp and similar
-    use({ "mfussenegger/nvim-dap" }) -- For debugger
+	use({ "williamboman/mason.nvim", "williamboman/mason-lspconfig.nvim" }) -- grab lsp and similar
+	use({ "mfussenegger/nvim-dap" }) -- For debugger
 	use({ "jose-elias-alvarez/null-ls.nvim" }) -- for formatters and linters
 	use({ "RRethy/vim-illuminate" })
 	use({ "nvim-lua/plenary.nvim" }) -- Useful lua functions used by lots of plugins
 
-    use({"mfussenegger/nvim-jdtls"}) -- allows full use of Java jdtls server
+	use({ "mfussenegger/nvim-jdtls" }) -- allows full use of Java jdtls server
 
-    -- TODO look into dapui later
+	-- TODO look into dapui later
 	-- use { "rcarriga/nvim-dap-ui", commit = "d76d6594374fb54abf2d94d6a320f3fd6e9bb2f7" }
-
 
 	-- Completion
 	use({ "hrsh7th/nvim-cmp" }) -- use nvim-cmp as completion engine
@@ -78,8 +79,8 @@ return packer.startup(function(use)
 	use({ "saadparwaiz1/cmp_luasnip" }) -- snippets completions
 	use({ "hrsh7th/cmp-nvim-lsp" }) -- nvim native lsp completions
 	use({ "hrsh7th/cmp-nvim-lua" }) -- nvim lua api completions
-    use({ "hrsh7th/cmp-nvim-lsp-signature-help" }) -- method signature while typing
-    use({ "onsails/lspkind.nvim" }) -- auto icons in cmp
+	use({ "hrsh7th/cmp-nvim-lsp-signature-help" }) -- method signature while typing
+	use({ "onsails/lspkind.nvim" }) -- auto icons in cmp
 
 	-- Github Copilot
 	-- use({ "https://github.com/github/copilot.vim" }) -- Only needed to config copilot.lua first time

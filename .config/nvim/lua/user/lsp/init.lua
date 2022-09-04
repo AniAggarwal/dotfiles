@@ -4,27 +4,23 @@ local lsp = vim.lsp
 
 local custom_attach = function(client, bufnr)
 	-- Keymappings
-    -- TODO move all this to whichkey
-	local keymap_opts = { noremap = true, silent = true, buffer = bufnr }
+	-- local keymap_opts = { noremap = true, silent = true, buffer = bufnr }
+	-- vim.keymap.set("n", "gD", vim.lsp.buf.declaration, keymap_opts)
+	-- vim.keymap.set("n", "gd", vim.lsp.buf.definition, keymap_opts)
+	-- vim.keymap.set("n", "K", vim.lsp.buf.hover, keymap_opts)
+	-- vim.keymap.set("n", "gI", vim.lsp.buf.implementation, keymap_opts)
+	-- vim.keymap.set("n", "gl", vim.diagnostic.open_float, keymap_opts)
+	-- vim.keymap.set("n", "gf", vim.lsp.buf.formatting, keymap_opts)
+	-- vim.keymap.set("n", "gs", vim.lsp.buf.signature_help, keymap_opts)
+	-- vim.keymap.set("n", "ga", vim.lsp.buf.code_action, keymap_opts)
+	-- vim.keymap.set("n", "gn", vim.lsp.buf.rename, keymap_opts)
+	-- vim.keymap.set("n", "]g", vim.diagnostic.goto_next, { noremap = true, silent = true, buffer = 0 })
+	-- vim.keymap.set("n", "[g", vim.diagnostic.goto_prev, { noremap = true, silent = true, buffer = 0 })
 
-	vim.keymap.set("n", "gD", vim.lsp.buf.declaration, keymap_opts)
-	vim.keymap.set("n", "gd", vim.lsp.buf.definition, keymap_opts)
-	vim.keymap.set("n", "K", vim.lsp.buf.hover, keymap_opts)
-	vim.keymap.set("n", "gI", vim.lsp.buf.implementation, keymap_opts)
-	vim.keymap.set("n", "gl", vim.diagnostic.open_float, keymap_opts)
-	vim.keymap.set("n", "]g", vim.diagnostic.goto_next, { noremap = true, silent = true, buffer = 0 })
-	vim.keymap.set("n", "[g", vim.diagnostic.goto_prev, { noremap = true, silent = true, buffer = 0 })
-	vim.keymap.set("n", "gf", vim.lsp.buf.formatting, keymap_opts)
-	vim.keymap.set("n", "gs", vim.lsp.buf.signature_help, keymap_opts)
-	vim.keymap.set("n", "ga", vim.lsp.buf.code_action, keymap_opts)
-	vim.keymap.set("n", "gn", vim.lsp.buf.rename, keymap_opts)
-
-
-    -- Dispable so that null-ls' formatting can be used without asking for null-ls or sumneko_lua each time
+	-- Dispable so that null-ls' formatting can be used without asking for null-ls or sumneko_lua each time
 	if client.name == "sumneko_lua" then
 		client.resolved_capabilities.document_formatting = false
 	end
-
 end
 
 local capabilities = lsp.protocol.make_client_capabilities()
@@ -64,16 +60,16 @@ mason_lspconfig.setup_handlers({
 							[vim.fn.stdpath("config") .. "/lua"] = true,
 						},
 					},
-                    format = {
-                        -- disable sumneko_lua's formatting to use null-ls' instead
-                        enable = false,
-                    }
+					format = {
+						-- disable sumneko_lua's formatting to use null-ls' instead
+						enable = false,
+					},
 				},
 			},
 		})
 	end,
 
-    -- TODO set up jdtls
+	-- TODO set up jdtls
 	["jdtls"] = function()
 		local jdtls_path = vim.fn.stdpath("data") .. "/mason/packages/jdtls"
 		local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":p:h:t")
@@ -81,7 +77,7 @@ mason_lspconfig.setup_handlers({
 		local mount_commands = function()
 			local jdtls = require("jdtls")
 
-            -- TODO customize keymaps
+			-- TODO customize keymaps
 			-- Set some keymaps for extra functionality
 			vim.keymap.set("n", "<A-o>", function()
 				jdtls.organize_imports()
@@ -101,8 +97,6 @@ mason_lspconfig.setup_handlers({
 			vim.keymap.set("v", "crm", function()
 				jdtls.extract_method(true)
 			end)
-
-            custom_attach() -- add other custom keymaps, TODO remove just this line after using whichkey
 
 			require("jdtls.setup").add_commands()
 		end
@@ -149,7 +143,8 @@ mason_lspconfig.setup_handlers({
 			-- if you want to use additional eclipse.jdt.ls plugins.
 			init_options = {
 				bundles = {
-					"/home/owhan/projects/java-debug/com.microsoft.java.debug.plugin/target/com.microsoft.java.debug.plugin-0.40.0.jar",
+                    -- TODO add my own path
+					-- "/home/owhan/projects/java-debug/com.microsoft.java.debug.plugin/target/com.microsoft.java.debug.plugin-0.40.0.jar",
 				},
 			},
 		}
@@ -200,6 +195,5 @@ lsp.handlers["textDocument/hover"] = lsp.with(lsp.handlers.hover, {
 lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, {
 	border = "rounded",
 })
-
 
 require("user.lsp.null-ls")
