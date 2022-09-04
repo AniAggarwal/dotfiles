@@ -1,4 +1,3 @@
--- TODO put in pcall
 require("mason").setup()
 require("mason-lspconfig").setup()
 
