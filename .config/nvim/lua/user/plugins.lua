@@ -73,14 +73,16 @@ return packer.startup(function(use)
 
 	-- Completion
 	use({ "hrsh7th/nvim-cmp" }) -- use nvim-cmp as completion engine
-	use({ "hrsh7th/cmp-buffer" })
-	use({ "hrsh7th/cmp-path" })
-	use({ "saadparwaiz1/cmp_luasnip" })
-	use({ "hrsh7th/cmp-nvim-lsp" })
-	use({ "hrsh7th/cmp-nvim-lua" })
+	use({ "hrsh7th/cmp-buffer" }) -- completions based on current buffer contents
+	use({ "hrsh7th/cmp-path" }) -- system path completions
+	use({ "saadparwaiz1/cmp_luasnip" }) -- snippets completions
+	use({ "hrsh7th/cmp-nvim-lsp" }) -- nvim native lsp completions
+	use({ "hrsh7th/cmp-nvim-lua" }) -- nvim lua api completions
+    use({ "hrsh7th/cmp-nvim-lsp-signature-help" }) -- method signature while typing
+    use({ "onsails/lspkind.nvim" }) -- auto icons in cmp
 
 	-- Github Copilot
-	use({ "https://github.com/github/copilot.vim" })
+	-- use({ "https://github.com/github/copilot.vim" }) -- Only needed to config copilot.lua first time
 	-- Intergrate Github Copilot with nvim-cmp
 	-- This starts copilot server
 	use({
@@ -92,8 +94,6 @@ return packer.startup(function(use)
 			end, 100)
 		end,
 	})
-	-- This adds copilot to nvim-cmp
-    -- TODO: turn off copilot virtual text and use nvim-cmp's instead
 	use({
 		"zbirenbaum/copilot-cmp",
 		module = "copilot_cmp",

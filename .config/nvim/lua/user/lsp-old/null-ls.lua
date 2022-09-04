@@ -1,4 +1,7 @@
-null_ls = require("null-ls")
+local null_ls_status_ok, null_ls = pcall(require, "null-ls")
+if not null_ls_status_ok then
+	return
+end
 
 -- https://github.com/jose-elias-alvarez/null-ls.nvim/tree/main/lua/null-ls/builtins/formatting
 local formatting = null_ls.builtins.formatting
@@ -17,8 +20,7 @@ null_ls.setup({
 		formatting.isort.with ({
 			command = "/home/ani/miniconda3/envs/nvim/bin/isort",
 		}),
-         -- for Lua formatting
-		formatting.stylua,
+		formatting.stylua, -- for Lua formatting
 
         -- for Python linting
 		diagnostics.flake8.with ({

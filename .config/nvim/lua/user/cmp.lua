@@ -9,6 +9,9 @@ if not snip_status_ok then
 	return
 end
 
+-- Nicer symbols
+local lspkind = require('lspkind')
+
 -- Allow vscode-like snippets to be loaded (i.e. friendly-snippets)
 require("luasnip/loaders/from_vscode").lazy_load()
 
@@ -18,57 +21,15 @@ local check_backspace = function()
 	return col == 0 or vim.fn.getline("."):sub(col, col):match("%s")
 end
 
-local kind_icons = {
-	Text = "",
-	Method = "m",
-	Function = "",
-	Constructor = "",
-	Field = "",
-	Variable = "",
-	Class = "",
-	Interface = "",
-	Module = "",
-	Property = "",
-	Unit = "",
-	Value = "",
-	Enum = "",
-	Keyword = "",
-	Snippet = "",
-	Color = "",
-	File = "",
-	Reference = "",
-	Folder = "",
-	EnumMember = "",
-	Constant = "",
-	Struct = "",
-	Event = "",
-	Operator = "",
-	TypeParameter = "",
-}
-
 local source_names = {
-	copilot = "(COPILOT)",
-	nvim_lsp = "(LSP)",
-	emoji = "(Emoji)",
-	path = "(Path)",
-	calc = "(Calc)",
-	cmp_tabnine = "(Tabnine)",
-	vsnip = "(Snippet)",
-	luasnip = "(Snippet)",
-	buffer = "(Buffer)",
-	tmux = "(TMUX)",
-
-	-- Uncomment these and comment above to not display source names
-	--    nvim_lsp = "",
-	--    emoji = "",
-	--    path = "",
-	--    calc = "",
-	--    cmp_tabnine = "",
-	--    vsnip = "",
-	--    luasnip = "",
-	--    buffer = "",
-	--    tmux = "",
+	copilot = "[ COPILOT]",
+	nvim_lsp = "[力LSP]",
+    nvim_lsp_signature_help = "[ SIGNATURE]",
+	path = "[~ PATH]",
+	luasnip = "[ Snippet]",
+	buffer = "[ Buffer]",
 }
+
 
 cmp.setup({
 	-- Using luasnip as my snippet engine
@@ -121,22 +82,29 @@ cmp.setup({
 			"s",
 		}),
 	}),
-	formatting = {
-		fields = { "kind", "abbr", "menu" },
-		format = function(entry, vim_item)
-			vim_item.kind = kind_icons[vim_item.kind]
-			vim_item.menu = source_names[entry.source.name]
-			return vim_item
-		end,
-	},
+    formatting = {
+        fields = { "kind", "abbr", "menu" },
+        format = lspkind.cmp_format({
+            mode = 'symbol', -- show only symbol annotations
+            maxwidth = 50, -- prevent the popup from showing more than provided characters (e.g 50 will not show more than 50 characters)
+            -- The function below will be called before any actual modifications from lspkind
+            -- so that you can provide more controls on popup customization. (See [#30](https://github.com/onsails/lspkind-nvim/pull/30))
+            before = function (entry, vim_item)
+        		vim_item.menu = source_names[entry.source.name]
+                return vim_item
+            end
+        })
+    },
+
 	-- Order matters: nvim_lsp is shown before nvim_lua in this case
 	sources = {
-		{ name = "copilot" },
-		{ name = "nvim_lsp" },
-		{ name = "nvim_lua" },
-		{ name = "luasnip" },
-		{ name = "buffer" },
-		{ name = "path" },
+		{ name = "copilot", keyword_length = 0, max_item_count = 5 }, -- Github copilot
+		{ name = "nvim_lsp" }, -- native lsp
+        { name = "nvim_lsp_signature_help" }, -- Display method signatures while typing
+		{ name = "nvim_lua" }, -- Neovim's lua api
+		{ name = "luasnip" }, -- snippets
+		{ name = "buffer" }, -- based on current items in buffer
+		{ name = "path" }, -- based on filesystem paths
 	},
 	confirm_opts = {
 		behavior = cmp.ConfirmBehavior.Replace,
@@ -150,3 +118,26 @@ cmp.setup({
 		ghost_text = true, -- preview completion text
 	},
 })
+
+
+-- Color the icons in the completion menu
+vim.cmd[[
+  highlight! link CmpItemMenu Comment
+  " gray
+  highlight! CmpItemAbbrDeprecated guibg=NONE gui=strikethrough guifg=#808080
+  " blue
+  highlight! CmpItemAbbrMatch guibg=NONE guifg=#569CD6
+  highlight! CmpItemAbbrMatchFuzzy guibg=NONE guifg=#569CD6
+  " light blue
+  highlight! CmpItemKindVariable guibg=NONE guifg=#9CDCFE
+  highlight! CmpItemKindInterface guibg=NONE guifg=#9CDCFE
+  highlight! CmpItemKindText guibg=NONE guifg=#9CDCFE
+  " pink
+  highlight! CmpItemKindFunction guibg=NONE guifg=#C586C0
+  highlight! CmpItemKindMethod guibg=NONE guifg=#C586C0
+  " front
+  highlight! CmpItemKindKeyword guibg=NONE guifg=#D4D4D4
+  highlight! CmpItemKindProperty guibg=NONE guifg=#D4D4D4
+  highlight! CmpItemKindUnit guibg=NONE guifg=#D4D4D4
+]]
+
