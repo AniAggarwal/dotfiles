@@ -14,6 +14,8 @@ local custom_attach = function(client, bufnr)
 	-- vim.keymap.set("n", "gs", vim.lsp.buf.signature_help, keymap_opts)
 	-- vim.keymap.set("n", "ga", vim.lsp.buf.code_action, keymap_opts)
 	-- vim.keymap.set("n", "gn", vim.lsp.buf.rename, keymap_opts)
+
+	-- TODO the below mappings don't work
 	-- vim.keymap.set("n", "]g", vim.diagnostic.goto_next, { noremap = true, silent = true, buffer = 0 })
 	-- vim.keymap.set("n", "[g", vim.diagnostic.goto_prev, { noremap = true, silent = true, buffer = 0 })
 
@@ -76,27 +78,28 @@ mason_lspconfig.setup_handlers({
 		local workspace_dir = os.getenv("HOME") .. "/.cache/jdtls/workspace/" .. project_name
 		local mount_commands = function()
 			local jdtls = require("jdtls")
-
 			-- TODO customize keymaps
 			-- Set some keymaps for extra functionality
-			vim.keymap.set("n", "<A-o>", function()
-				jdtls.organize_imports()
-			end)
-			vim.keymap.set("n", "crv", function()
-				jdtls.extract_variable()
-			end)
-			vim.keymap.set("v", "crv", function()
-				jdtls.extract_variable(true)
-			end)
-			vim.keymap.set("n", "crc", function()
-				jdtls.extract_variable()
-			end)
-			vim.keymap.set("v", "crc", function()
-				jdtls.extract_variable(true)
-			end)
-			vim.keymap.set("v", "crm", function()
-				jdtls.extract_method(true)
-			end)
+			-- vim.keymap.set("n", "<A-o>", function()
+			-- 	jdtls.organize_imports()
+			-- end)
+			-- vim.keymap.set("n", "crv", function()
+			-- 	jdtls.extract_variable(true)
+			-- end)
+			-- vim.keymap.set("v", "crv", function()
+			-- 	jdtls.extract_variable(true)
+			-- end)
+			-- vim.keymap.set("n", "crc", function()
+			-- 	jdtls.extract_variable()
+			-- end)
+			-- vim.keymap.set("v", "crc", function()
+			-- 	jdtls.extract_variable(true)
+			-- end)
+			-- vim.keymap.set("v", "crm", function()
+			-- 	jdtls.extract_method(true)
+			-- end)
+			-- vim.keymap.set("v", "crm", "<Esc><Cmd>lua require('jdtls').extract_method(true)<CR>")
+			-- vim.keymap.set("v", "crm", "<Esc><Cmd>lua require'jdtls'.code_action(true, 'refactor')<CR>")
 
 			require("jdtls.setup").add_commands()
 		end
@@ -143,7 +146,7 @@ mason_lspconfig.setup_handlers({
 			-- if you want to use additional eclipse.jdt.ls plugins.
 			init_options = {
 				bundles = {
-                    -- TODO add my own path
+					-- TODO add my own path
 					-- "/home/owhan/projects/java-debug/com.microsoft.java.debug.plugin/target/com.microsoft.java.debug.plugin-0.40.0.jar",
 				},
 			},
@@ -157,7 +160,7 @@ mason_lspconfig.setup_handlers({
 				require("jdtls").start_or_attach(config)
 			end,
 			group = lsp_group,
-			desc = "Checks whether server jdtls should start a new instance or attach to an existing one.",
+			desc = "Checks if LSP jdtls should start a new instance or attach an existing one.",
 		})
 	end,
 })

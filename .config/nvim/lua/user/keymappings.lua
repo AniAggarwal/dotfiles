@@ -89,6 +89,7 @@ keymap("c", "<C-l>", "<Right>", opts)
 -- Plugins --
 
 -- LSP
+-- TODO make the below two keymappings work
 vim.keymap.set("n", "]g", vim.diagnostic.goto_next, { noremap = true, silent = true, buffer = 0 })
 vim.keymap.set("n", "[g", vim.diagnostic.goto_prev, { noremap = true, silent = true, buffer = 0 })
 

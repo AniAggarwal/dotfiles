@@ -96,3 +96,13 @@ which_key.register({
 	},
 }, { prefix = "", mode = "n" })
 
+
+-- Visual mode maps
+which_key.register({
+	g = {
+        -- These are global but only work on certain LSPs
+        f = { vim.lsp.buf.range_formatting, "Range Format" },
+        a = { vim.lsp.buf.code_action, "Code action" },
+	},
+}, { prefix = "", mode = "v" })
+
