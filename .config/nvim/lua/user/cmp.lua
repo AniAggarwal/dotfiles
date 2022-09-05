@@ -15,12 +15,6 @@ local lspkind = require('lspkind')
 -- Allow vscode-like snippets to be loaded (i.e. friendly-snippets)
 require("luasnip/loaders/from_vscode").lazy_load()
 
--- Used in the 'supertab' functionality
-local check_backspace = function()
-	local col = vim.fn.col(".") - 1
-	return col == 0 or vim.fn.getline("."):sub(col, col):match("%s")
-end
-
 local source_names = {
 	copilot = "[ COPILOT]",
 	nvim_lsp = "[力LSP]",
@@ -52,17 +46,11 @@ cmp.setup({
 
 		-- Accept currently selected item. If none selected, `select` first item.
 		-- Set `select` to `false` to only confirm explicitly selected items.
-        -- TODO broken
 		["<CR>"] = cmp.mapping.confirm({ select = false }),
+
 		["<Tab>"] = cmp.mapping(function(fallback)
-			if cmp.visible() then
-				cmp.select_next_item()
-			elseif luasnip.expandable() then
-				luasnip.expand()
-			elseif luasnip.expand_or_jumpable() then
+			if luasnip.expand_or_jumpable() then
 				luasnip.expand_or_jump()
-			elseif check_backspace() then
-				fallback()
 			else
 				fallback()
 			end
@@ -71,9 +59,7 @@ cmp.setup({
 			"s",
 		}),
 		["<S-Tab>"] = cmp.mapping(function(fallback)
-			if cmp.visible() then
-				cmp.select_prev_item()
-			elseif luasnip.jumpable(-1) then
+			if luasnip.jumpable(-1) then
 				luasnip.jump(-1)
 			else
 				fallback()
@@ -100,10 +86,10 @@ cmp.setup({
 	-- Order matters: nvim_lsp is shown before nvim_lua in this case
 	sources = {
 		{ name = "copilot", keyword_length = 0, max_item_count = 5 }, -- Github copilot
+		{ name = "luasnip" }, -- snippets
 		{ name = "nvim_lsp" }, -- native lsp
         { name = "nvim_lsp_signature_help" }, -- Display method signatures while typing
 		{ name = "nvim_lua" }, -- Neovim's lua api
-		{ name = "luasnip" }, -- snippets
 		{ name = "buffer" }, -- based on current items in buffer
 		{ name = "path" }, -- based on filesystem paths
 	},
