@@ -88,10 +88,18 @@ keymap("c", "<C-l>", "<Right>", opts)
 -- Plugins --
 
 -- LSP
--- TODO make the below two keymappings work
 vim.keymap.set("n", "]g", vim.diagnostic.goto_next, { noremap = true, silent = true })
 vim.keymap.set("n", "[g", vim.diagnostic.goto_prev, { noremap = true, silent = true })
 vim.keymap.set("n", "K", vim.lsp.buf.hover, { noremap = true, silent = true })
+
+-- Todo Comments
+vim.keymap.set("n", "]t", function()
+  require("todo-comments").jump_next()
+end, { noremap = true, silent = true })
+
+vim.keymap.set("n", "[t", function()
+  require("todo-comments").jump_prev()
+end, { noremap = true, silent = true  })
 
 -- Comment
 -- TODO make this work

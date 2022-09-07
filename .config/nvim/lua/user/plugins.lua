@@ -57,7 +57,7 @@ return packer.startup(function(use)
 
 	use({ "goolord/alpha-nvim" }) -- startup page
 
-    use {'stevearc/dressing.nvim'} -- use nice ui for all vim.input and vim.select events
+	use({ "stevearc/dressing.nvim" }) -- use nice ui for all vim.input and vim.select events
 
 	-- LSP
 	use({ "neovim/nvim-lspconfig" }) -- enable LSP
@@ -118,6 +118,7 @@ return packer.startup(function(use)
 	use({ "tpope/vim-repeat" }) -- allow repeating commands
 	use({ "windwp/nvim-autopairs" }) -- Autopairs, integrates with both cmp and treesitter
 	use({ "numToStr/Comment.nvim" }) -- comment out easily
+	use({ "folke/todo-comments.nvim" }) -- Display and find todo and similar comments
 
 	-- Treesitter
 	use({ "nvim-treesitter/nvim-treesitter", run = ":TSUpdate" })

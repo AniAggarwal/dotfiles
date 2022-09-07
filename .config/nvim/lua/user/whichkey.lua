@@ -37,6 +37,7 @@ which_key.register({
 		l = { "<cmd>Telescope current_buffer_fuzzy_find<CR>", "Current buffer" },
 		d = { "<cmd>Telescope diagnostics<CR>", "Diagnostics" },
 		s = { "<cmd>Telescope lsp_document_symbols<CR>", "Document symbols" },
+        T = { "<cmd>TodoTelescope<CR>", "Search TODOs"}
 	},
 
 	-- Git

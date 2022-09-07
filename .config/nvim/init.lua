@@ -1,4 +1,3 @@
-
 require "user.options"
 require "user.keymappings"
 require "user.plugins"
@@ -22,3 +21,4 @@ require "user.whichkey"
 require "user.vimilluminate"
 require "user.leap"
 require "user.dressing"
+require "user.todo_comments"
