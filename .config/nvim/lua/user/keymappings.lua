@@ -77,7 +77,6 @@ keymap("v", "<A-j>", ":m .+1<CR>==", opts)
 keymap("x", "<A-j>", ":move '>+1<CR>gv-gv", opts)
 keymap("x", "<A-k>", ":move '<-2<CR>gv-gv", opts)
 
-
 -- Command Mode --
 -- Use ctrl+h/j/k/l to move cursor
 -- TODO make this work
@@ -90,8 +89,9 @@ keymap("c", "<C-l>", "<Right>", opts)
 
 -- LSP
 -- TODO make the below two keymappings work
-vim.keymap.set("n", "]g", vim.diagnostic.goto_next, { noremap = true, silent = true, buffer = 0 })
-vim.keymap.set("n", "[g", vim.diagnostic.goto_prev, { noremap = true, silent = true, buffer = 0 })
+vim.keymap.set("n", "]g", vim.diagnostic.goto_next, { noremap = true, silent = true })
+vim.keymap.set("n", "[g", vim.diagnostic.goto_prev, { noremap = true, silent = true })
+vim.keymap.set("n", "K", vim.lsp.buf.hover, { noremap = true, silent = true })
 
 -- Comment
 -- TODO make this work
@@ -142,6 +142,22 @@ keymap("n", "[c", "<cmd>Gitsigns prev_hunk<CR>", opts)
 -- TODO: these don't work properly
 keymap("n", "<M-l>", ":BufferLineMoveNext<CR>", opts)
 keymap("n", "<M-h>", ":BufferLineMovePrev<CR>", opts)
+
+-- Dressing
+vim.keymap.set("n", "z=", function()
+  local word = vim.fn.expand("<cword>")
+  local suggestions = vim.fn.spellsuggest(word)
+  vim.ui.select(
+    suggestions,
+    {},
+    vim.schedule_wrap(function(selected)
+      if selected then
+        vim.api.nvim_feedkeys("ciw" .. selected, "n", true)
+        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, true, true), "n", true)
+      end
+    end)
+  )
+end)
 
 -- -- DAP
 -- keymap("n", "<leader>db", "<cmd>lua require'dap'.toggle_breakpoint()<cr>", opts)

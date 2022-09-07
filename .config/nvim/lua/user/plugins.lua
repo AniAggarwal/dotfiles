@@ -116,6 +116,8 @@ return packer.startup(function(use)
 	use({ "kylechui/nvim-surround" }) -- surround text with stuff
 	use({ "ggandor/leap.nvim" }) -- quick movement
 	use({ "tpope/vim-repeat" }) -- allow repeating commands
+	use({ "windwp/nvim-autopairs" }) -- Autopairs, integrates with both cmp and treesitter
+	use({ "numToStr/Comment.nvim" }) -- comment out easily
 
 	-- Treesitter
 	use({ "nvim-treesitter/nvim-treesitter", run = ":TSUpdate" })
@@ -126,11 +128,9 @@ return packer.startup(function(use)
 	use({ "kdheepak/lazygit.nvim" }) -- lazygit popup window
 
 	use({ "kyazdani42/nvim-tree.lua" }) -- Explorer/tree on left side
-	use({ "windwp/nvim-autopairs" }) -- Autopairs, integrates with both cmp and treesitter
-	use({ "numToStr/Comment.nvim" }) -- comment out easily
 	use({ "ahmedkhalf/project.nvim" }) -- easily move between projects
 	use({ "lewis6991/impatient.nvim" }) -- faster startuptime
-	use({ "folke/which-key.nvim" })
+	use({ "folke/which-key.nvim" }) -- show key maps
 
 	-- Automatically set up your configuration after cloning packer.nvim
 	-- Put this at the end after all plugins
