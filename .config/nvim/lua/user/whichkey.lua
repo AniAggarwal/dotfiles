@@ -12,12 +12,6 @@ which_key.setup({
 		padding = { 2, 2, 2, 2 }, -- extra window padding [top, right, bottom, left]
 		winblend = 0,
 	},
-	plugins = {
-		spelling = {
-			enabled = true,
-			suggestions = 20,
-		},
-	},
 })
 
 -- Leader maps in normal mode

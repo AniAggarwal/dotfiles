@@ -3,22 +3,6 @@ local api = vim.api
 local lsp = vim.lsp
 
 local custom_attach = function(client, bufnr)
-	-- Keymappings
-	-- local keymap_opts = { noremap = true, silent = true, buffer = bufnr }
-	-- vim.keymap.set("n", "gD", vim.lsp.buf.declaration, keymap_opts)
-	-- vim.keymap.set("n", "gd", vim.lsp.buf.definition, keymap_opts)
-	-- vim.keymap.set("n", "K", vim.lsp.buf.hover, keymap_opts)
-	-- vim.keymap.set("n", "gI", vim.lsp.buf.implementation, keymap_opts)
-	-- vim.keymap.set("n", "gl", vim.diagnostic.open_float, keymap_opts)
-	-- vim.keymap.set("n", "gf", vim.lsp.buf.formatting, keymap_opts)
-	-- vim.keymap.set("n", "gs", vim.lsp.buf.signature_help, keymap_opts)
-	-- vim.keymap.set("n", "ga", vim.lsp.buf.code_action, keymap_opts)
-	-- vim.keymap.set("n", "gn", vim.lsp.buf.rename, keymap_opts)
-
-	-- TODO the below mappings don't work
-	-- vim.keymap.set("n", "]g", vim.diagnostic.goto_next, { noremap = true, silent = true, buffer = 0 })
-	-- vim.keymap.set("n", "[g", vim.diagnostic.goto_prev, { noremap = true, silent = true, buffer = 0 })
-
 	-- Dispable so that null-ls' formatting can be used without asking for null-ls or sumneko_lua each time
 	if client.name == "sumneko_lua" then
 		client.resolved_capabilities.document_formatting = false
@@ -138,7 +122,13 @@ mason_lspconfig.setup_handlers({
 
 			-- Here you can configure eclipse.jdt.ls specific settings
 			settings = {
-				java = {},
+				java = {
+                    format = {
+                        settings = {
+                            url = os.getenv("HOME") .. "/dotfiles/.config/nvim/language-configs/java/custom-google-style.xml",
+                        },
+                    },
+                },
 			},
 
 			-- Language server `initializationOptions`
