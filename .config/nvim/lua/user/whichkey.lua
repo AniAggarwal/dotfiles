@@ -20,6 +20,7 @@ which_key.register({
 	q = { "<cmd>q<CR>", "Quit" },
 	Q = { "<cmd>q!<CR>", "Quit without saving" },
 	H = { "<cmd>nohlsearch<CR>", "Clear highlights" },
+    c = {"<cmd>let &colorcolumn=(&colorcolumn == 81 ? 0 : 81)<CR>", "Highlight column 81"},
 
 	-- NvimTree
 	e = { "<cmd>NvimTreeToggle<CR>", "Explorer" },

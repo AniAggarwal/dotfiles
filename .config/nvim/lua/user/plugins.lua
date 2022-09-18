@@ -67,9 +67,10 @@ return packer.startup(function(use)
 	use({ "RRethy/vim-illuminate" })
 	use({ "nvim-lua/plenary.nvim" }) -- Useful lua functions used by lots of plugins
 
-	use({ "mfussenegger/nvim-jdtls" }) -- allows full use of Java jdtls server
+    -- TODO: remove this specific commit once it is merged
+	use({ "mfussenegger/nvim-jdtls" , commit = "f48ef188637fe3f2cac964b647befe197d268683"}) -- allows full use of Java jdtls server
 
-	-- TODO look into dapui later
+	-- TODO: look into dapui later
 	-- use { "rcarriga/nvim-dap-ui", commit = "d76d6594374fb54abf2d94d6a320f3fd6e9bb2f7" }
 
 	-- Completion
