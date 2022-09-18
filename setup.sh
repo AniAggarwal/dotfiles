@@ -11,7 +11,7 @@ setup_kitty() {
     fi
     ln -s "$SCRIPT_DIR/.config/kitty" "$KITTY_CONFIG_PATH"
 
-    # TODO add new kitty logo to kitty.desktop file
+    # TODO: add new kitty logo to kitty.desktop file
     # Make it install kitty, symlink it, add desktop file, etc.
     # Details: https://sw.kovidgoyal.net/kitty/binary/ 
 
@@ -80,7 +80,7 @@ setup_nala() {
 }
 
 setup_apts() {
-    # TODO make this use nala
+    # TODO: make this use nala
     # Make this walk through to decide what to install
     sudo apt install powertop
     sudo apt install btop
@@ -121,11 +121,11 @@ setup_font() {
 }
 
 
-# TODO parse arugments for which things to configure
-# TODO make it install Fira Code Nerd Font and make kitty use it
-# TODO make an installation walk through to choose what all to install
-# TODO grub/plymouth setup
-# TODO python setup
+# TODO: parse arugments for which things to configure
+# TODO: make it install Fira Code Nerd Font and make kitty use it
+# TODO: make an installation walk through to choose what all to install
+# TODO: grub/plymouth setup
+# TODO: python setup
 # ZSH setup
 
 setup_kitty

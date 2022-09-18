@@ -42,5 +42,4 @@ vim.g.python3_host_prog = "/home/ani/miniconda3/envs/nvim/bin/python" -- Use nvi
 vim.opt.foldmethod = "expr" -- Use nvim-treesitter for folding
 vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
 vim.opt.foldenable = false -- leave file unfolded by default
-
--- TODO: make spelling suggessions only show a few best suggessions in a rounded popup
+vim.opt.textwidth = 80

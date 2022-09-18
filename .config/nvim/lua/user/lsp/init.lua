@@ -136,7 +136,7 @@ mason_lspconfig.setup_handlers({
 			-- if you want to use additional eclipse.jdt.ls plugins.
 			init_options = {
 				bundles = {
-					-- TODO add my own path
+					-- TODO: add my own path
 					-- "/home/owhan/projects/java-debug/com.microsoft.java.debug.plugin/target/com.microsoft.java.debug.plugin-0.40.0.jar",
 				},
 			},

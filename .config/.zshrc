@@ -49,7 +49,7 @@ export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME=""
 
 # Plugins
-# TODO decide if keeping python plugin
+# TODO: decide if keeping python plugin
 plugins=(
     git
     python
