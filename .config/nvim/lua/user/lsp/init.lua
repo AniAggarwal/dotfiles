@@ -55,7 +55,6 @@ mason_lspconfig.setup_handlers({
 		})
 	end,
 
-	-- TODO set up jdtls
 	["jdtls"] = function()
 		local jdtls_path = vim.fn.stdpath("data") .. "/mason/packages/jdtls"
 		local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":p:h:t")
@@ -125,7 +124,7 @@ mason_lspconfig.setup_handlers({
 				java = {
                     format = {
                         settings = {
-                            url = os.getenv("HOME") .. "/dotfiles/.config/nvim/language-configs/java/custom-google-style.xml",
+                            url = os.getenv("HOME") .. "/dotfiles/.config/nvim/language-configs/java/cmsc-132-style.xml",
                         },
                     },
                 },
