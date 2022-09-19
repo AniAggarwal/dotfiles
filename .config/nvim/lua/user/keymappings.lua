@@ -32,23 +32,12 @@ keymap("n", "<C-Right>", "<cmd>vertical resize +2<CR>", opts)
 keymap("n", "<S-l>", "<cmd>BufferLineCycleNext<CR>", opts)
 keymap("n", "<S-h>", "<cmd>BufferLineCyclePrev<CR>", opts)
 
--- Clear highlights
--- keymap("n", "<leader>H", "<cmd>nohlsearch<CR>", opts)
-
 -- Close buffers
 keymap("n", "<S-q>", "<cmd>Bdelete<CR>", opts)
 
 -- Better paste - pasting on highlighted texts keeps originally yanked text
 keymap("v", "p", '"_dP', opts)
 
--- Save faster
--- keymap("n", "<leader>w", "<cmd>w<CR>", opts)
-
--- Exit faster
--- keymap("n", "<leader>q", "<cmd>q<CR>", opts)
-
--- Exit without saving faster
--- keymap("n", "<leader>Q", "<cmd>q!<CR>", opts)
 
 -- Insert --
 -- Press jk fast to enter
@@ -63,6 +52,7 @@ keymap("i", "<C-h>", "<C-o>dw", opts)
 -- Toggle spell checking
 keymap("n", "z-", "<cmd>set spell!<CR>", opts)
 
+
 -- Visual --
 -- Stay in indent mode after indenting
 keymap("v", "<", "<gv", opts)
@@ -76,6 +66,7 @@ keymap("v", "<A-j>", ":m .+1<CR>==", opts)
 -- Move text up/down
 keymap("x", "<A-j>", ":move '>+1<CR>gv-gv", opts)
 keymap("x", "<A-k>", ":move '<-2<CR>gv-gv", opts)
+
 
 -- Command Mode --
 -- Use ctrl+h/j/k/l to move cursor
@@ -102,25 +93,9 @@ vim.keymap.set("n", "[t", function()
 end, { noremap = true, silent = true  })
 
 -- Comment
--- TODO make this work
+-- TODO: make this work
 -- keymap("n", "gcp", "yy <bar> gcc <bar> p", opts)
-
--- NvimTree
--- keymap("n", "<leader>e", ":NvimTreeToggle<CR>", opts)
-
--- Telescope
--- keymap("n", "<leader>fr", ":Telescope resume<CR>", opts)
--- keymap("n", "<leader>ff", ":Telescope find_files<CR>", opts)
--- keymap("n", "<leader>ft", ":Telescope live_grep<CR>", opts)
--- keymap("n", "<leader>fp", ":Telescope projects<CR>", opts)
--- keymap("n", "<leader>fb", ":Telescope buffers<CR>", opts)
--- keymap("n", "<leader>fc", ":Telescope commands<CR>", opts)
--- keymap("n", "<leader>fl", ":Telescope current_buffer_fuzzy_find<CR>", opts)
--- keymap("n", "<leader>fgs", ":Telescope git_status<CR>", opts)
---
--- keymap("n", "<leader>fd", ":Telescope diagnostics<CR>", opts)
--- keymap("n", "<leader>fs", ":Telescope lsp_document_symbols<CR>", opts) -- maybe use treesitter symbols instead
--- TODO look into using Telescope for marks and jumplist
+-- TODO: look into using Telescope for marks and jumplist
 
 -- Trouble
 keymap("n", "gr", "<cmd>TroubleToggle lsp_references<CR>", opts)
@@ -130,26 +105,9 @@ keymap("n", "gL", "<cmd>TroubleToggle document_diagnostics<CR>", opts)
 keymap("n", "]c", "<cmd>Gitsigns next_hunk<CR>", opts)
 keymap("n", "[c", "<cmd>Gitsigns prev_hunk<CR>", opts)
 
--- keymap({ "n", "v" }, "<leader>hs", "<cmd>Gitsigns stage_hunk<CR>", opts)
--- keymap({ "n", "v" }, "<leader>hr", "<cmd>Gitsigns reset_hunk<CR>", opts)
--- keymap("n", "<leader>hS", "<cmd>Gitsigns stage_buffer<CR>", opts)
---
--- keymap("n", "<leader>hu", "<cmd>Gitsigns undo_stage_hunk<CR>", opts)
--- -- show full blame_line
--- keymap("n", "<leader>hb", function()
--- 	package.loaded.gitsigns.blame_line({ full = true })
--- end, opts)
--- keymap("n", "<leader>hp", "<cmd>Gitsigns preview_hunk<CR>", opts)
--- keymap("n", "<leader>hq", "<cmd>Gitsigns setqflist<CR>", opts)
--- keymap("n", "<leader>hd", "<cmd>Gitsigns diffthis<CR>", opts)
-
--- LazyGit
--- keymap("n", "<leader>hg", "<cmd>LazyGit<CR>", opts)
-
 -- Bufferline
--- TODO: these don't work properly
-keymap("n", "<M-l>", ":BufferLineMoveNext<CR>", opts)
-keymap("n", "<M-h>", ":BufferLineMovePrev<CR>", opts)
+keymap("n", "<S-M-l>", ":BufferLineMoveNext<CR>", opts)
+keymap("n", "<S-M-h>", ":BufferLineMovePrev<CR>", opts)
 
 -- Dressing
 vim.keymap.set("n", "z=", function()
