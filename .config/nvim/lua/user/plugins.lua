@@ -59,6 +59,14 @@ return packer.startup(function(use)
 
 	use({ "stevearc/dressing.nvim" }) -- use nice ui for all vim.input and vim.select events
 
+	-- Symbols outline on side of code
+	use({
+		"simrat39/symbols-outline.nvim",
+		config = function()
+			require("symbols-outline").setup({ wrap = true })
+		end,
+	})
+
 	-- LSP
 	use({ "neovim/nvim-lspconfig" }) -- enable LSP
 	use({ "williamboman/mason.nvim", "williamboman/mason-lspconfig.nvim" }) -- grab lsp and similar
@@ -67,8 +75,7 @@ return packer.startup(function(use)
 	use({ "RRethy/vim-illuminate" })
 	use({ "nvim-lua/plenary.nvim" }) -- Useful lua functions used by lots of plugins
 
-	-- TODO: remove this specific commit once it is merged
-	use({ "mfussenegger/nvim-jdtls", commit = "f48ef188637fe3f2cac964b647befe197d268683" }) -- allows full use of Java jdtls server
+	use({ "mfussenegger/nvim-jdtls" }) -- allows full use of Java jdtls server
 
 	-- TODO: look into dapui later
 	-- use { "rcarriga/nvim-dap-ui", commit = "d76d6594374fb54abf2d94d6a320f3fd6e9bb2f7" }
@@ -92,7 +99,11 @@ return packer.startup(function(use)
 		event = { "VimEnter" },
 		config = function()
 			vim.defer_fn(function()
-				require("copilot").setup()
+				require("copilot").setup({
+					panel = {
+						enabled = true,
+					},
+				})
 			end, 100)
 		end,
 	})
@@ -100,7 +111,9 @@ return packer.startup(function(use)
 		"zbirenbaum/copilot-cmp",
 		after = { "copilot.lua" },
 		config = function()
-			require("copilot_cmp").setup()
+			require("copilot_cmp").setup({
+				method = "getCompletionsCycling",
+			})
 		end,
 	})
 
@@ -134,8 +147,10 @@ return packer.startup(function(use)
 
 	use({ "kyazdani42/nvim-tree.lua" }) -- Explorer/tree on left side
 	use({ "ahmedkhalf/project.nvim" }) -- easily move between projects
-	use({ "lewis6991/impatient.nvim" }) -- faster startuptime
 	use({ "folke/which-key.nvim" }) -- show key maps
+
+	use({ "lewis6991/impatient.nvim" }) -- faster startuptime
+    use({ "dstein64/vim-startuptime"}) -- show how long plugins take to load
 
 	-- Automatically set up your configuration after cloning packer.nvim
 	-- Put this at the end after all plugins
