@@ -126,6 +126,7 @@ setup_font() {
 # TODO: make an installation walk through to choose what all to install
 # TODO: grub/plymouth setup
 # TODO: python setup
+# Auto-cpu freq setup maybe. ln the conf file
 # ZSH setup
 
 setup_kitty
