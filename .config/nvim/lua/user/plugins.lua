@@ -121,13 +121,6 @@ return packer.startup(function(use)
 	use({ "L3MON4D3/LuaSnip" }) -- Snippet engine for cmp_luasnip
 	use({ "rafamadriz/friendly-snippets" }) -- Extra snippets
 
-	-- Telescope
-	use({ "nvim-telescope/telescope.nvim" })
-	use({ "nvim-telescope/telescope-fzf-native.nvim", run = "make" }) -- for faster searching
-
-	-- Trouble
-	use({ "folke/trouble.nvim" }) -- Shows issues in panel
-
 	-- Movement and Productivity
 	use({ "https://github.com/knubie/vim-kitty-navigator", run = "cp ./*.py ~/.config/kitty/" }) -- for movement between kitty windows
 	use({ "kylechui/nvim-surround" }) -- surround text with stuff
@@ -136,10 +129,17 @@ return packer.startup(function(use)
 	use({ "windwp/nvim-autopairs" }) -- Autopairs, integrates with both cmp and treesitter
 	use({ "numToStr/Comment.nvim" }) -- comment out easily
 	use({ "folke/todo-comments.nvim" }) -- Display and find todo and similar comments
+    use({"https://github.com/AndrewRadev/linediff.vim"}) -- diff on line selections
+
+	-- Telescope
+	use({ "nvim-telescope/telescope.nvim" })
+	use({ "nvim-telescope/telescope-fzf-native.nvim", run = "make" }) -- for faster searching
+
+	-- Trouble
+	use({ "folke/trouble.nvim" }) -- Shows issues in panel
 
 	-- Treesitter
 	use({ "nvim-treesitter/nvim-treesitter", run = ":TSUpdate" })
-	use({ "lewis6991/spellsitter.nvim" }) -- spell checking
 
 	-- Git
 	use({ "lewis6991/gitsigns.nvim" }) -- show sings of git changes

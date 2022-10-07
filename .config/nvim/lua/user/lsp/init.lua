@@ -3,9 +3,9 @@ local api = vim.api
 local lsp = vim.lsp
 
 local custom_attach = function(client, bufnr)
-	-- Dispable so that null-ls' formatting can be used without asking for null-ls or sumneko_lua each time
+	-- Disable so that null-ls' formatting can be used without asking for null-ls or sumneko_lua each time
 	if client.name == "sumneko_lua" then
-		client.resolved_capabilities.document_formatting = false
+		client.server_capabilities.document_formatting = false
 	end
 end
 
@@ -122,12 +122,13 @@ mason_lspconfig.setup_handlers({
 			-- Here you can configure eclipse.jdt.ls specific settings
 			settings = {
 				java = {
-                    format = {
-                        settings = {
-                            url = os.getenv("HOME") .. "/dotfiles/.config/nvim/language-configs/java/cmsc-132-style.xml",
-                        },
-                    },
-                },
+					format = {
+						settings = {
+							url = os.getenv("HOME")
+								.. "/dotfiles/.config/nvim/language-configs/java/cmsc-132-style.xml",
+						},
+					},
+				},
 			},
 
 			-- Language server `initializationOptions`
