@@ -178,6 +178,11 @@ _G.packer_plugins = {
     path = "/home/ani/.local/share/nvim/site/pack/packer/start/leap.nvim",
     url = "https://github.com/ggandor/leap.nvim"
   },
+  ["linediff.vim"] = {
+    loaded = true,
+    path = "/home/ani/.local/share/nvim/site/pack/packer/start/linediff.vim",
+    url = "https://github.com/AndrewRadev/linediff.vim"
+  },
   ["lspkind.nvim"] = {
     loaded = true,
     path = "/home/ani/.local/share/nvim/site/pack/packer/start/lspkind.nvim",
@@ -267,11 +272,6 @@ _G.packer_plugins = {
     loaded = true,
     path = "/home/ani/.local/share/nvim/site/pack/packer/start/project.nvim",
     url = "https://github.com/ahmedkhalf/project.nvim"
-  },
-  ["spellsitter.nvim"] = {
-    loaded = true,
-    path = "/home/ani/.local/share/nvim/site/pack/packer/start/spellsitter.nvim",
-    url = "https://github.com/lewis6991/spellsitter.nvim"
   },
   ["symbols-outline.nvim"] = {
     config = { "\27LJ\2\nJ\0\0\3\0\4\0\a6\0\0\0'\2\1\0B\0\2\0029\0\2\0005\2\3\0B\0\2\1K\0\1\0\1\0\1\twrap\2\nsetup\20symbols-outline\frequire\0" },
