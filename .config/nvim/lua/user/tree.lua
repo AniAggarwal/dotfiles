@@ -6,6 +6,7 @@ end
 tree.setup({
 
 	disable_netrw = true,
+    open_on_setup = true,
 
 	diagnostics = {
 		enable = true,

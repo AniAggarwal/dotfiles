@@ -43,3 +43,4 @@ vim.opt.foldmethod = "expr" -- Use nvim-treesitter for folding
 vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
 vim.opt.foldenable = false -- leave file unfolded by default
 vim.opt.textwidth = 80
+vim.opt.spelloptions:append({ "camel" })

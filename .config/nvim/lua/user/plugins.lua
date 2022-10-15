@@ -60,12 +60,17 @@ return packer.startup(function(use)
 	use({ "stevearc/dressing.nvim" }) -- use nice ui for all vim.input and vim.select events
 
 	-- Symbols outline on side of code
-	use({
-		"simrat39/symbols-outline.nvim",
-		config = function()
-			require("symbols-outline").setup({ wrap = true })
-		end,
-	})
+	-- use({
+	-- 	"simrat39/symbols-outline.nvim",
+	-- 	config = function()
+	-- 		require("symbols-outline").setup({ wrap = true })
+	-- 	end,
+	-- })
+
+    use {
+        "rbjorklin/symbols-outline.nvim",
+        branch = "fix-outline-detection",
+    }
 
 	-- LSP
 	use({ "neovim/nvim-lspconfig" }) -- enable LSP
@@ -129,7 +134,7 @@ return packer.startup(function(use)
 	use({ "windwp/nvim-autopairs" }) -- Autopairs, integrates with both cmp and treesitter
 	use({ "numToStr/Comment.nvim" }) -- comment out easily
 	use({ "folke/todo-comments.nvim" }) -- Display and find todo and similar comments
-    use({"https://github.com/AndrewRadev/linediff.vim"}) -- diff on line selections
+	use({ "AndrewRadev/linediff.vim" }) -- diff on line selections
 
 	-- Telescope
 	use({ "nvim-telescope/telescope.nvim" })
@@ -150,7 +155,7 @@ return packer.startup(function(use)
 	use({ "folke/which-key.nvim" }) -- show key maps
 
 	use({ "lewis6991/impatient.nvim" }) -- faster startuptime
-    use({ "dstein64/vim-startuptime"}) -- show how long plugins take to load
+	use({ "dstein64/vim-startuptime" }) -- show how long plugins take to load
 
 	-- Automatically set up your configuration after cloning packer.nvim
 	-- Put this at the end after all plugins

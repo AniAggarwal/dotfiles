@@ -3,7 +3,6 @@ if not status_ok then
 	return
 end
 
--- TODO set up manual keybinds
 which_key.setup({
 	window = {
 		border = "rounded", -- none, single, double, shadow
@@ -26,7 +25,6 @@ which_key.register({
 	e = { "<cmd>NvimTreeToggle<CR>", "Explorer" },
 
 	-- Telescope
-	-- TODO look into using Telescope for marks and jumplist
 	f = {
 		name = "Telescope",
 		r = { "<cmd>Telescope resume<CR>", "Resume" },
@@ -88,14 +86,18 @@ which_key.register({
 		K = { vim.lsp.buf.hover, "Hover" },
 		I = { vim.lsp.buf.implementation, "To implementation" },
 		l = { vim.diagnostic.open_float, "Open Diagnostic" },
-		f = { vim.lsp.buf.formatting, "Format" },
+		f = { vim.lsp.buf.format, "Format" },
 		s = { vim.lsp.buf.signature_help, "Signature help" },
 		a = { vim.lsp.buf.code_action, "Code action" },
 		n = { vim.lsp.buf.rename, "Rename" },
 
-		-- TODO make this work
+		-- TODO: make this work
 		-- keymap("n", "gcp", "yy <bar> gcc <bar> p", opts)
 	},
+    z = {
+        n = { "]s1z=", "Correct next misspelling."},
+        p = { "[s1z=", "Correct prev misspelling."}
+    }
 }, { prefix = "", mode = "n" })
 
 -- Visual mode maps
