@@ -70,11 +70,10 @@ keymap("x", "<A-k>", ":move '<-2<CR>gv-gv", opts)
 
 -- Command Mode --
 -- Use ctrl+h/j/k/l to move cursor
--- TODO make this work
-keymap("c", "<C-h>", "<Left>", opts)
-keymap("c", "<C-j>", "<Down>", opts)
-keymap("c", "<C-k>", "<Up>", opts)
-keymap("c", "<C-l>", "<Right>", opts)
+keymap("c", "<C-h>", "<Left>", {})
+keymap("c", "<C-j>", "<Down>", {})
+keymap("c", "<C-k>", "<Up>", {})
+keymap("c", "<C-l>", "<Right>", {})
 
 -- Plugins --
 
@@ -93,9 +92,9 @@ vim.keymap.set("n", "[t", function()
 end, { noremap = true, silent = true  })
 
 -- Comment
--- TODO: make this work
+-- TODO: make this work, either here or in whichkey
 -- keymap("n", "gcp", "yy <bar> gcc <bar> p", opts)
--- TODO: look into using Telescope for marks and jumplist
+-- keymap("v", "gcp", "<Plug>comment_toggle_linewise_visual", opts)
 
 -- Trouble
 keymap("n", "gr", "<cmd>TroubleToggle lsp_references<CR>", opts)

@@ -60,30 +60,6 @@ mason_lspconfig.setup_handlers({
 		local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":p:h:t")
 		local workspace_dir = os.getenv("HOME") .. "/.cache/jdtls/workspace/" .. project_name
 		local mount_commands = function()
-			local jdtls = require("jdtls")
-			-- TODO customize keymaps
-			-- Set some keymaps for extra functionality
-			-- vim.keymap.set("n", "<A-o>", function()
-			-- 	jdtls.organize_imports()
-			-- end)
-			-- vim.keymap.set("n", "crv", function()
-			-- 	jdtls.extract_variable(true)
-			-- end)
-			-- vim.keymap.set("v", "crv", function()
-			-- 	jdtls.extract_variable(true)
-			-- end)
-			-- vim.keymap.set("n", "crc", function()
-			-- 	jdtls.extract_variable()
-			-- end)
-			-- vim.keymap.set("v", "crc", function()
-			-- 	jdtls.extract_variable(true)
-			-- end)
-			-- vim.keymap.set("v", "crm", function()
-			-- 	jdtls.extract_method(true)
-			-- end)
-			-- vim.keymap.set("v", "crm", "<Esc><Cmd>lua require('jdtls').extract_method(true)<CR>")
-			-- vim.keymap.set("v", "crm", "<Esc><Cmd>lua require'jdtls'.code_action(true, 'refactor')<CR>")
-
 			require("jdtls.setup").add_commands()
 		end
 		local config = {

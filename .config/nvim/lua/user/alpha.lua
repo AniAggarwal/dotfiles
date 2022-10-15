@@ -3,7 +3,7 @@ if not status_ok then
 	return
 end
 
--- TODO use custom header from file
+-- TODO: use custom header from file
 local dashboard = require("alpha.themes.dashboard")
 dashboard.section.header.val = {
 	[[                               __                ]],
