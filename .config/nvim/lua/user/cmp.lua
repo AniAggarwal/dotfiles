@@ -45,6 +45,7 @@ cmp.setup({
 
 		-- Accept currently selected item. If none selected, `select` first item.
 		-- Set `select` to `false` to only confirm explicitly selected items.
+		-- TODO: resolve copilot un-indenting everytime it is selected with <CR>
 		["<CR>"] = cmp.mapping.confirm({ select = false }),
 
 		["<Tab>"] = cmp.mapping(function(fallback)
@@ -72,7 +73,7 @@ cmp.setup({
 		fields = { "kind", "abbr", "menu" },
 		format = lspkind.cmp_format({
 			mode = "symbol", -- show only symbol annotations
-			maxwidth = 50, -- prevent the popup from showing more than provided characters (e.g 50 will not show more than 50 characters)
+			-- maxwidth = 50, -- prevent the popup from showing more than provided characters (e.g 50 will not show more than 50 characters)
 			-- The function below will be called before any actual modifications from lspkind
 			-- so that you can provide more controls on popup customization. (See [#30](https://github.com/onsails/lspkind-nvim/pull/30))
 			before = function(entry, vim_item)
