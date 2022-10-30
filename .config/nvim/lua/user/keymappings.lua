@@ -38,7 +38,6 @@ keymap("n", "<S-q>", "<cmd>Bdelete<CR>", opts)
 -- Better paste - pasting on highlighted texts keeps originally yanked text
 keymap("v", "p", '"_dP', opts)
 
-
 -- Insert --
 -- Press jk fast to enter
 keymap("i", "jk", "<ESC>", opts)
@@ -51,7 +50,6 @@ keymap("i", "<C-h>", "<C-o>dw", opts)
 
 -- Toggle spell checking
 keymap("n", "z-", "<cmd>set spell!<CR>", opts)
-
 
 -- Visual --
 -- Stay in indent mode after indenting
@@ -66,7 +64,6 @@ keymap("v", "<A-j>", ":m .+1<CR>==", opts)
 -- Move text up/down
 keymap("x", "<A-j>", ":move '>+1<CR>gv-gv", opts)
 keymap("x", "<A-k>", ":move '<-2<CR>gv-gv", opts)
-
 
 -- Command Mode --
 -- Use ctrl+h/j/k/l to move cursor
@@ -84,17 +81,30 @@ vim.keymap.set("n", "K", vim.lsp.buf.hover, { noremap = true, silent = true })
 
 -- Todo Comments
 vim.keymap.set("n", "]t", function()
-  require("todo-comments").jump_next()
+	require("todo-comments").jump_next()
 end, { noremap = true, silent = true })
 
 vim.keymap.set("n", "[t", function()
-  require("todo-comments").jump_prev()
-end, { noremap = true, silent = true  })
+	require("todo-comments").jump_prev()
+end, { noremap = true, silent = true })
 
 -- Comment
 -- TODO: make this work, either here or in whichkey
 -- keymap("n", "gcp", "yy <bar> gcc <bar> p", opts)
 -- keymap("v", "gcp", "<Plug>comment_toggle_linewise_visual", opts)
+-- local YankAndComment = function(type)
+-- 	if type == "v" then
+-- 		vim.cmd("normal! `<v`>y")
+-- 	elseif type == "V" then
+-- 		vim.cmd("normal! `<V`>y")
+-- 	elseif type == "char" then
+-- 		vim.cmd("normal! `[v`]y")
+-- 	else
+-- 		return
+-- 	end
+-- 	require("Comment.api").comment.linewise(vim.fn.visualmode())
+-- end
+-- keymap("v", "gcp", "<cmd>YankAndComment(vim.fn.visualmode)<cr>", opts)
 
 -- Trouble
 keymap("n", "gr", "<cmd>TroubleToggle lsp_references<CR>", opts)
@@ -110,18 +120,18 @@ keymap("n", "<S-M-h>", ":BufferLineMovePrev<CR>", opts)
 
 -- Dressing
 vim.keymap.set("n", "z=", function()
-  local word = vim.fn.expand("<cword>")
-  local suggestions = vim.fn.spellsuggest(word)
-  vim.ui.select(
-    suggestions,
-    {},
-    vim.schedule_wrap(function(selected)
-      if selected then
-        vim.api.nvim_feedkeys("ciw" .. selected, "n", true)
-        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, true, true), "n", true)
-      end
-    end)
-  )
+	local word = vim.fn.expand("<cword>")
+	local suggestions = vim.fn.spellsuggest(word)
+	vim.ui.select(
+		suggestions,
+		{},
+		vim.schedule_wrap(function(selected)
+			if selected then
+				vim.api.nvim_feedkeys("ciw" .. selected, "n", true)
+				vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, true, true), "n", true)
+			end
+		end)
+	)
 end)
 
 -- -- DAP
