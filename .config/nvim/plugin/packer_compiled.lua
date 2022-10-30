@@ -276,7 +276,7 @@ _G.packer_plugins = {
   ["symbols-outline.nvim"] = {
     loaded = true,
     path = "/home/ani/.local/share/nvim/site/pack/packer/start/symbols-outline.nvim",
-    url = "https://github.com/rbjorklin/symbols-outline.nvim"
+    url = "https://github.com/simrat39/symbols-outline.nvim"
   },
   ["telescope-fzf-native.nvim"] = {
     loaded = true,

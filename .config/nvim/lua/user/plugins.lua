@@ -60,17 +60,9 @@ return packer.startup(function(use)
 	use({ "stevearc/dressing.nvim" }) -- use nice ui for all vim.input and vim.select events
 
 	-- Symbols outline on side of code
-	-- use({
-	-- 	"simrat39/symbols-outline.nvim",
-	-- 	config = function()
-	-- 		require("symbols-outline").setup({ wrap = true })
-	-- 	end,
-	-- })
-
-    use {
-        "rbjorklin/symbols-outline.nvim",
-        branch = "fix-outline-detection",
-    }
+	use({
+		"simrat39/symbols-outline.nvim",
+	})
 
 	-- LSP
 	use({ "neovim/nvim-lspconfig" }) -- enable LSP
@@ -144,7 +136,7 @@ return packer.startup(function(use)
 	use({ "folke/trouble.nvim" }) -- Shows issues in panel
 
 	-- Treesitter
-	use({ "nvim-treesitter/nvim-treesitter", run = ":TSUpdate" })
+	use({ "nvim-treesitter/nvim-treesitter", run = ":TSUpdate" , commit = "addc129a4f272aba0834bd0a7b6bd4ad5d8c801b"})
 
 	-- Git
 	use({ "lewis6991/gitsigns.nvim" }) -- show sings of git changes
