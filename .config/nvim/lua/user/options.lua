@@ -31,7 +31,6 @@ vim.opt.showcmd = false --
 vim.opt.ruler = false
 vim.opt.numberwidth = 4 -- set number column width to 2 {default 4}
 vim.opt.signcolumn = "yes" -- always show the sign column, otherwise it would shift the text each time
-vim.opt.wrap = false -- display lines as one long line
 vim.opt.scrolloff = 8 -- how many lines of context to show around current line
 vim.opt.sidescrolloff = 8
 vim.opt.guifont = "FiraCode Nerd Font:h17" -- the font used in graphical neovim applications
@@ -42,5 +41,7 @@ vim.g.python3_host_prog = "/home/ani/miniconda3/envs/nvim/bin/python" -- Use nvi
 vim.opt.foldmethod = "expr" -- Use nvim-treesitter for folding
 vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
 vim.opt.foldenable = false -- leave file unfolded by default
-vim.opt.textwidth = 80
-vim.opt.spelloptions:append({ "camel" })
+vim.opt.wrap = false -- display lines as one long line
+vim.opt.textwidth = 80 -- max line length
+vim.opt.spelloptions:append({ "camel" }) -- allow camel case words to be detected correctly for spell check
+vim.api.nvim_create_autocmd("FileType", { pattern = "text", command = "setlocal wrap" }) -- wrap text files
