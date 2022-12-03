@@ -17,3 +17,6 @@ alias icat="kitty +kitten icat"
 
 # Alias for shortening lazygit
 alias lg="lazygit"
+
+# Alias for shortening command to display line length of java files
+alias len-java="find . -iname '*.java' -exec wc -L {} \;"
