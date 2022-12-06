@@ -37,6 +37,7 @@ which_key.register({
 		d = { "<cmd>Telescope diagnostics<CR>", "Diagnostics" },
 		s = { "<cmd>Telescope lsp_document_symbols<CR>", "Document symbols" },
 		T = { "<cmd>TodoTelescope<CR>", "Search TODOs" },
+		L = { "<cmd>Legendary<CR>", "Search with Legendary" },
 	},
 
 	-- Git
@@ -94,10 +95,10 @@ which_key.register({
 		-- TODO: make this work
 		-- keymap("n", "gcp", "yy <bar> gcc <bar> p", opts)
 	},
-    z = {
-        n = { "]s1z=", "Correct next misspelling."},
-        p = { "[s1z=", "Correct prev misspelling."}
-    }
+	z = {
+		n = { "]s1z=", "Correct next misspelling." },
+		p = { "[s1z=", "Correct prev misspelling." },
+	},
 }, { prefix = "", mode = "n" })
 
 -- Visual mode maps
