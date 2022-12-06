@@ -57,7 +57,18 @@ require("dressing").setup({
 		end,
 
 		-- see :help dressing_get_config
-		get_config = nil,
+		get_config = function(opts)
+            -- change order of searches via fuzzy
+			if opts.kind == "legendary.nvim" then
+				return {
+					telescope = {
+						sorter = require("telescope.sorters").fuzzy_with_index_bias({}),
+					},
+				}
+			else
+				return {}
+			end
+		end,
 	},
 	select = {
 		-- Set to false to disable the vim.ui.select implementation
