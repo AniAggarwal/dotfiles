@@ -178,6 +178,11 @@ _G.packer_plugins = {
     path = "/home/ani/.local/share/nvim/site/pack/packer/start/leap.nvim",
     url = "https://github.com/ggandor/leap.nvim"
   },
+  ["legendary.nvim"] = {
+    loaded = true,
+    path = "/home/ani/.local/share/nvim/site/pack/packer/start/legendary.nvim",
+    url = "https://github.com/mrjones2014/legendary.nvim"
+  },
   ["linediff.vim"] = {
     loaded = true,
     path = "/home/ani/.local/share/nvim/site/pack/packer/start/linediff.vim",
