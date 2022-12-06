@@ -105,6 +105,9 @@ compinit
 # Use Neovim as default editor
 export EDITOR="/usr/bin/nvim"
 
+# Use Neovim for man pages
+export MANPAGER='nvim +Man!'
+
 # Add local bin to PATH
 export PATH="$HOME/.local/bin:$PATH"
 
