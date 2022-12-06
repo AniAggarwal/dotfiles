@@ -136,15 +136,19 @@ return packer.startup(function(use)
 	use({ "folke/trouble.nvim" }) -- Shows issues in panel
 
 	-- Treesitter
-	use({ "nvim-treesitter/nvim-treesitter", run = ":TSUpdate" , commit = "addc129a4f272aba0834bd0a7b6bd4ad5d8c801b"})
+	-- Use commit = "addc129a4f272aba0834bd0a7b6bd4ad5d8c801b" if treesitter
+    -- causes conflicts with other plugins
+	use({ "nvim-treesitter/nvim-treesitter", run = ":TSUpdate" })
 
 	-- Git
 	use({ "lewis6991/gitsigns.nvim" }) -- show sings of git changes
 	use({ "kdheepak/lazygit.nvim" }) -- lazygit popup window
 
+	-- Quality of life
 	use({ "kyazdani42/nvim-tree.lua" }) -- Explorer/tree on left side
 	use({ "ahmedkhalf/project.nvim" }) -- easily move between projects
 	use({ "folke/which-key.nvim" }) -- show key maps
+	use({ "mrjones2014/legendary.nvim" }) -- search key maps
 
 	use({ "lewis6991/impatient.nvim" }) -- faster startuptime
 	use({ "dstein64/vim-startuptime" }) -- show how long plugins take to load
