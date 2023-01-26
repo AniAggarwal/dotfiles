@@ -1,4 +1,4 @@
--- Favorite colorschemes: onedark, darkplus, tokyonight
+-- Favorite colorschemes: onedark, darkplus
 local colorscheme = "onedark"
 
 local status_ok, _ = pcall(vim.cmd, "colorscheme " .. colorscheme)

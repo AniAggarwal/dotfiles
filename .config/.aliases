@@ -1,3 +1,4 @@
+
 # Set of aliases to use for both bash and zsh
 alias ls='ls --color=auto'
 alias ll='ls -alFh'
@@ -8,15 +9,20 @@ alias grep='grep --color=auto'
 alias fgrep='fgrep --color=auto'
 alias egrep='egrep --color=auto'
 
-# Add an "alert" alias for long running commands.  Use like so:
-#   sleep 10; alert
-alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
-
-# Alias for displaying images using icat in kitty
-alias icat="kitty +kitten icat"
-
 # Alias for shortening lazygit
 alias lg="lazygit"
 
 # Alias for shortening command to display line length of java files
 alias len-java="find . -iname '*.java' -exec wc -L {} \;"
+
+# Add an "alert" alias for long running commands.  Use like so:
+#   sleep 10; alert
+alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+
+
+# Aliases for kitty terminal emulator
+
+# Alias for displaying images using icat in kitty
+alias icat="kitty +kitten icat"
+# Alias for using kitty wrapper over ssh
+alias kssh="kitty +kitten ssh"
