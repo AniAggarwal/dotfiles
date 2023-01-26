@@ -46,8 +46,6 @@ return packer.startup(function(use)
 	use({ "wbthomason/packer.nvim" }) -- Have packer manage itself
 
 	-- Colorschemes and looks
-	use({ "lunarvim/darkplus.nvim" })
-	use({ "folke/tokyonight.nvim" })
 	use({ "joshdick/onedark.vim" }) -- A lua alternative to look into monsonjeremy/onedark.nvim
 	use({ "kyazdani42/nvim-web-devicons" })
 
