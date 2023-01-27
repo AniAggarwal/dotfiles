@@ -9,6 +9,10 @@ alias grep='grep --color=auto'
 alias fgrep='fgrep --color=auto'
 alias egrep='egrep --color=auto'
 
+alias updt='sudo apt-get update'
+alias upgr='sudo apt-get upgrade'
+alias l-upgr='apt list --upgradable'
+
 # Alias for shortening lazygit
 alias lg="lazygit"
 
