@@ -298,6 +298,11 @@ _G.packer_plugins = {
     path = "/home/ani/.local/share/nvim/site/pack/packer/start/trouble.nvim",
     url = "https://github.com/folke/trouble.nvim"
   },
+  ["vim-arsync"] = {
+    loaded = true,
+    path = "/home/ani/.local/share/nvim/site/pack/packer/start/vim-arsync",
+    url = "https://github.com/KenN7/vim-arsync"
+  },
   ["vim-bbye"] = {
     loaded = true,
     path = "/home/ani/.local/share/nvim/site/pack/packer/start/vim-bbye",

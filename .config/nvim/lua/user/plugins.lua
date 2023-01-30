@@ -135,7 +135,7 @@ return packer.startup(function(use)
 
 	-- Treesitter
 	-- Use commit = "addc129a4f272aba0834bd0a7b6bd4ad5d8c801b" if treesitter
-    -- causes conflicts with other plugins
+	-- causes conflicts with other plugins
 	use({ "nvim-treesitter/nvim-treesitter", run = ":TSUpdate" })
 
 	-- Git
@@ -150,6 +150,8 @@ return packer.startup(function(use)
 
 	use({ "lewis6991/impatient.nvim" }) -- faster startuptime
 	use({ "dstein64/vim-startuptime" }) -- show how long plugins take to load
+
+	use({ "KenN7/vim-arsync" }) -- Automatically sync to remote server
 
 	-- Automatically set up your configuration after cloning packer.nvim
 	-- Put this at the end after all plugins
