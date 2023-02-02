@@ -117,3 +117,5 @@ source $ZSH/oh-my-zsh.sh
 # Set up starship prompt
 eval "$(starship init zsh)"
 
+
+export PATH=$PATH:/home/ani/.spicetify
