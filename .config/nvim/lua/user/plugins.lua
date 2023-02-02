@@ -70,7 +70,21 @@ return packer.startup(function(use)
 	use({ "RRethy/vim-illuminate" })
 	use({ "nvim-lua/plenary.nvim" }) -- Useful lua functions used by lots of plugins
 
+	-- Language specific
 	use({ "mfussenegger/nvim-jdtls" }) -- allows full use of Java jdtls server
+	-- extended C support in LSP
+	use({
+		"p00f/clangd_extensions.nvim",
+		config = function()
+			require("clangd_extensions").setup({
+                server = {
+                    cmd = {
+                        "clangd", "-offset-encoding=utf-16"
+                    }
+                }
+            })
+		end,
+	})
 
 	-- TODO: look into dapui later
 	-- use { "rcarriga/nvim-dap-ui", commit = "d76d6594374fb54abf2d94d6a320f3fd6e9bb2f7" }
@@ -91,15 +105,10 @@ return packer.startup(function(use)
 	-- This starts copilot server
 	use({
 		"zbirenbaum/copilot.lua",
-		event = { "VimEnter" },
+		cmd = "Copilot",
+		event = "InsertEnter",
 		config = function()
-			vim.defer_fn(function()
-				require("copilot").setup({
-					panel = {
-						enabled = true,
-					},
-				})
-			end, 100)
+			require("copilot").setup({})
 		end,
 	})
 	use({
