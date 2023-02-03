@@ -1,9 +1,4 @@
-local status_ok, configs = pcall(require, "nvim-treesitter.configs")
-if not status_ok then
-	return
-end
-
-configs.setup({
+require("nvim-treesitter.configs").setup({
 	ensure_installed = "all", -- one of "all" or a list of languages
 	auto_install = true,
 	ignore_install = { "" }, -- List of parsers to ignore installing
@@ -16,8 +11,8 @@ configs.setup({
 	},
 	indent = {
 		enable = true,
-        -- python indentation doesn't work well with treesitter
-		disable = {"python"},
+		-- python indentation doesn't work well with treesitter
+		disable = { "python" },
 	},
 })
 -- treesitter is being used for folding; if running into issues, reference: https://github.com/nvim-treesitter/nvim-treesitter/wiki/Installation#packernvim

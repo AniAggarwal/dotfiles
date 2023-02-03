@@ -1,10 +1,4 @@
-local status_ok, tree = pcall(require, "nvim-tree")
-if not status_ok then
-	return
-end
-
-tree.setup({
-
+require("nvim-tree").setup({
 	disable_netrw = true,
 
 	diagnostics = {
@@ -30,26 +24,24 @@ tree.setup({
 })
 
 local function open_nvim_tree(data)
+	-- buffer is a directory
+	local directory = vim.fn.isdirectory(data.file) == 1
 
-  -- buffer is a directory
-  local directory = vim.fn.isdirectory(data.file) == 1
+	if not directory then
+		return
+	end
 
-  if not directory then
-    return
-  end
+	-- create a new, empty buffer
+	vim.cmd.enew()
 
-  -- create a new, empty buffer
-  vim.cmd.enew()
+	-- wipe the directory buffer
+	vim.cmd.bw(data.buf)
 
-  -- wipe the directory buffer
-  vim.cmd.bw(data.buf)
+	-- change to the directory
+	vim.cmd.cd(data.file)
 
-  -- change to the directory
-  vim.cmd.cd(data.file)
-
-  -- open the tree
-  require("nvim-tree.api").tree.open()
+	-- open the tree
+	require("nvim-tree.api").tree.open()
 end
-
 
 vim.api.nvim_create_autocmd({ "VimEnter" }, { callback = open_nvim_tree })

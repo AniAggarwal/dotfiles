@@ -44,5 +44,8 @@ vim.opt.foldenable = false -- leave file unfolded by default
 vim.opt.wrap = false -- display lines as one long line
 vim.opt.textwidth = 80 -- max line length
 vim.opt.spelloptions:append({ "camel" }) -- allow camel case words to be detected correctly for spell check
-vim.api.nvim_create_autocmd("FileType", { pattern = "text", command = "setlocal wrap | setlocal tw=0 | setlocal linebreak | setlocal spell" }) -- wrap text files
+vim.api.nvim_create_autocmd(
+	"FileType",
+	{ pattern = "text", command = "setlocal wrap | setlocal tw=0 | setlocal linebreak | setlocal spell" }
+) -- wrap text files
 vim.api.nvim_create_autocmd("FileType", { pattern = "Outline", command = "setlocal nospell" }) -- No spelling on symbols outline

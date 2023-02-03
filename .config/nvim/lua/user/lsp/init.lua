@@ -6,14 +6,6 @@ local capabilities = lsp.protocol.make_client_capabilities()
 capabilities = require("cmp_nvim_lsp").default_capabilities(capabilities)
 capabilities.textDocument.completion.completionItem.snippetSupport = true
 
--- local clangd_capabilities = capabilities
--- clangd_capabilities.textDocument.semanticHighlighting = true
--- Doesn't seem neccesary or isn't doing anything
--- clangd_capabilities.offsetEncoding = {"utf-16"}
--- clangd_capabilities.offset_encoding = "utf-16"
--- print(vim.inspect(clangd_capabilities))
-
-
 local custom_attach = function(client, bufnr)
 	-- Disable so that null-ls' formatting can be used without asking for null-ls or sumneko_lua each time
 	if client.name == "sumneko_lua" then
@@ -36,14 +28,6 @@ mason_lspconfig.setup_handlers({
 			capabilities = capabilities,
 		})
 	end,
-
-	-- ["clangd"] = function()
-	-- 	lspconfig.clangd.setup({
-	-- 		cmd = { "clangd" , "--offset-encoding=utf-16" },
-	-- 		on_attach = custom_attach,
-	-- 		capabilities = capabilities,
-	-- 	})
-	-- end,
 
 	-- Custom handler for sumneko_lua
 	["sumneko_lua"] = function()

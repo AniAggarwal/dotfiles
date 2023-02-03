@@ -24,4 +24,3 @@ end
 -- TODO: make this work, either here or in whichkey
 -- vim.api.nvim_set_keymap("x", "gy", "<ESC><CMD>lua ___gdc(vim.fn.visualmode())<CR>", { silent = true, noremap = true })
 -- vim.api.nvim_set_keymap("n", "gy", "<CMD>set operatorfunc=v:lua.___gdc<CR>g@", { silent = true, noremap = true })
-

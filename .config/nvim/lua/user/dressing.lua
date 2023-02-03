@@ -58,7 +58,7 @@ require("dressing").setup({
 
 		-- see :help dressing_get_config
 		get_config = function(opts)
-            -- change order of searches via fuzzy
+			-- change order of searches via fuzzy
 			if opts.kind == "legendary.nvim" then
 				return {
 					telescope = {
