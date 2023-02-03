@@ -95,7 +95,6 @@ _G.packer_plugins = {
     url = "https://github.com/akinsho/bufferline.nvim"
   },
   ["clangd_extensions.nvim"] = {
-    config = { "\27LJ\2\n‡\1\0\0\5\0\b\0\v6\0\0\0'\2\1\0B\0\2\0029\0\2\0005\2\6\0005\3\4\0005\4\3\0=\4\5\3=\3\a\2B\0\2\1K\0\1\0\vserver\1\0\0\bcmd\1\0\0\1\3\0\0\vclangd\28-offset-encoding=utf-16\nsetup\22clangd_extensions\frequire\0" },
     loaded = true,
     path = "/home/ani/.local/share/nvim/site/pack/packer/start/clangd_extensions.nvim",
     url = "https://github.com/p00f/clangd_extensions.nvim"
@@ -131,7 +130,6 @@ _G.packer_plugins = {
     url = "https://github.com/saadparwaiz1/cmp_luasnip"
   },
   ["copilot-cmp"] = {
-    config = { "\27LJ\2\n]\0\0\3\0\4\0\a6\0\0\0'\2\1\0B\0\2\0029\0\2\0005\2\3\0B\0\2\1K\0\1\0\1\0\1\vmethod\26getCompletionsCycling\nsetup\16copilot_cmp\frequire\0" },
     load_after = {
       ["copilot.lua"] = true
     },
@@ -143,7 +141,6 @@ _G.packer_plugins = {
   ["copilot.lua"] = {
     after = { "copilot-cmp" },
     commands = { "Copilot" },
-    config = { "\27LJ\2\n9\0\0\3\0\3\0\a6\0\0\0'\2\1\0B\0\2\0029\0\2\0004\2\0\0B\0\2\1K\0\1\0\nsetup\fcopilot\frequire\0" },
     loaded = false,
     needs_bufread = false,
     only_cond = false,
@@ -343,10 +340,6 @@ _G.packer_plugins = {
 }
 
 time([[Defining packer_plugins]], false)
--- Config for: clangd_extensions.nvim
-time([[Config for clangd_extensions.nvim]], true)
-try_loadstring("\27LJ\2\n‡\1\0\0\5\0\b\0\v6\0\0\0'\2\1\0B\0\2\0029\0\2\0005\2\6\0005\3\4\0005\4\3\0=\4\5\3=\3\a\2B\0\2\1K\0\1\0\vserver\1\0\0\bcmd\1\0\0\1\3\0\0\vclangd\28-offset-encoding=utf-16\nsetup\22clangd_extensions\frequire\0", "config", "clangd_extensions.nvim")
-time([[Config for clangd_extensions.nvim]], false)
 
 -- Command lazy-loads
 time([[Defining lazy-load commands]], true)

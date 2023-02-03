@@ -72,19 +72,7 @@ return packer.startup(function(use)
 
 	-- Language specific
 	use({ "mfussenegger/nvim-jdtls" }) -- allows full use of Java jdtls server
-	-- extended C support in LSP
-	use({
-		"p00f/clangd_extensions.nvim",
-		config = function()
-			require("clangd_extensions").setup({
-                server = {
-                    cmd = {
-                        "clangd", "-offset-encoding=utf-16"
-                    }
-                }
-            })
-		end,
-	})
+	use({ "p00f/clangd_extensions.nvim" }) -- extended C support in LSP
 
 	-- TODO: look into dapui later
 	-- use { "rcarriga/nvim-dap-ui", commit = "d76d6594374fb54abf2d94d6a320f3fd6e9bb2f7" }
@@ -100,33 +88,17 @@ return packer.startup(function(use)
 	use({ "onsails/lspkind.nvim" }) -- auto icons in cmp
 
 	-- Github Copilot
-	-- use({ "https://github.com/github/copilot.vim" }) -- Only needed to config copilot.lua first time
 	-- Intergrate Github Copilot with nvim-cmp
-	-- This starts copilot server
-	use({
-		"zbirenbaum/copilot.lua",
-		cmd = "Copilot",
-		event = "InsertEnter",
-		config = function()
-			require("copilot").setup({})
-		end,
-	})
-	use({
-		"zbirenbaum/copilot-cmp",
-		after = { "copilot.lua" },
-		config = function()
-			require("copilot_cmp").setup({
-				method = "getCompletionsCycling",
-			})
-		end,
-	})
+	-- This lazy loads copilot server
+	use({ "zbirenbaum/copilot.lua", cmd = "Copilot", event = "InsertEnter" })
+	use({ "zbirenbaum/copilot-cmp", after = { "copilot.lua" } })
 
 	-- Snippet
 	use({ "L3MON4D3/LuaSnip" }) -- Snippet engine for cmp_luasnip
 	use({ "rafamadriz/friendly-snippets" }) -- Extra snippets
 
 	-- Movement and Productivity
-	use({ "https://github.com/knubie/vim-kitty-navigator", run = "cp ./*.py ~/.config/kitty/" }) -- for movement between kitty windows
+	use({ "knubie/vim-kitty-navigator", run = "cp ./*.py ~/.config/kitty/" }) -- for movement between kitty windows
 	use({ "kylechui/nvim-surround" }) -- surround text with stuff
 	use({ "ggandor/leap.nvim" }) -- quick movement
 	use({ "tpope/vim-repeat" }) -- allow repeating commands
@@ -143,8 +115,6 @@ return packer.startup(function(use)
 	use({ "folke/trouble.nvim" }) -- Shows issues in panel
 
 	-- Treesitter
-	-- Use commit = "addc129a4f272aba0834bd0a7b6bd4ad5d8c801b" if treesitter
-	-- causes conflicts with other plugins
 	use({ "nvim-treesitter/nvim-treesitter", run = ":TSUpdate" })
 
 	-- Git
