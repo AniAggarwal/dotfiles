@@ -1,7 +1,4 @@
-local status_ok, bufferline = pcall(require, "bufferline")
-if not status_ok then
-	return
-end
+local bufferline = require("bufferline")
 
 bufferline.setup({
 
@@ -20,8 +17,8 @@ bufferline.setup({
 	},
 	highlights = {
 		fill = {
-            -- Manually filling background to have same fill as theme
-            bg = "#282C34"
+			-- Manually filling background to have same fill as theme
+			bg = "#282C34",
 		},
 	},
 })

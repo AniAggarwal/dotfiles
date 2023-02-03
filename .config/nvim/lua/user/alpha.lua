@@ -1,7 +1,4 @@
-local status_ok, alpha = pcall(require, "alpha")
-if not status_ok then
-	return
-end
+local alpha = require("alpha")
 
 -- TODO: use custom header from file
 local dashboard = require("alpha.themes.dashboard")
@@ -25,7 +22,7 @@ dashboard.section.buttons.val = {
 }
 
 local function footer()
-    -- Below doesn't work as packer_plugins table is empty initally
+	-- Below doesn't work as packer_plugins table is empty initally
 	-- local plugins_count = #vim.tbl_keys(packer_plugins or {})
 	local plugins_count = vim.fn.len(vim.fn.globpath("~/.local/share/nvim/site/pack/packer/start", "*", 0, 1))
 	local v = vim.version()

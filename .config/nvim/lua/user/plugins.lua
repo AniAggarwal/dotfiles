@@ -88,10 +88,26 @@ return packer.startup(function(use)
 	use({ "onsails/lspkind.nvim" }) -- auto icons in cmp
 
 	-- Github Copilot
+	-- use({ "https://github.com/github/copilot.vim" }) -- Only needed to config copilot.lua first time
 	-- Intergrate Github Copilot with nvim-cmp
-	-- This lazy loads copilot server
-	use({ "zbirenbaum/copilot.lua", cmd = "Copilot", event = "InsertEnter" })
-	use({ "zbirenbaum/copilot-cmp", after = { "copilot.lua" } })
+	-- This starts copilot server
+	use({
+		"zbirenbaum/copilot.lua",
+		cmd = "Copilot",
+		event = "InsertEnter",
+		config = function()
+			require("copilot").setup()
+		end,
+	})
+	use({
+		"zbirenbaum/copilot-cmp",
+		after = { "copilot.lua" },
+		config = function()
+			require("copilot_cmp").setup({
+				method = "getCompletionsCycling",
+			})
+		end,
+	})
 
 	-- Snippet
 	use({ "L3MON4D3/LuaSnip" }) -- Snippet engine for cmp_luasnip
@@ -99,8 +115,21 @@ return packer.startup(function(use)
 
 	-- Movement and Productivity
 	use({ "knubie/vim-kitty-navigator", run = "cp ./*.py ~/.config/kitty/" }) -- for movement between kitty windows
-	use({ "kylechui/nvim-surround" }) -- surround text with stuff
-	use({ "ggandor/leap.nvim" }) -- quick movement
+
+	-- surround text with stuff
+	use({
+		"kylechui/nvim-surround",
+		config = function()
+			require("nvim-surround").setup()
+		end,
+	})
+	use({
+		"ggandor/leap.nvim",
+		config = function()
+			require("leap").set_default_keymaps()
+		end,
+	}) -- quick movement
+
 	use({ "tpope/vim-repeat" }) -- allow repeating commands
 	use({ "windwp/nvim-autopairs" }) -- Autopairs, integrates with both cmp and treesitter
 	use({ "numToStr/Comment.nvim" }) -- comment out easily
@@ -127,7 +156,12 @@ return packer.startup(function(use)
 	use({ "folke/which-key.nvim" }) -- show key maps
 	use({ "mrjones2014/legendary.nvim" }) -- search key maps
 
-	use({ "lewis6991/impatient.nvim" }) -- faster startuptime
+	use({
+		"lewis6991/impatient.nvim",
+		config = function()
+			require("impatient").enable_profile()
+		end,
+	}) -- faster startuptime
 	use({ "dstein64/vim-startuptime" }) -- show how long plugins take to load
 
 	use({ "KenN7/vim-arsync" }) -- Automatically sync to remote server
