@@ -6,6 +6,7 @@ require("clangd_extensions").setup({
 		cmd = {
 			"clangd",
 			"-offset-encoding=utf-16",
+            "--fallback-style=/home/ani/.config/nvim/language-configs/c/.clang-format"
 		},
 	},
 })
