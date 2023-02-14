@@ -7,12 +7,11 @@ capabilities = require("cmp_nvim_lsp").default_capabilities(capabilities)
 capabilities.textDocument.completion.completionItem.snippetSupport = true
 
 local custom_attach = function(client, bufnr)
-	-- Disable so that null-ls' formatting can be used without asking for null-ls or sumneko_lua each time
-	if client.name == "sumneko_lua" then
+	-- Disable so that null-ls' formatting can be used without asking for null-ls or lua_ls each time
+	if client.name == "lua_ls" then
 		client.server_capabilities.document_formatting = false
 	end
 end
-
 
 require("mason").setup()
 local mason_lspconfig = require("mason-lspconfig")
@@ -28,13 +27,11 @@ mason_lspconfig.setup_handlers({
 			capabilities = capabilities,
 		})
 	end,
-
-	-- Custom handler for sumneko_lua
-	["sumneko_lua"] = function()
-		lspconfig.sumneko_lua.setup({
+	-- Custom handler for lua_ls
+	["lua_ls"] = function()
+		lspconfig.lua_ls.setup({
 			on_attach = custom_attach,
 			capabilities = capabilities,
-
 			settings = {
 				Lua = {
 					-- Tells lua that vim and use exist for nvim configuration
@@ -48,14 +45,13 @@ mason_lspconfig.setup_handlers({
 						},
 					},
 					format = {
-						-- disable sumneko_lua's formatting to use null-ls' instead
+						-- disable lua_ls's formatting to use null-ls' instead
 						enable = false,
 					},
 				},
 			},
 		})
 	end,
-
 	["jdtls"] = function()
 		local jdtls_path = vim.fn.stdpath("data") .. "/mason/packages/jdtls"
 		local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":p:h:t")
@@ -93,9 +89,7 @@ mason_lspconfig.setup_handlers({
 				"-data",
 				workspace_dir,
 			},
-
 			root_dir = require("jdtls.setup").find_root({ ".git", "mvnw", "gradlew" }),
-
 			-- Here you can configure eclipse.jdt.ls specific settings
 			settings = {
 				java = {
@@ -107,7 +101,6 @@ mason_lspconfig.setup_handlers({
 					},
 				},
 			},
-
 			-- Language server `initializationOptions`
 			-- You need to extend the `bundles` with paths to jar files
 			-- if you want to use additional eclipse.jdt.ls plugins.
@@ -131,7 +124,6 @@ mason_lspconfig.setup_handlers({
 		})
 	end,
 })
-
 
 -- Change diagnostic signs.
 fn.sign_define("DiagnosticSignError", { numhl = "LspDiagnosticsLineNrError" })
