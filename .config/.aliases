@@ -1,9 +1,7 @@
 
 # Set of aliases to use for both bash and zsh
-alias ls='ls --color=auto'
-alias ll='ls -alFh'
-alias la='ls -A'
-alias l='ls -CF'
+alias ls='exa --color=auto'
+alias ll='exa -alFh --icons'
 
 alias grep='grep --color=auto'
 alias fgrep='fgrep --color=auto'
