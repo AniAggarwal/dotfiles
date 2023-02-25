@@ -19,3 +19,6 @@ unenroll
 unenrolled
 whitespace
 len
+docstrings
+Javadoc
+Doxygen
