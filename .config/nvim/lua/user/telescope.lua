@@ -16,9 +16,12 @@ telescope.setup({
 			},
 		},
 		hidden = true,
+		layout_strategy = "horizontal",
 		layout_config = {
-            preview_width = 0.5,
-            width = 0.85,
+			horizontal = {
+				preview_width = 0.5,
+			},
+			width = 0.85,
 		},
 	},
 	pickers = {
