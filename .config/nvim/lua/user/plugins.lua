@@ -63,9 +63,10 @@ return packer.startup(function(use)
 	})
 
 	-- LSP
+	use({ "williamboman/mason.nvim" })
+	use({ "williamboman/mason-lspconfig.nvim" }) -- grab lsp and similar
 	use({ "neovim/nvim-lspconfig" }) -- enable LSP
-	use({ "williamboman/mason.nvim", "williamboman/mason-lspconfig.nvim" }) -- grab lsp and similar
-	use({ "mfussenegger/nvim-dap" }) -- For debugger
+
 	use({ "jose-elias-alvarez/null-ls.nvim" }) -- for formatters and linters
 	use({ "RRethy/vim-illuminate" })
 	use({ "nvim-lua/plenary.nvim" }) -- Useful lua functions used by lots of plugins
@@ -74,8 +75,9 @@ return packer.startup(function(use)
 	use({ "mfussenegger/nvim-jdtls" }) -- allows full use of Java jdtls server
 	use({ "p00f/clangd_extensions.nvim" }) -- extended C support in LSP
 
-	-- TODO: look into dapui later
-	-- use { "rcarriga/nvim-dap-ui", commit = "d76d6594374fb54abf2d94d6a320f3fd6e9bb2f7" }
+	-- DAP
+	use({ "mfussenegger/nvim-dap" }) -- For debugger
+	use({ "jay-babu/mason-nvim-dap.nvim" })
 
 	-- Completion
 	use({ "hrsh7th/nvim-cmp" }) -- use nvim-cmp as completion engine
@@ -151,7 +153,8 @@ return packer.startup(function(use)
 	use({ "kdheepak/lazygit.nvim" }) -- lazygit popup window
 
 	-- Quality of life
-	use({ "kyazdani42/nvim-tree.lua" }) -- Explorer/tree on left side
+	-- TODO: remove pinned commit once memory leak is fixed
+	use({ "kyazdani42/nvim-tree.lua", commit = "8b8d457" }) -- Explorer/tree on left side
 	use({ "ahmedkhalf/project.nvim" }) -- easily move between projects
 	use({ "folke/which-key.nvim" }) -- show key maps
 	use({ "mrjones2014/legendary.nvim" }) -- search key maps
