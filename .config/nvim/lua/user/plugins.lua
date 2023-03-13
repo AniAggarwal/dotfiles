@@ -74,10 +74,21 @@ return packer.startup(function(use)
 	-- Language specific
 	use({ "mfussenegger/nvim-jdtls" }) -- allows full use of Java jdtls server
 	use({ "p00f/clangd_extensions.nvim" }) -- extended C support in LSP
+	use({
+		"folke/neodev.nvim",
+		config = function()
+			require("neodev").setup({
+				library = { plugins = { "nvim-dap-ui" }, types = true },
+			})
+		end,
+	}) -- lsp and docs for neovim lua api
 
 	-- DAP
 	use({ "mfussenegger/nvim-dap" }) -- For debugger
 	use({ "jay-babu/mason-nvim-dap.nvim" })
+	use({ "rcarriga/nvim-dap-ui", requires = { "mfussenegger/nvim-dap" } })
+	use({ "nvim-telescope/telescope-dap.nvim" })
+	use({ "theHamsta/nvim-dap-virtual-text" })
 
 	-- Completion
 	use({ "hrsh7th/nvim-cmp" }) -- use nvim-cmp as completion engine
@@ -153,8 +164,7 @@ return packer.startup(function(use)
 	use({ "kdheepak/lazygit.nvim" }) -- lazygit popup window
 
 	-- Quality of life
-	-- TODO: remove pinned commit once memory leak is fixed
-	use({ "kyazdani42/nvim-tree.lua", commit = "8b8d457" }) -- Explorer/tree on left side
+	use({ "kyazdani42/nvim-tree.lua" }) -- Explorer/tree on left side
 	use({ "ahmedkhalf/project.nvim" }) -- easily move between projects
 	use({ "folke/which-key.nvim" }) -- show key maps
 	use({ "mrjones2014/legendary.nvim" }) -- search key maps

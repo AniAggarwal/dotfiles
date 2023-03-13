@@ -61,6 +61,19 @@ which_key.register({
 		"<cmd>SymbolsOutline<CR>",
 		"Symbols Outline",
 	},
+
+	-- Nvim DAP
+	d = {
+		name = "DAP",
+		b = { "<cmd>lua require'dap'.toggle_breakpoint()<CR>", "Toggle breakpoint" },
+		B = { "<cmd>lua require'dap'.set_breakpoint(vim.fn.input('Breakpoint condition: '))<CR>", "Set breakpoint" },
+		e = { "<cmd>lua require'dap'.set_exception_breakpoints({'all'})<CR>", "Exception breakpoints" },
+		l = { "<cmd>lua require'dap'.set_breakpoint(nil, nil, vim.fn.input('Log point message: '))<CR>", "Log point" },
+
+		S = { "<cmd>lua require'dap'.close()<CR>", "Stop" },
+		w = { "<cmd>lua require'dap.ui.widgets'.hover()<CR>", "Hover info" },
+		u = { "<cmd>lua require'dapui'.toggle()<CR>", "Toggle DAP UI" },
+	},
 }, { prefix = "<leader>", mode = "n" })
 
 -- Leader maps in visual mode

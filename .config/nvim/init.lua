@@ -25,4 +25,4 @@ require("user.todo_comments")
 require("user.symbols_outline")
 require("user.legendary")
 require("user.whichkey") -- must be registered after legendary
-
+require("user.dap")
