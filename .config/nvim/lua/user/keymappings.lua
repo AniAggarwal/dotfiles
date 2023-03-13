@@ -79,6 +79,13 @@ vim.keymap.set("n", "]g", vim.diagnostic.goto_next, { noremap = true, silent = t
 vim.keymap.set("n", "[g", vim.diagnostic.goto_prev, { noremap = true, silent = true })
 vim.keymap.set("n", "K", vim.lsp.buf.hover, { noremap = true, silent = true })
 
+-- DAP
+
+keymap("n", "<F5>", "<cmd>lua require'dap'.continue()<CR>", opts)
+keymap("n", "<F6>", "<cmd>lua require'dap'.step_into()<CR>", opts)
+keymap("n", "<F7>", "<cmd>lua require'dap'.step_over()<CR>", opts)
+keymap("n", "<F8>", "<cmd>lua require'dap'.step_out()<CR>", opts)
+
 -- Todo Comments
 vim.keymap.set("n", "]t", function()
 	require("todo-comments").jump_next()
@@ -133,14 +140,3 @@ vim.keymap.set("n", "z=", function()
 		end)
 	)
 end)
-
--- -- DAP
--- keymap("n", "<leader>db", "<cmd>lua require'dap'.toggle_breakpoint()<cr>", opts)
--- keymap("n", "<leader>dc", "<cmd>lua require'dap'.continue()<cr>", opts)
--- keymap("n", "<leader>di", "<cmd>lua require'dap'.step_into()<cr>", opts)
--- keymap("n", "<leader>do", "<cmd>lua require'dap'.step_over()<cr>", opts)
--- keymap("n", "<leader>dO", "<cmd>lua require'dap'.step_out()<cr>", opts)
--- keymap("n", "<leader>dr", "<cmd>lua require'dap'.repl.toggle()<cr>", opts)
--- keymap("n", "<leader>dl", "<cmd>lua require'dap'.run_last()<cr>", opts)
--- keymap("n", "<leader>du", "<cmd>lua require'dapui'.toggle()<cr>", opts)
--- keymap("n", "<leader>dt", "<cmd>lua require'dap'.terminate()<cr>", opts)

@@ -17,6 +17,9 @@ require("mason").setup()
 local mason_lspconfig = require("mason-lspconfig")
 mason_lspconfig.setup()
 
+-- must require neodev before lspconfig
+require("neodev").setup()
+
 local lspconfig = require("lspconfig")
 
 mason_lspconfig.setup_handlers({
