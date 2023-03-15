@@ -71,7 +71,7 @@ which_key.register({
 		l = { "<cmd>lua require'dap'.set_breakpoint(nil, nil, vim.fn.input('Log point message: '))<CR>", "Log point" },
 
 		S = { "<cmd>lua require'dap'.close()<CR>", "Stop" },
-		w = { "<cmd>lua require'dap.ui.widgets'.hover()<CR>", "Hover info" },
+		k = { "<cmd>lua require'dap.ui.widgets'.hover()<CR>", "Hover info" },
 		u = { "<cmd>lua require'dapui'.toggle()<CR>", "Toggle DAP UI" },
 	},
 }, { prefix = "<leader>", mode = "n" })

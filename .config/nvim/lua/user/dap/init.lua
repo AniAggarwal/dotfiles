@@ -12,26 +12,30 @@ require("mason-nvim-dap").setup_handlers({
 	function(source_name)
 		require("mason-nvim-dap.automatic_setup")(source_name)
 	end,
-	codelldb = function(source_name)
-		dap.adapters.codelldb = {
-			type = "server",
-			port = "${port}",
-			executable = {
-				command = "/home/ani/.local/share/nvim/mason/packages/codelldb/codelldb",
-				args = { "--port", "${port}" },
-			},
+	cppdbg = function(source_name)
+		dap.adapters.cppdbg = {
+			id = "cppdbg",
+			type = "executable",
+			command = "/home/ani/.local/share/nvim/mason/packages/cpptools/extension/debugAdapters/bin/OpenDebugAD7",
 		}
 
 		dap.configurations.c = {
 			{
 				name = "Launch file",
-				type = "codelldb",
+				type = "cppdbg",
 				request = "launch",
 				program = function()
 					return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/", "file")
 				end,
 				cwd = "${workspaceFolder}",
 				stopOnEntry = false,
+			},
+		}
+		setupCommands = {
+			{
+				text = "-enable-pretty-printing",
+				description = "enable pretty printing",
+				ignoreFailures = false,
 			},
 		}
 	end,
