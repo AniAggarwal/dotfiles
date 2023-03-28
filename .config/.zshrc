@@ -1,3 +1,6 @@
+# Measures speed of zsh startup
+# zmodload zsh/zprof
+
 HISTFILE=~/.histfile
 HISTSIZE=10000
 SAVEHIST=10000
@@ -39,6 +42,11 @@ fi
 unset __conda_setup
 # <<< conda initialize <<<
 
+# TODO: see if this is needed
+# To keep qtile from always being active
+# if [ "$CONDA_DEFAULT_ENV" -eq "qtile-env" ]; then
+#     conda deactivate
+# fi
 
 ########################
 ###### Oh My Zsh #######
@@ -54,7 +62,6 @@ plugins=(
     git
     python
     sudo 
-    # dirhistory # causing issues with clone-in-kitty so removed for now
     zsh-autosuggestions
     zsh-syntax-highlighting
     zsh-vi-mode 
@@ -84,6 +91,23 @@ ZVM_KEYTIMEOUT=0.1
 function zvm_after_init() {
     # Use FZF's completion and keybinds
     [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh 
+
+    export FZF_CTRL_T_OPTS="
+      --preview 'bat -n --color=always {}'
+      --bind 'ctrl-/:change-preview-window(down|hidden|)'"
+
+    export FZF_CTRL_R_OPTS="
+      --preview 'echo {}' --preview-window up:3:hidden:wrap
+      --bind 'ctrl-/:toggle-preview'
+      --color header:italic
+      --header 'Press CTRL-/ to show full command.'"
+    export FZF_ALT_C_OPTS="--preview 'tree -C {}'"
+
+    # export FZF_DEFAULT_COMMAND="rg --files --hidden --follow -g!{**/.git/*,/home/ani/miniconda3/}"
+    export FZF_DEFAULT_COMMAND='fdfind --type f --strip-cwd-prefix --hidden'
+    # export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow'
+
+
 
     bindkey '^ ' autosuggest-accept
 
@@ -119,3 +143,7 @@ eval "$(starship init zsh)"
 
 
 export PATH=$PATH:/home/ani/.spicetify
+
+
+# Completes measurement of zsh startup speed
+# zprof
