@@ -1,7 +1,7 @@
 -- Must be required in this order
 require("mason").setup()
 require("mason-nvim-dap").setup({
-	ensure_installed = { "codelldb" },
+	ensure_installed = { "cppdbg" },
 	automatic_setup = true,
 })
 local dap = require("dap")
