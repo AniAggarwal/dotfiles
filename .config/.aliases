@@ -3,6 +3,8 @@
 alias ls='exa --color=auto'
 alias ll='exa -alFh --icons'
 
+alias fd='fdfind'
+
 alias grep='grep --color=auto'
 alias fgrep='fgrep --color=auto'
 alias egrep='egrep --color=auto'
