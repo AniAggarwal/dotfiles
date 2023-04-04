@@ -101,9 +101,6 @@ which_key.register({
 		s = { vim.lsp.buf.signature_help, "Signature help" },
 		a = { vim.lsp.buf.code_action, "Code action" },
 		n = { vim.lsp.buf.rename, "Rename" },
-
-		-- TODO: make this work
-		-- keymap("n", "gcp", "yy <bar> gcc <bar> p", opts)
 	},
 	z = {
 		n = { "]s1z=", "Correct next misspelling." },

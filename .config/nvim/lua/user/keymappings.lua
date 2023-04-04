@@ -95,23 +95,12 @@ vim.keymap.set("n", "[t", function()
 	require("todo-comments").jump_prev()
 end, { noremap = true, silent = true })
 
--- Comment
--- TODO: make this work, either here or in whichkey
--- keymap("n", "gcp", "yy <bar> gcc <bar> p", opts)
--- keymap("v", "gcp", "<Plug>comment_toggle_linewise_visual", opts)
--- local YankAndComment = function(type)
--- 	if type == "v" then
--- 		vim.cmd("normal! `<v`>y")
--- 	elseif type == "V" then
--- 		vim.cmd("normal! `<V`>y")
--- 	elseif type == "char" then
--- 		vim.cmd("normal! `[v`]y")
--- 	else
--- 		return
--- 	end
--- 	require("Comment.api").comment.linewise(vim.fn.visualmode())
--- end
--- keymap("v", "gcp", "<cmd>YankAndComment(vim.fn.visualmode)<cr>", opts)
+-- Comment and copy
+vim.keymap.set("n", "gcp", "yy<Plug>(comment_toggle_linewise_current)p")
+vim.keymap.set(
+  "x", "gcp",
+  ":'{,'}y<cr>gv<Plug>(comment_toggle_linewise_visual)`>p"
+)
 
 -- Trouble
 keymap("n", "gr", "<cmd>TroubleToggle lsp_references<CR>", opts)
