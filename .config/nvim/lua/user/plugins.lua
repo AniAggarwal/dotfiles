@@ -157,7 +157,7 @@ return packer.startup(function(use)
 	use({ "folke/trouble.nvim" }) -- Shows issues in panel
 
 	-- Treesitter
-	use({ "nvim-treesitter/nvim-treesitter", run = ":TSUpdate" })
+	use({ "nvim-treesitter/nvim-treesitter", run = ":TSUpdate", commit = "bc23db25153efd480392ee479784d5bbac4b1913" })
 
 	-- Git
 	use({ "lewis6991/gitsigns.nvim" }) -- show sings of git changes
@@ -177,7 +177,8 @@ return packer.startup(function(use)
 	}) -- faster startuptime
 	use({ "dstein64/vim-startuptime" }) -- show how long plugins take to load
 
-	use({ "KenN7/vim-arsync" }) -- Automatically sync to remote server
+	-- use({ "KenN7/vim-arsync" }) -- Automatically sync to remote server
+	use({ "AniAggarwal/vim-arsync" }) -- Automatically sync to remote server with my fork
 
 	-- Automatically set up your configuration after cloning packer.nvim
 	-- Put this at the end after all plugins
