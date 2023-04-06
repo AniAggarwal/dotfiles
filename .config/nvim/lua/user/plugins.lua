@@ -162,6 +162,11 @@ return packer.startup(function(use)
 	-- Git
 	use({ "lewis6991/gitsigns.nvim" }) -- show sings of git changes
 	use({ "kdheepak/lazygit.nvim" }) -- lazygit popup window
+	-- Git diff viewer
+	use({
+		"sindrets/diffview.nvim",
+		requires = "nvim-lua/plenary.nvim",
+	})
 
 	-- Quality of life
 	use({ "kyazdani42/nvim-tree.lua" }) -- Explorer/tree on left side
@@ -177,8 +182,17 @@ return packer.startup(function(use)
 	}) -- faster startuptime
 	use({ "dstein64/vim-startuptime" }) -- show how long plugins take to load
 
-	-- use({ "KenN7/vim-arsync" }) -- Automatically sync to remote server
-	use({ "AniAggarwal/vim-arsync" }) -- Automatically sync to remote server with my fork
+	-- Automatically sync to remote server
+	-- use({ "kenn7/vim-arsync", requires = {
+	-- 	{ "prabirshrestha/async.vim" },
+	-- } })
+	use({
+		"AniAggarwal/vim-arsync",
+		branch = "remove-password-substitution",
+		requires = {
+			{ "prabirshrestha/async.vim" },
+		},
+	})
 
 	-- Automatically set up your configuration after cloning packer.nvim
 	-- Put this at the end after all plugins

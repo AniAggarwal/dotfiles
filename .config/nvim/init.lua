@@ -5,6 +5,7 @@ require("user.colorscheme")
 
 require("user.cmp")
 require("user.lsp")
+require("user.dap")
 
 require("user.clangd_extensions")
 
@@ -13,7 +14,6 @@ require("user.trouble")
 require("user.treesitter")
 require("user.autopairs")
 require("user.comment")
-require("user.gitsigns")
 require("user.tree")
 require("user.bufferline")
 require("user.lualine")
@@ -23,6 +23,9 @@ require("user.vimilluminate")
 require("user.dressing")
 require("user.todo_comments")
 require("user.symbols_outline")
+
+require("user.gitsigns")
+require("user.diffview")
+
 require("user.legendary")
 require("user.whichkey") -- must be registered after legendary
-require("user.dap")
