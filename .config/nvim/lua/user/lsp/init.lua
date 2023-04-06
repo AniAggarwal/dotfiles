@@ -19,7 +19,6 @@ mason_lspconfig.setup()
 
 -- must require neodev before lspconfig
 require("neodev").setup()
-
 local lspconfig = require("lspconfig")
 
 mason_lspconfig.setup_handlers({
@@ -154,6 +153,8 @@ vim.diagnostic.config({
 	},
 })
 
+-- TODO: this may be causing issues with some buffers not letting hover work
+-- properly
 lsp.handlers["textDocument/hover"] = lsp.with(lsp.handlers.hover, {
 	border = "rounded",
 })

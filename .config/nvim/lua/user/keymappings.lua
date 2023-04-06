@@ -98,8 +98,8 @@ end, { noremap = true, silent = true })
 -- Comment and copy
 vim.keymap.set("n", "gcp", "yy<Plug>(comment_toggle_linewise_current)p")
 vim.keymap.set(
-  "x", "gcp",
-  ":'{,'}y<cr>gv<Plug>(comment_toggle_linewise_visual)`>p"
+  "x", "gp",
+  "ygv<Plug>(comment_toggle_linewise_visual)`>p"
 )
 
 -- Trouble

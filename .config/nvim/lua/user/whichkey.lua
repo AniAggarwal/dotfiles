@@ -16,7 +16,7 @@ which_key.register({
 	q = { "<cmd>q<CR>", "Quit" },
 	Q = { "<cmd>q!<CR>", "Quit without saving" },
 	H = { "<cmd>nohlsearch<CR>", "Clear highlights" },
-	c = { "<cmd>let &colorcolumn=(&colorcolumn == 81 ? 0 : 81)<CR>", "Highlight column 81" },
+	C = { "<cmd>let &colorcolumn=(&colorcolumn == 81 ? 0 : 81)<CR>", "Highlight column 81" },
 
 	-- NvimTree
 	e = { "<cmd>NvimTreeToggle<CR>", "Explorer" },
@@ -38,13 +38,13 @@ which_key.register({
 	},
 
 	-- Git
-	h = {
+	g = {
 		name = "Git",
 		s = { "<cmd>Gitsigns stage_hunk<CR>", "Stage hunk" },
 		r = { "<cmd>Gitsigns reset_hunk<CR>", "Reset hunk" },
 		S = { "<cmd>Gitsigns stage_buffer<CR>", "Stage buffer" },
 		u = { "<cmd>Gitsigns undo_stage_hunk<CR>", "Undo stage hunk" },
-		b = {
+		B = {
 			function()
 				package.loaded.gitsigns.blame_line({ full = true })
 			end,
@@ -52,8 +52,14 @@ which_key.register({
 		},
 		p = { "<cmd>Gitsigns preview_hunk<CR>", "Preview hunk" },
 		q = { "<cmd>Gitsigns setqflist<CR>", "Quickfix list" },
-		d = { "<cmd>Gitsigns diffthis<CR>", "Diff this" },
 		g = { "<cmd>LazyGit<CR>", "LazyGit" },
+
+		D = { "<cmd>DiffviewOpen<CR>", "Open Diffview" },
+		d = {
+			d = { "<cmd>Gitsigns diffthis<CR>", "Diff this" },
+			g = { "<cmd>diffget<CR>", "Diff get" },
+			p = { "<cmd>diffput<CR>", "Diff put" },
+		},
 	},
 
 	-- Symbols outline
