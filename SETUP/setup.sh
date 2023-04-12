@@ -1,5 +1,9 @@
 #!/bin/bash
 
+
+echo "CURRENTLY BROKEN!!"
+exit
+
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 setup_kitty() {
