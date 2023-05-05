@@ -1,7 +1,8 @@
 
 # Set of aliases to use for both bash and zsh
-alias ls='exa --color=auto'
+alias ls='exa --group-directories-first --icons'
 alias ll='exa -alFh --icons'
+alias l='exa -alFh --icons'
 
 alias fd='fdfind'
 

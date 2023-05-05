@@ -42,12 +42,6 @@ fi
 unset __conda_setup
 # <<< conda initialize <<<
 
-# TODO: see if this is needed
-# To keep qtile from always being active
-# if [ "$CONDA_DEFAULT_ENV" -eq "qtile-env" ]; then
-#     conda deactivate
-# fi
-
 ########################
 ###### Oh My Zsh #######
 ########################
@@ -57,10 +51,7 @@ export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME=""
 
 # Plugins
-# TODO: decide if keeping python plugin
 plugins=(
-    git
-    python
     sudo 
     zsh-autosuggestions
     zsh-syntax-highlighting
@@ -87,6 +78,9 @@ ZVM_VI_ESCAPE_BINDKEY=jk
 # Switching between Insert and Normal mode have less timeout but not too low so that jk works
 ZVM_KEYTIMEOUT=0.1
 
+# Use wlc as clipboard method
+ZSH_SYSTEM_CLIPBOARD_METHOD="wlc"
+
 # run after init because zsh-vi-mode uses zvm instead of zle
 function zvm_after_init() {
     # Use FZF's completion and keybinds
@@ -105,9 +99,6 @@ function zvm_after_init() {
 
     # export FZF_DEFAULT_COMMAND="rg --files --hidden --follow -g!{**/.git/*,/home/ani/miniconda3/}"
     export FZF_DEFAULT_COMMAND='fdfind --type f --strip-cwd-prefix --hidden'
-    # export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow'
-
-
 
     bindkey '^ ' autosuggest-accept
 
@@ -127,23 +118,28 @@ compinit
 
 
 # Use Neovim as default editor
-export EDITOR="/usr/bin/nvim"
+export EDITOR="/home/ani/.local/bin/nvim"
 
-# Use Neovim for man pages
-export MANPAGER='nvim +Man!'
+# Use Neovim for man pages. TODO: broken due to fuse right now.
+# export MANPAGER='nvim +Man!'
 
 # Add local bin to PATH
 export PATH="$HOME/.local/bin:$PATH"
 
+# Uses system clipboard for yank and paste
+source ~/.oh-my-zsh/custom/plugins/zsh-system-clipboard/zsh-system-clipboard.zsh
+
+source ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
 # Source oh-my-zsh at end to allow zsh-vi-mode keybinds to work
 source $ZSH/oh-my-zsh.sh
+
 
 # Set up starship prompt
 eval "$(starship init zsh)"
 
 
 export PATH=$PATH:/home/ani/.spicetify
-
 
 # Completes measurement of zsh startup speed
 # zprof
