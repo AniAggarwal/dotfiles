@@ -73,6 +73,9 @@ keymap("c", "<C-j>", "<Down>", {})
 keymap("c", "<C-k>", "<Up>", {})
 keymap("c", "<C-l>", "<Right>", {})
 
+-- Terminal Mode
+keymap("t", "<C-\\>", "<C-\\><C-n>", opts)
+
 -- Plugins --
 
 -- LSP
