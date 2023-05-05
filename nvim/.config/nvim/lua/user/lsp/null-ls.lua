@@ -31,6 +31,12 @@ null_ls.setup({
 			extra_args = { "--style=file:/home/ani/.config/nvim/language-configs/c/.clang-format" },
 		}),
 
+        -- For Bash/Zsh formatting
+        formatting.beautysh.with({
+            command = "/home/ani/.local/share/nvim/mason/packages/beautysh/venv/bin/beautysh",
+        }),
+
+
 		-- for Python linting
 		diagnostics.flake8.with({
 			command = "/home/ani/miniconda3/envs/nvim/bin/flake8",
