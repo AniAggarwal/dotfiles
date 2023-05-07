@@ -14,6 +14,8 @@ alias updt='sudo apt-get update'
 alias upgr='sudo apt-get upgrade'
 alias l-upgr='apt list --upgradable'
 
+alias op='xdg-open'
+
 # Alias for shortening lazygit
 alias lg="lazygit"
 

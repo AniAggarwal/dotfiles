@@ -1,14 +1,8 @@
+# Time startup speed
+# zmodload zsh/zprof
+
 # Source Zap Plugin Manager
 [ -f "$HOME/.local/share/zap/zap.zsh" ] && source "$HOME/.local/share/zap/zap.zsh"
-
-###########
-# Plugins #
-###########
-plug "zsh-users/zsh-autosuggestions"
-plug "jeffreytse/zsh-vi-mode"
-# plug "kutsan/zsh-system-clipboard"
-plug "zsh-users/zsh-syntax-highlighting"
-plug "conda-incubator/conda-zsh-completion"
 
 ###########
 # Options #
@@ -48,39 +42,56 @@ _comp_options+=(globdots)
 # Try searching history before using zsh's completion
 ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 
-# Use wlc as clipboard method.
-# TODO: not working currently. Wait util PR is merged to vi-mode
-# ZSH_SYSTEM_CLIPBOARD_METHOD="wlc"
+# TODO: wait util PR is merged to vi-mode for system clipboard
 
 ####################
 # Custom Functions #
 ####################
 
-export FZF_DEFAULT_COMMAND="fdfind --type f --strip-cwd-prefix --hidden --exclude .git --exclude miniconda3"
+# FZF
+function fzf_config {
+    # If slow performance, remove --ansi, --color always, and whole exa command
+    FZF_PREVIEW="bat --color always {} || exa --all --sort=type --tree --level 3 --color-scale {}"
+    FZF_FIND="fdfind --hidden --strip-cwd-prefix --exclude miniconda3 --exclude .git --color always"
+    export FZF_DEFAULT_COMMAND="$FZF_FIND"
+    export FZF_DEFAULT_OPTS="--ansi"
+
+    export FZF_CTRL_T_COMMAND="$FZF_FIND"
+    export FZF_CTRL_T_OPTS="--preview '($FZF_PREVIEW) 2> /dev/null' --bind 'ctrl-/:change-preview-window(down|hidden|)'"
+
+    export FZF_CTRL_R_OPTS="
+    --preview 'echo {}' --preview-window up:3:hidden:wrap
+    --bind 'ctrl-/:toggle-preview'
+    --color header:italic
+    --header 'Press CTRL-/ to show full command.'"
+
+    export FZF_ALT_C_COMMAND="$FZF_FIND --type d"
+    export FZF_ALT_C_OPTS="--preview 'tree -C {}'"
+}
+
 function fzf_open_file {
     local file
     { file="$(fzf)" && [ -f "$file" ] && xdg-open "$file" &> /dev/null } </dev/tty
 }
 
+
 ##################
 # Plugin Configs #
 ##################
 
-# zsh-vi-mode config
-function zvm_config() {
+# zsh-vi-mode config. Not using zvm_opts because it is not working
+# Must be manually set before sourcing zsh-vi-mode
+function zvm_before_init_opts() {
     # Use the better key engine
     ZVM_READKEY_ENGINE=$ZVM_READKEY_ENGINE_NEX
     # Use insert mode by default
     ZVM_LINE_INIT_MODE=$ZVM_MODE_INSERT
-    # TODO: this doesn't work yet
     # jk to switch to command mode
     ZVM_VI_ESCAPE_BINDKEY=jk
     # Switching between Insert and Normal mode have less timeout but not too low so that jk works
     ZVM_KEYTIMEOUT=0.1
-    echo 'hi'
 
     # Change highlight colors
-    # TODO: make zsh highlight which sugession from list we are selecting
     ZVM_VI_HIGHLIGHT_BACKGROUND=#3e4452
     ZVM_VI_HIGHLIGHT_FOREGROUND=#abb3be
 }
@@ -89,26 +100,14 @@ function zvm_config() {
 function zvm_after_init() {
     # Use FZF's completion and keybinds
     [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-
-    export FZF_CTRL_T_COMMAND='fdfind --type f --strip-cwd-prefix --hidden --exclude .git --exclude miniconda3'
-    export FZF_CTRL_T_OPTS="
-    --preview 'bat -n --color=always {}'
-    --bind 'ctrl-/:change-preview-window(down|hidden|)'"
-
-    export FZF_CTRL_R_OPTS="
-    --preview 'echo {}' --preview-window up:3:hidden:wrap
-    --bind 'ctrl-/:toggle-preview'
-    --color header:italic
-    --header 'Press CTRL-/ to show full command.'"
-
-    export FZF_ALT_C_COMMAND='fdfind --strip-cwd-prefix --hidden --exclude .git --exclude miniconda3'
-    export FZF_ALT_C_OPTS="--preview 'tree -C {}'"
+    fzf_config
 
     # Ctrl+space to accept suggestion, ctrl+enter to acecpt, execute
     bindkey '^ ' autosuggest-accept
     # TODO: execute doesn't work, using kitty workaround for now
     # bindkey '^\n' autosuggest-execute
 
+    # Ctrl+o to open file using fzf
     zvm_define_widget fzf_open_file
     bindkey '^o' fzf_open_file
 
@@ -144,8 +143,20 @@ unset __conda_setup
 # <<< conda initialize <<<
 
 
+###########
+# Plugins #
+###########
+plug "zsh-users/zsh-autosuggestions"
+zvm_before_init_opts ; plug "jeffreytse/zsh-vi-mode"
+plug "zsh-users/zsh-syntax-highlighting"
+plug "conda-incubator/conda-zsh-completion"
+
+
 ###################
 # Starship prompt #
 ###################
 
 eval "$(starship init zsh)"
+
+# Completes measurement of zsh startup speed
+# zprof
