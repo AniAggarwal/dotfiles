@@ -1,3 +1,22 @@
+local function on_attach(bufnr)
+	local api = require("nvim-tree.api")
+
+	local function opts(desc)
+		return { desc = "nvim-tree: " .. desc, buffer = bufnr, noremap = true, silent = true, nowait = true }
+	end
+
+    api.config.mappings.default_on_attach(bufnr)
+
+	-- Mappings removed:
+    vim.keymap.set("n", "<C-x>", "", { buffer = bufnr })
+	vim.keymap.del("n", "<C-x>", { buffer = bufnr })
+
+    -- Added
+	vim.keymap.set("n", "<C-s>", api.node.open.horizontal, opts("Open: Horizontal Split"))
+end
+
+
+
 require("nvim-tree").setup({
 	disable_netrw = true,
 
@@ -5,14 +24,8 @@ require("nvim-tree").setup({
 		enable = true,
 	},
 
-	view = {
-		mappings = {
-			list = {
-				{ key = "<C-s>", action = "split" },
-				{ key = "<C-x>", action = "" },
-			},
-		},
-	},
+    -- Add custom keybinds
+    on_attach = on_attach,
 
 	-- for syncing with project_nvim
 	sync_root_with_cwd = true,
