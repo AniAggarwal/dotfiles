@@ -102,6 +102,9 @@ function zvm_after_init() {
     [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
     fzf_config
 
+    # Cycle backwards through completion suggestions
+    bindkey '^[[Z' reverse-menu-complete
+
     # Ctrl+space to accept suggestion, ctrl+enter to acecpt, execute
     bindkey '^ ' autosuggest-accept
     # TODO: execute doesn't work, using kitty workaround for now

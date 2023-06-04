@@ -47,7 +47,16 @@ return packer.startup(function(use)
 
 	-- Colorschemes and looks
 	use({ "joshdick/onedark.vim" }) -- A lua alternative to look into monsonjeremy/onedark.nvim
-	use({ "kyazdani42/nvim-web-devicons" })
+	use({
+		"nvim-tree/nvim-web-devicons",
+		config = function()
+			require("nvim-web-devicons").setup({
+				color_icons = true,
+				default = true,
+				strict = true,
+			})
+		end,
+	})
 
 	use({ "akinsho/bufferline.nvim" }) -- Bufferline
 	use({ "moll/vim-bbye" }) -- allow buffers to be closed properly
@@ -91,7 +100,7 @@ return packer.startup(function(use)
 	use({ "theHamsta/nvim-dap-virtual-text" })
 
 	-- Completion
-	use({ "hrsh7th/nvim-cmp" }) -- use nvim-cmp as completion engine
+	use({ "hrsh7th/nvim-cmp", commit = "c3f7c54f6efed83b5657b1cf2e2a9bb7c121c6b4" }) -- use nvim-cmp as completion engine
 	use({ "hrsh7th/cmp-buffer" }) -- completions based on current buffer contents
 	use({ "hrsh7th/cmp-path" }) -- system path completions
 	use({ "saadparwaiz1/cmp_luasnip" }) -- snippets completions
@@ -186,6 +195,9 @@ return packer.startup(function(use)
 	use({ "kenn7/vim-arsync", requires = {
 		{ "prabirshrestha/async.vim" },
 	} })
+
+	-- Leetcode
+	use({ "ianding1/leetcode.vim" })
 
 	-- Automatically set up your configuration after cloning packer.nvim
 	-- Put this at the end after all plugins
