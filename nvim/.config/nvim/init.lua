@@ -27,5 +27,7 @@ require("user.symbols_outline")
 require("user.gitsigns")
 require("user.diffview")
 
+-- require("user.leetcode")
+
 require("user.legendary")
 require("user.whichkey") -- must be registered after legendary
