@@ -4,8 +4,6 @@ alias ls='exa --group-directories-first --icons'
 alias ll='exa -alFh --icons'
 alias l='exa -alFh --icons'
 
-alias fd='fdfind'
-
 alias grep='grep --color=auto'
 alias fgrep='fgrep --color=auto'
 alias egrep='egrep --color=auto'
