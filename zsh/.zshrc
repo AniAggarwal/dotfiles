@@ -53,7 +53,7 @@ ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 function fzf_config {
     # If slow performance, remove --ansi, --color always, and whole exa command
     FZF_PREVIEW="bat --color always {} || exa --all --sort=type --tree --level 3 --color-scale {}"
-    FZF_FIND="fdfind --hidden --strip-cwd-prefix --exclude miniconda3 --exclude .git --color always"
+    FZF_FIND="fd --hidden --strip-cwd-prefix --exclude miniconda3 --exclude .git --color always"
     export FZF_DEFAULT_COMMAND="$FZF_FIND"
     export FZF_DEFAULT_OPTS="--ansi"
 
@@ -100,7 +100,8 @@ function zvm_before_init_opts() {
 # Fix compatibility issues with zsh-vi-mode
 function zvm_after_init() {
     # Use FZF's completion and keybinds
-    [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+    [ -f /usr/share/fzf/key-bindings.zsh ] && source /usr/share/fzf/key-bindings.zsh
+    [ -f /usr/share/fzf/completion.zsh ] && source /usr/share/fzf/completion.zsh
     fzf_config
 
     # Cycle backwards through completion suggestions
@@ -131,21 +132,20 @@ function zvm_after_init() {
 #############################
 
 # Miniconda
-### # >>> conda initialize >>>
-### # !! Contents within this block are managed by 'conda init' !!
-### __conda_setup="$('/home/ani/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
-### if [ $? -eq 0 ]; then
-###     eval "$__conda_setup"
-### else
-###     if [ -f "/home/ani/miniconda3/etc/profile.d/conda.sh" ]; then
-###         . "/home/ani/miniconda3/etc/profile.d/conda.sh"
-###     else
-###         export PATH="/home/ani/miniconda3/bin:$PATH"
-###     fi
-### fi
-### unset __conda_setup
-### # <<< conda initialize <<<
-
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/opt/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/opt/miniconda3/etc/profile.d/conda.sh" ]; then
+        . "/opt/miniconda3/etc/profile.d/conda.sh"
+    else
+        export PATH="/opt/miniconda3/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<
 
 ###########
 # Plugins #
@@ -160,7 +160,7 @@ plug "conda-incubator/conda-zsh-completion"
 # Starship prompt #
 ###################
 
-# eval "$(starship init zsh)"
+eval "$(starship init zsh)"
 
 # Completes measurement of zsh startup speed
 # zprof

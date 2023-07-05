@@ -14,10 +14,10 @@ require("luasnip/loaders/from_vscode").lazy_load()
 
 local source_names = {
 	copilot = "[ COPILOT]",
-	nvim_lsp = "[力LSP]",
-	nvim_lsp_signature_help = "[ SIGNATURE]",
+	nvim_lsp = "[󰒋LSP]",
+	nvim_lsp_signature_help = "[󰃣 SIGNATURE]",
 	path = "[~ PATH]",
-	luasnip = "[ Snippet]",
+	luasnip = "[󰆐 Snippet]",
 	buffer = "[ Buffer]",
 }
 
