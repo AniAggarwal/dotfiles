@@ -8,7 +8,7 @@ url="https://github.com/ryanoasis/nerd-fonts/tree/master/patched-fonts/FiraCode"
 license=('GPL')
 groups=()
 depends=()
-makedepends=('git') # 'bzr', 'git', 'mercurial' or 'subversion'
+makedepends=('git')
 provides=('ttf-font-nerd')
 replaces=('ttf-firacode-nerd')
 backup=()
@@ -17,30 +17,6 @@ install=
 source=("$pkgname-$pkgver::https://github.com/ryanoasis/nerd-fonts/releases/download/v$pkgver/FiraCode.tar.xz")
 noextract=()
 md5sums=('SKIP')
-
-# # Git, tags available
-# 	printf "%s" "$(git describe --long | sed 's/\([^-]*-\)g/r\1/;s/-/./g')"
-# 
-# # Git, no tags available
-# 	printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
-# 
-#
-# prepare() {
-# 	cd "$srcdir/${pkgname%-VCS}"
-# 	patch -p1 -i "$srcdir/${pkgname%-VCS}.patch"
-# }
-# 
-# build() {
-# 	cd "$srcdir/${pkgname%-VCS}"
-# 	./autogen.sh
-# 	./configure --prefix=/usr
-# 	make
-# }
-# 
-# check() {
-# 	cd "$srcdir/${pkgname%-VCS}"
-# 	make -k check
-# }
 
 package() {
     install -d $pkgdir/usr/share/fonts/TTF
