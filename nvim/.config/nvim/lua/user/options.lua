@@ -37,7 +37,7 @@ vim.opt.guifont = "FiraCode Nerd Font:h17" -- the font used in graphical neovim 
 vim.opt.fillchars.eob = " " -- the char to fill the end of a buffer with
 vim.opt.shortmess:append("c") -- don't give |ins-completion-menu| messages, for example, "match 1 of 2".
 vim.opt.whichwrap:append("<,>,[,],h,l")
-vim.g.python3_host_prog = "/home/ani/miniconda3/envs/nvim/bin/python" -- Use nvim conda env
+vim.g.python3_host_prog = "/home/ani/.conda/envs/nvim/bin/python" -- Use nvim conda env
 vim.opt.foldmethod = "expr" -- Use nvim-treesitter for folding
 vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
 vim.opt.foldenable = false -- leave file unfolded by default

@@ -8,7 +8,7 @@ local diagnostics = null_ls.builtins.diagnostics
 -- https://github.com/prettier-solidity/prettier-plugin-solidity
 null_ls.setup({
 
-    -- Needed to make null-ls use a different than default encoding
+	-- Needed to make null-ls use a different than default encoding
 	on_init = function(new_client, _)
 		new_client.offset_encoding = "utf-16"
 	end,
@@ -17,11 +17,16 @@ null_ls.setup({
 	sources = {
 		-- for Python formatting
 		formatting.black.with({
-			command = "/usr/bin/black",
+			command = "/home/ani/.local/share/nvim/mason/packages/black/venv/bin/black",
+			extra_args = {
+				"--line-length",
+				"79",
+				"--experimental-string-processing",
+			},
 		}),
 		-- for Python imports
 		formatting.isort.with({
-			command = "/home/ani/miniconda3/envs/nvim/bin/isort",
+			command = "/home/ani/.local/share/nvim/mason/packages/isort/venv/bin/isort",
 		}),
 		-- for Lua formatting
 		formatting.stylua,
@@ -31,15 +36,15 @@ null_ls.setup({
 			extra_args = { "--style=file:/home/ani/.config/nvim/language-configs/c/.clang-format" },
 		}),
 
-        -- For Bash/Zsh formatting
-        formatting.beautysh.with({
-            command = "/home/ani/.local/share/nvim/mason/packages/beautysh/venv/bin/beautysh",
-        }),
-
+		-- For Bash/Zsh formatting
+		formatting.beautysh.with({
+			command = "/home/ani/.local/share/nvim/mason/packages/beautysh/venv/bin/beautysh",
+		}),
 
 		-- for Python linting
 		diagnostics.flake8.with({
-			command = "/home/ani/miniconda3/envs/nvim/bin/flake8",
+			command = "/home/ani/.local/share/nvim/mason/packages/flake8/venv/bin/flake8",
+			extra_args = { "--config=/home/ani/.config/nvim/language-configs/python/.flake8" },
 		}),
 
 		-- gitsigns intergration

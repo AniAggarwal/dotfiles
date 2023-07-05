@@ -15,7 +15,7 @@ dashboard.section.buttons.val = {
 	dashboard.button("f", " " .. " Find file", ":Telescope find_files<CR>"),
 	dashboard.button("e", " " .. " New file", ":ene <BAR> startinsert <CR>"),
 	dashboard.button("p", " " .. " Find project", ":lua require('telescope').extensions.projects.projects()<CR>"),
-	dashboard.button("r", " " .. " Recent files", ":Telescope oldfiles <CR>"),
+	dashboard.button("r", "󰄉 " .. " Recent files", ":Telescope oldfiles <CR>"),
 	dashboard.button("t", " " .. " Find text", ":Telescope live_grep <CR>"),
 	dashboard.button("c", " " .. " Config", ":e ~/.config/nvim/init.lua <CR>"),
 	dashboard.button("q", " " .. " Quit", ":qa<CR>"),
@@ -28,7 +28,7 @@ local function footer()
 	local v = vim.version()
 	local datetime = os.date(" %d-%m-%Y   %H:%M:%S")
 	local platform = vim.fn.has("win32") == 1 and "" or " Linux"
-	return string.format(" %d   v%d.%d.%d %s  %s", plugins_count, v.major, v.minor, v.patch, platform, datetime)
+	return string.format("󰂖 %d   v%d.%d.%d %s  %s", plugins_count, v.major, v.minor, v.patch, platform, datetime)
 end
 
 dashboard.section.footer.val = footer()
