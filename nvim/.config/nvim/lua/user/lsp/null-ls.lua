@@ -27,6 +27,10 @@ null_ls.setup({
 		-- for Python imports
 		formatting.isort.with({
 			command = "/home/ani/.local/share/nvim/mason/packages/isort/venv/bin/isort",
+            extra_args = {
+                "-SKIP",
+                "~/dev/work/*"
+            }
 		}),
 		-- for Lua formatting
 		formatting.stylua,
