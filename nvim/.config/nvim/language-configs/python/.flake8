@@ -1,4 +1,4 @@
 [flake8]
 format = pylint
 # ignore import not at top of file
-extend-ignore = E402
+extend-ignore = E402, E501

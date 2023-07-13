@@ -100,7 +100,8 @@ return packer.startup(function(use)
 	use({ "theHamsta/nvim-dap-virtual-text" })
 
 	-- Completion
-	use({ "hrsh7th/nvim-cmp", commit = "c3f7c54f6efed83b5657b1cf2e2a9bb7c121c6b4" }) -- use nvim-cmp as completion engine
+	-- use({ "hrsh7th/nvim-cmp", commit = "c3f7c54f6efed83b5657b1cf2e2a9bb7c121c6b4" }) -- use nvim-cmp as completion engine
+	use({ "hrsh7th/nvim-cmp" }) -- use nvim-cmp as completion engine
 	use({ "hrsh7th/cmp-buffer" }) -- completions based on current buffer contents
 	use({ "hrsh7th/cmp-path" }) -- system path completions
 	use({ "saadparwaiz1/cmp_luasnip" }) -- snippets completions
@@ -110,9 +111,8 @@ return packer.startup(function(use)
 	use({ "onsails/lspkind.nvim" }) -- auto icons in cmp
 
 	-- Github Copilot
-	-- use({ "https://github.com/github/copilot.vim" }) -- Only needed to config copilot.lua first time
 	-- Intergrate Github Copilot with nvim-cmp
-	-- This starts copilot server
+	-- Lazy load
 	use({
 		"zbirenbaum/copilot.lua",
 		cmd = "Copilot",
@@ -127,6 +127,9 @@ return packer.startup(function(use)
 		config = function()
 			require("copilot_cmp").setup({
 				method = "getCompletionsCycling",
+				filetypes = {
+					VimspectorPrompt = false,
+				},
 			})
 		end,
 	})
@@ -184,11 +187,23 @@ return packer.startup(function(use)
 	use({ "mrjones2014/legendary.nvim" }) -- search key maps
 
 	use({
+		"danymat/neogen",
+		config = function()
+			require("neogen").setup({
+				snippet_engine = "luasnip",
+				languages = { python = { templates = { "google_docstrings" } } },
+			})
+		end,
+		requires = "nvim-treesitter/nvim-treesitter",
+	})
+
+	-- faster startuptime
+	use({
 		"lewis6991/impatient.nvim",
 		config = function()
 			require("impatient").enable_profile()
 		end,
-	}) -- faster startuptime
+	})
 	use({ "dstein64/vim-startuptime" }) -- show how long plugins take to load
 
 	-- Automatically sync to remote server
@@ -197,7 +212,7 @@ return packer.startup(function(use)
 	} })
 
 	-- Leetcode
-	use({ "ianding1/leetcode.vim" })
+	-- use({ "ianding1/leetcode.vim" })
 
 	-- Automatically set up your configuration after cloning packer.nvim
 	-- Put this at the end after all plugins
