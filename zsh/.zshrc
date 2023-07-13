@@ -17,7 +17,7 @@ CASE_SENSITIVE="false"
 ENABLE_CORRECTION="true"
 COMPLETION_WAITING_DOTS="false"
 
-export EDITOR="/home/ani/.local/bin/nvim"
+export EDITOR="/usr/bin/nvim"
 export PATH="$HOME/.local/bin:$PATH"
 export PATH=$PATH:/home/ani/.spicetify
 
@@ -122,8 +122,9 @@ function zvm_after_init() {
     fi
 
     # Fixes https://github.com/jeffreytse/zsh-vi-mode/pull/188
-    autoload add-zle-hook-widget
-    add-zle-hook-widget zle-line-pre-redraw zvm_zle-line-pre-redraw
+    # Unclear if this work around is still needed
+    # autoload add-zle-hook-widget
+    # add-zle-hook-widget zle-line-pre-redraw zvm_zle-line-pre-redraw
 }
 
 
@@ -161,6 +162,19 @@ plug "conda-incubator/conda-zsh-completion"
 ###################
 
 eval "$(starship init zsh)"
+
+
+#############
+# SSH Agent #
+#############
+
+# if ! pgrep -u "$USER" ssh-agent > /dev/null; then
+#     ssh-agent -t 1h > "$XDG_RUNTIME_DIR/ssh-agent.env"
+# fi
+#
+# if [[ ! -f "$SSH_AUTH_SOCK" ]]; then
+#     source "$XDG_RUNTIME_DIR/ssh-agent.env" >/dev/null
+# fi
 
 # Completes measurement of zsh startup speed
 # zprof
