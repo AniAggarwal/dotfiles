@@ -12,7 +12,7 @@ usage() {
 }
 
 install_all_no_sudo() {
-    stow -d "$dir" -t ~/ zsh kitty nvim bat conky easyeffects ignores bin
+    stow -d "$dir" -t ~/ zsh kitty nvim bat conky easyeffects ignores bin hyprland
 }
 
 install_all_sudo() {
