@@ -18,9 +18,9 @@ local source_names = {
 }
 
 local has_words_before = function()
-  unpack = unpack or table.unpack
-  local line, col = unpack(vim.api.nvim_win_get_cursor(0))
-  return col ~= 0 and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match("%s") == nil
+	unpack = unpack or table.unpack
+	local line, col = unpack(vim.api.nvim_win_get_cursor(0))
+	return col ~= 0 and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match("%s") == nil
 end
 
 cmp.setup({
@@ -35,29 +35,70 @@ cmp.setup({
 		["<C-b>"] = cmp.mapping.scroll_docs(-4),
 		["<C-f>"] = cmp.mapping.scroll_docs(4),
 		["<C-e>"] = cmp.mapping.abort(),
-		["<CR>"] = cmp.mapping.confirm({ select = false }),
 
+		-- ["<CR>"] = cmp.mapping.confirm({ select = false }),
 		["<Tab>"] = cmp.mapping(function(fallback)
-			if cmp.visible() then
-				cmp.select_next_item()
-			elseif luasnip.expand_or_locally_jumpable() then
+			if luasnip.expand_or_locally_jumpable() then
 				luasnip.expand_or_jump()
-			elseif has_words_before() then
-				cmp.complete()
 			else
 				fallback()
 			end
-		end, { "i", "s" }),
-
+		end, {
+			"i",
+			"s",
+		}),
 		["<S-Tab>"] = cmp.mapping(function(fallback)
-			if cmp.visible() then
-				cmp.select_prev_item()
-			elseif luasnip.jumpable(-1) then
+			if luasnip.jumpable(-1) then
 				luasnip.jump(-1)
 			else
 				fallback()
 			end
-		end, { "i", "s" }),
+		end, {
+			"i",
+			"s",
+		}),
+
+		-- ["<Tab>"] = cmp.mapping(function(fallback)
+		-- 	if cmp.visible() then
+		-- 		cmp.select_next_item()
+		-- 	elseif luasnip.expand_or_locally_jumpable() then
+		-- 		luasnip.expand_or_jump()
+		-- 	elseif has_words_before() then
+		-- 		cmp.complete()
+		-- 	else
+		-- 		fallback()
+		-- 	end
+		-- end, { "i", "s" }),
+		--
+		-- ["<S-Tab>"] = cmp.mapping(function(fallback)
+		-- 	if cmp.visible() then
+		-- 		cmp.select_prev_item()
+		-- 	elseif luasnip.jumpable(-1) then
+		-- 		luasnip.jump(-1)
+		-- 	else
+		-- 		fallback()
+		-- 	end
+		-- end, { "i", "s" }),
+
+		["<CR>"] = function(fallback)
+			-- Don't block <CR> if signature help is active
+			-- https://github.com/hrsh7th/cmp-nvim-lsp-signature-help/issues/13
+			if
+				not cmp.visible()
+				or not cmp.get_selected_entry()
+				or cmp.get_selected_entry().source.name == "nvim_lsp_signature_help"
+			then
+				fallback()
+			else
+				cmp.confirm({
+					-- Replace word if completing in the middle of a word
+					-- https://github.com/hrsh7th/nvim-cmp/issues/664
+					behavior = cmp.ConfirmBehavior.Replace,
+					-- Don't select first item on CR if nothing was selected
+					select = false,
+				})
+			end
+		end,
 	}),
 	formatting = {
 		fields = { "kind", "abbr", "menu" },

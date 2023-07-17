@@ -17,7 +17,8 @@ which_key.register({
 	Q = { "<cmd>q!<CR>", "Quit without saving" },
 	H = { "<cmd>nohlsearch<CR>", "Clear highlights" },
 	l = { "<cmd>let &colorcolumn=(&colorcolumn == 81 ? 0 : 81)<CR>", "Highlight column 81" },
-    c = { "<cmd>Neogen<CR>", "Generate Documentation" },
+    C = { "<cmd>Neogen<CR>", "Generate Documentation" },
+    D = { "<cmd>DiffviewToggleFiles<CR>", "Toggle Diffview"},
 
 	-- NvimTree
 	e = { "<cmd>NvimTreeToggle<CR>", "Explorer" },
