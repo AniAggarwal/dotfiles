@@ -1,0 +1,19 @@
+clock
+
+ignore-empty-password
+grace=3
+
+screenshot
+
+fade-in=3
+effect-blur=20x5
+
+indicator
+timestr="%-I:%M %p"
+
+ring-color=696969
+ring-clear-color=AEAEAE
+
+inside-clear-color=C3BAAC
+inside-caps-lock-color=DFD6E9
+key-hl-color=F8F8F8

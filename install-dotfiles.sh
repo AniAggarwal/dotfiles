@@ -12,7 +12,7 @@ usage() {
 }
 
 install_all_no_sudo() {
-    stow -d "$dir" -t ~/ zsh kitty nvim bat conky easyeffects ignores bin hyprland
+    stow -d "$dir" -t ~/ zsh kitty nvim bat conky easyeffects ignores bin hyprland swaylock-effects
 }
 
 install_all_sudo() {
@@ -32,28 +32,28 @@ do
 
     case $key in
         -s|--no-sudo)
-        install_all_no_sudo
-        echo "Note: battery-optimizations and grub-theme require sudo, skipping installation."
-        ;;
+            install_all_no_sudo
+            echo "Note: battery-optimizations and grub-theme require sudo, skipping installation."
+            ;;
 
         -a|--all)
-        install_all
-        ;;
+            install_all
+            ;;
 
-         -d|--dir)
-        dir="$2"
-        shift
-        ;;
+        -d|--dir)
+            dir="$2"
+            shift
+            ;;
 
         -h|--help)
-        usage
-        exit 0
-        ;;
+            usage
+            exit 0
+            ;;
 
         *)
-        echo "Invalid option: $1"
-        exit 1
-        ;;
+            echo "Invalid option: $1"
+            exit 1
+            ;;
     esac
     shift
 done
