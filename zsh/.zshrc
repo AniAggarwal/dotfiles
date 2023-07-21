@@ -8,6 +8,9 @@
 # Options #
 ###########
 
+# remove / so that ctrl+w deletes only to /
+# original: WORDCHARS='*?_-.[]~=/&;!#$%^(){}<>'
+WORDCHARS='*?_-.[]~=&;!#$%^(){}<>'
 HISTFILE=~/.histfile
 HISTSIZE=10000
 SAVEHIST=10000

@@ -185,7 +185,12 @@ return packer.startup(function(use)
 	use({ "ahmedkhalf/project.nvim" }) -- easily move between projects
 	use({ "folke/which-key.nvim" }) -- show key maps
 	use({ "mrjones2014/legendary.nvim" }) -- search key maps
-
+	use({
+		"fei6409/log-highlight.nvim",
+		config = function()
+			require("log-highlight").setup({})
+		end,
+	}) -- log file highlighting
 	use({
 		"danymat/neogen",
 		config = function()
@@ -195,7 +200,7 @@ return packer.startup(function(use)
 			})
 		end,
 		requires = "nvim-treesitter/nvim-treesitter",
-	})
+	}) -- documentation generation
 
 	-- faster startuptime
 	use({
