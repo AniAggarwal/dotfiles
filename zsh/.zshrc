@@ -33,6 +33,8 @@ setopt HIST_FIND_NO_DUPS
 setopt HIST_IGNORE_DUPS
 # Use #, ~, ^ as patterns. Raise error if no match
 setopt extendedglob nomatch
+# Allow tab completion on hidden files
+setopt globdots
 # Highlight matches when completing
 zstyle ':completion:*' menu select
 
@@ -119,11 +121,6 @@ function zvm_after_init() {
     if [ -f ~/.aliases ]; then
         . ~/.aliases
     fi
-
-    # Fixes https://github.com/jeffreytse/zsh-vi-mode/pull/188
-    # Unclear if this work around is still needed
-    # autoload add-zle-hook-widget
-    # add-zle-hook-widget zle-line-pre-redraw zvm_zle-line-pre-redraw
 }
 
 
@@ -143,6 +140,13 @@ else
 fi
 unset __mamba_setup
 # <<< mamba initialize <<<
+
+
+### opam configuration ###
+# Auto generated is below, but we are prefering our own eval
+# [[ ! -r /home/ani/.opam/opam-init/init.zsh ]] || source /home/ani/.opam/opam-init/init.zsh  > /dev/null 2> /dev/null
+# opam recomends: eval $(opam env) but cliff recommends below
+eval `opam config env`
 
 ###########
 # Plugins #

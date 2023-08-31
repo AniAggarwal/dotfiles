@@ -8,9 +8,10 @@ alias grep='grep --color=auto'
 alias fgrep='fgrep --color=auto'
 alias egrep='egrep --color=auto'
 
-alias updt='sudo apt-get update'
-alias upgr='sudo apt-get upgrade'
-alias l-upgr='apt list --upgradable'
+alias up="sudo pacman -Syu"
+alias hibernate="systemctl hibernate"
+alias suspend="systemctl suspend-then-hibernate"
+alias bluetooth="systemctl start bluetooth; bluetuith"
 
 alias op='xdg-open'
 
@@ -38,3 +39,13 @@ alias jlab='micromamba activate jupyter; jupyter lab'
 alias icat="kitty +kitten icat"
 # Alias for using kitty wrapper over ssh
 alias kssh="kitty +kitten ssh"
+
+
+
+leetcode_create_edit() {
+    mkdir "$1"
+    touch "$1/$1.py"
+    nvim "$1/$1.py"
+}
+
+alias leet="leetcode_create_edit"
