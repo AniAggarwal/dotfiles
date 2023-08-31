@@ -41,3 +41,6 @@ pytest
 github
 Py
 str
+reparameterize
+docstring
+numpy

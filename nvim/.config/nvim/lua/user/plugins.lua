@@ -112,11 +112,8 @@ return packer.startup(function(use)
 
 	-- Github Copilot
 	-- Intergrate Github Copilot with nvim-cmp
-	-- Lazy load
 	use({
 		"zbirenbaum/copilot.lua",
-		cmd = "Copilot",
-		event = "InsertEnter",
 		config = function()
 			require("copilot").setup()
 		end,
@@ -215,9 +212,6 @@ return packer.startup(function(use)
 	use({ "kenn7/vim-arsync", requires = {
 		{ "prabirshrestha/async.vim" },
 	} })
-
-	-- Leetcode
-	-- use({ "ianding1/leetcode.vim" })
 
 	-- Automatically set up your configuration after cloning packer.nvim
 	-- Put this at the end after all plugins

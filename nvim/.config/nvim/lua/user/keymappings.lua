@@ -101,10 +101,7 @@ end, { noremap = true, silent = true })
 
 -- Comment and copy
 vim.keymap.set("n", "gcp", "yy<Plug>(comment_toggle_linewise_current)p")
-vim.keymap.set(
-  "x", "gp",
-  "ygv<Plug>(comment_toggle_linewise_visual)`>p"
-)
+vim.keymap.set("x", "gp", "ygv<Plug>(comment_toggle_linewise_visual)`>p")
 
 -- Trouble
 keymap("n", "gr", "<cmd>TroubleToggle lsp_references<CR>", opts)
@@ -133,3 +130,23 @@ vim.keymap.set("n", "z=", function()
 		end)
 	)
 end)
+
+
+
+function DisableCopilot()
+    local target_name = "copilot"
+    local clients = vim.lsp.get_active_clients()
+
+    for _, client in ipairs(clients) do
+        if client.name == target_name then
+            vim.lsp.stop_client(client.id)
+            print("Copilot client detached.")
+            return
+        end
+    end
+
+    print("Copilot client not found.")
+
+end
+
+vim.cmd("command! DisableCopilot lua DisableCopilot()")
