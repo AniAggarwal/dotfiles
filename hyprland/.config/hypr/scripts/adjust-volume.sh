@@ -1,13 +1,14 @@
 #!/bin/bash
 
 # Check for the correct number of arguments
-if [ "$#" -ne 1 ]; then
-    echo "Usage: $0 <percentage>+|-"
+if [ "$#" -ne 2 ]; then
+    echo "Usage: $0 <source|sink> <percentage>%+|-"
     exit 1
 fi
 
-# Get the volume adjustment percentage from the argument
-adjustment="$1"
+# Get the source/sink and volume adjustment percentage from the arguments
+device="$1"
+adjustment="$2"
 
 # Validate the adjustment format (N%+ or N%-)
 if ! [[ "$adjustment" =~ ^[0-9]+%[-+]$ ]]; then
@@ -15,10 +16,14 @@ if ! [[ "$adjustment" =~ ^[0-9]+%[-+]$ ]]; then
     exit 1
 fi
 
-# Get the running sink
+# Get the running source/sink
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$script_dir/get-running-sink.sh"
+if [ "$device" = "source" ]; then
+    source "$script_dir/get-running-source.sh"
+else 
+    source "$script_dir/get-running-sink.sh"
+fi
 
 # Adjust the volume of the running sink using wpctl
-echo "wpctl set-volume -l 1.0 $object_id $adjustment" > /tmp/foo.txt
+echo "wpctl set-volume -l 1.0 $object_id $adjustment"
 wpctl set-volume -l 1.0 $object_id $adjustment
