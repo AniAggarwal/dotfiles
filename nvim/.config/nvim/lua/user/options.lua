@@ -42,7 +42,7 @@ vim.opt.foldmethod = "expr" -- Use nvim-treesitter for folding
 vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
 vim.opt.foldenable = false -- leave file unfolded by default
 vim.opt.wrap = false -- display lines as one long line
--- vim.opt.textwidth = 79 -- max line length 
+-- vim.opt.textwidth = 79 -- max line length
 vim.opt.spelloptions:append({ "camel" }) -- allow camel case words to be detected correctly for spell check
 
 vim.api.nvim_create_autocmd(
@@ -50,4 +50,7 @@ vim.api.nvim_create_autocmd(
 	{ pattern = "text", command = "setlocal wrap | setlocal tw=0 | setlocal linebreak | setlocal spell" }
 ) -- wrap text files
 vim.api.nvim_create_autocmd("FileType", { pattern = "Outline", command = "setlocal nospell" }) -- No spelling on symbols outline
-vim.api.nvim_create_autocmd("FileType", { pattern = "asm", command = "setlocal noexpandtab | setlocal tabstop=8 | setlocal shiftwidth=8" })
+vim.api.nvim_create_autocmd(
+	"FileType",
+	{ pattern = "asm", command = "setlocal noexpandtab | setlocal tabstop=8 | setlocal shiftwidth=8" }
+)

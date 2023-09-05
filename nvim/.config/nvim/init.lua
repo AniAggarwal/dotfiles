@@ -8,6 +8,7 @@ require("user.lsp")
 require("user.dap")
 
 require("user.clangd_extensions")
+require("user.vimtex")
 
 require("user.telescope")
 require("user.trouble")

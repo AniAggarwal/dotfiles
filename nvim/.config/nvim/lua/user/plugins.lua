@@ -92,6 +92,8 @@ return packer.startup(function(use)
 		end,
 	}) -- lsp and docs for neovim lua api
 
+    use({ "lervag/vimtex" })
+
 	-- DAP
 	use({ "mfussenegger/nvim-dap" }) -- For debugger
 	use({ "jay-babu/mason-nvim-dap.nvim" })
