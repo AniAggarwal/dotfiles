@@ -10,6 +10,13 @@ fi
 device="$1"
 adjustment="$2"
 
+
+# Validate the device format
+if ! [[ "$device" =~ ^(source)|(sink)$ ]]; then
+    echo "Invalid device format. Please use source or sink."
+    exit 1
+fi
+
 # Validate the adjustment format (N%+ or N%-)
 if ! [[ "$adjustment" =~ ^[0-9]+%[-+]$ ]]; then
     echo "Invalid adjustment format. Please use N%+ or N%- (e.g., 5%+ or 10%-)."
