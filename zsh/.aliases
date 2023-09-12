@@ -9,7 +9,8 @@ alias fgrep='fgrep --color=auto'
 alias egrep='egrep --color=auto'
 
 alias up="sudo pacman -Syu"
-alias hibernate="systemctl hibernate"
+alias sys="systemctl"
+alias hibernate="systemctl stop bluetooth.service; systemctl hibernate"
 alias suspend="systemctl suspend-then-hibernate"
 alias bluetooth="systemctl start bluetooth; bluetuith"
 
