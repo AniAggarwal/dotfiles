@@ -92,7 +92,7 @@ return packer.startup(function(use)
 		end,
 	}) -- lsp and docs for neovim lua api
 
-    use({ "lervag/vimtex" })
+	use({ "lervag/vimtex" })
 
 	-- DAP
 	use({ "mfussenegger/nvim-dap" }) -- For debugger
@@ -169,6 +169,11 @@ return packer.startup(function(use)
 
 	-- Treesitter
 	use({ "nvim-treesitter/nvim-treesitter", run = ":TSUpdate" })
+	use({
+		"nvim-treesitter/nvim-treesitter-textobjects",
+		after = "nvim-treesitter",
+		requires = "nvim-treesitter/nvim-treesitter",
+	})
 
 	-- Git
 	use({ "lewis6991/gitsigns.nvim" }) -- show sings of git changes
@@ -200,6 +205,17 @@ return packer.startup(function(use)
 		end,
 		requires = "nvim-treesitter/nvim-treesitter",
 	}) -- documentation generation
+
+	-- image viewing
+	use({
+		"edluffy/hologram.nvim",
+		config = function()
+			require("hologram").setup({
+				-- WIP automatic markdown image display, may be prone to breaking
+				auto_display = true,
+			})
+		end,
+	})
 
 	-- faster startuptime
 	use({
