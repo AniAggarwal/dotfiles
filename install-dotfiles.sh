@@ -5,7 +5,7 @@ dir=~/dotfiles
 usage() {
     echo "Usage: $0 [OPTIONS]"
     echo "Options:"
-    echo "  -s, --no-sudo       Install dotfiles that don't require sudo"
+    echo "  -n, --no-sudo       Install dotfiles that don't require sudo"
     echo "  -a, --all           Install all dotfiles, including those that require sudo"
     echo "  -d, --dir DIR       Directory where the dotfiles are installed (default: ~/dotfiles)"
     echo "  -h, --help          Display this help message"
@@ -31,7 +31,7 @@ do
     key="$1"
 
     case $key in
-        -s|--no-sudo)
+        -n|--no-sudo)
             install_all_no_sudo
             echo "Note: battery-optimizations and grub-theme require sudo, skipping installation."
             ;;

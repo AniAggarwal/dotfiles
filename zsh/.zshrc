@@ -21,7 +21,7 @@ ENABLE_CORRECTION="true"
 COMPLETION_WAITING_DOTS="false"
 
 export EDITOR="/usr/bin/nvim"
-export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/bin:$PATH"
 export PATH=$PATH:/home/ani/.spicetify
 export MAMBA_ROOT_PREFIX=/home/ani/micromamba
 
