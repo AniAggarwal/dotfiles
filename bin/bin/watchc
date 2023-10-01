@@ -1,0 +1,57 @@
+#!/bin/bash
+
+# Default values
+refresh_interval=1
+
+# Function to display help text
+display_help() {
+  echo "Usage: $0 [OPTIONS] COMMAND"
+  echo "Options:"
+  echo "  -h           Display this help text"
+  echo "  -n NUM       Refresh every NUM seconds (default is 1)"
+  exit 1
+}
+
+# Function to run the command and display it with timestamp
+run_and_display() {
+  DATE=$(date)
+  RESULT=$(unbuffer "$@" 2>&1)
+  clear
+  echo "$DATE"
+  echo -e "$RESULT"  # Use -e to interpret escape sequences
+}
+
+# Parse command-line options
+while getopts "hn:" opt; do
+  case $opt in
+    h)
+      display_help
+      ;;
+    n)
+      refresh_interval="$OPTARG"
+      if ! [[ "$refresh_interval" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+        echo "Invalid refresh interval: $refresh_interval"
+        exit 1
+      fi
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG"
+      display_help
+      ;;
+  esac
+done
+
+# Remove processed options from the argument list
+shift $((OPTIND - 1))
+
+# Check for the COMMAND argument
+if [ $# -eq 0 ]; then
+  echo "Missing COMMAND argument."
+  display_help
+fi
+
+# Main loop
+while true; do
+  run_and_display "$@"
+  sleep "$(echo "$refresh_interval" | bc)"
+done
