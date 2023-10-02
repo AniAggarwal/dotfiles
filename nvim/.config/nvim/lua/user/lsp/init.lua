@@ -15,7 +15,16 @@ end
 
 require("mason").setup()
 local mason_lspconfig = require("mason-lspconfig")
-mason_lspconfig.setup()
+mason_lspconfig.setup({
+	ensure_installed = {
+		"bashls",
+		"lua_ls",
+		"matlab_ls",
+		-- "ocamllsp",
+		"pyright",
+		"texlab",
+	},
+})
 
 -- must require neodev before lspconfig
 require("neodev").setup()
@@ -29,6 +38,26 @@ mason_lspconfig.setup_handlers({
 			capabilities = capabilities,
 		})
 	end,
+	-- Custom handler for ocamllsp
+	["ocamllsp"] = function()
+		lspconfig.ocamllsp.setup({
+			on_attach = custom_attach,
+			capabilities = capabilities,
+			cmd = { "ocamllsp" },
+			root_dir = lspconfig.util.root_pattern(
+				"*.opam",
+				"esy.json",
+				"package.json",
+				"esy.lock",
+				"dune-project",
+				"jbuild",
+				"jbuild-ignore",
+				".git",
+				"."
+			),
+		})
+	end,
+
 	-- Custom handler for lua_ls
 	["lua_ls"] = function()
 		lspconfig.lua_ls.setup({

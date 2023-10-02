@@ -1,5 +1,5 @@
 require("nvim-treesitter.configs").setup({
-	ensure_installed = { "python", "c", "lua", "bash" }, -- one of "all" or a list of languages
+	ensure_installed = { "python", "c", "lua", "bash", "ocaml" }, -- one of "all" or a list of languages
 	auto_install = true,
 	ignore_install = { "latex" }, -- List of parsers to ignore installing
 	highlight = {

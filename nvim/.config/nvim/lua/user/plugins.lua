@@ -106,10 +106,11 @@ return packer.startup(function(use)
 	use({ "hrsh7th/nvim-cmp" }) -- use nvim-cmp as completion engine
 	use({ "hrsh7th/cmp-buffer" }) -- completions based on current buffer contents
 	use({ "hrsh7th/cmp-path" }) -- system path completions
-	use({ "saadparwaiz1/cmp_luasnip" }) -- snippets completions
 	use({ "hrsh7th/cmp-nvim-lsp" }) -- nvim native lsp completions
+	use({ "hrsh7th/cmp-nvim-lsp-document-symbol" }) -- symbols
 	use({ "hrsh7th/cmp-nvim-lua" }) -- nvim lua api completions
 	use({ "hrsh7th/cmp-nvim-lsp-signature-help" }) -- method signature while typing
+	use({ "saadparwaiz1/cmp_luasnip" }) -- snippets completions
 	use({ "onsails/lspkind.nvim" }) -- auto icons in cmp
 
 	-- Github Copilot
