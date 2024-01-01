@@ -9,6 +9,7 @@ require("user.dap")
 
 require("user.clangd_extensions")
 require("user.vimtex")
+require("user.jupynium")
 
 require("user.telescope")
 require("user.trouble")
