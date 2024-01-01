@@ -1,8 +1,8 @@
 
 # Set of aliases to use for both bash and zsh
-alias ls='eza --group-directories-first --icons'
-alias ll='eza -alFh --icons'
-alias l='eza -alFh --icons'
+alias ls='eza --group-directories-first --icons=always'
+alias ll='eza -alFh --icons=always'
+alias l='eza -alFh --icons=always'
 
 alias grep='grep --color=auto'
 alias fgrep='fgrep --color=auto'
@@ -14,6 +14,15 @@ alias hibernate="systemctl hibernate"
 alias suspend="systemctl suspend-then-hibernate"
 alias bon="systemctl start bluetooth.service"
 alias boff="systemctl stop bluetooth.service"
+alias pow="watchc upower -i /org/freedesktop/UPower/devices/battery_BAT0"
+alias wifi-portal="firefox -private-window http://neverssl.com &"
+
+mnt-usb() {
+    sudo mount -o uid="$UID" "$1" /media/usb
+    cd /media/usb
+}
+
+alias mnt="sudo mount -o uid=$UID"
 
 alias op='xdg-open'
 
@@ -26,14 +35,14 @@ alias ma="micromamba"
 # Alias for shortening lazygit
 alias lg="lazygit"
 
+alias mpv="mpv --vo=gpu-next"
+
 # Alias for shortening command to display line length of java files
 alias len-java="find . -iname '*.java' -exec wc -L {} \;"
 
 # Add an "alert" alias for long running commands.  Use like so:
 #   sleep 10; alert
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
-
-alias jlab='micromamba activate jupyter; jupyter lab'
 
 # Aliases for kitty terminal emulator
 
@@ -42,12 +51,24 @@ alias icat="kitty +kitten icat"
 # Alias for using kitty wrapper over ssh
 alias kssh="kitty +kitten ssh"
 
+alias research="cd ~/dev/research/dr.shah/noise_suppression/; micromamba activate ecg_vae"
+alias 320="cd ~/dev/school/cmsc-320/; micromamba activate cmsc320"
+alias 330="cd ~/dev/school/cmsc-330/; micromamba activate cmsc330"
+alias 351="cd ~/dev/school/cmsc-351/"
 
+alias jlab='micromamba run -n jupyter jupyter lab'
+alias nvitop='micromamba run -n utils nvitop'
 
 leetcode_create_edit() {
-    mkdir "$1"
-    touch "$1/$1.py"
-    nvim "$1/$1.py"
+    read "input?Enter the string in the format '<number>. <words>': "
+
+    formatted_input=$(echo $input | sed 's/\. / /g' | tr '[:upper:]' '[:lower:]' | tr -d '[:punct:]' | tr ' ' '-')
+
+    cd "$HOME/dev/leetcode/"
+    mkdir "$formatted_input"
+
+    echo "from typing import *" > "$formatted_input/$formatted_input.py"
+    nvim "$formatted_input/$formatted_input.py"
 }
 
 alias leet="leetcode_create_edit"

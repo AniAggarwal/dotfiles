@@ -134,12 +134,24 @@ return packer.startup(function(use)
 		end,
 	})
 
+	-- GPT
+	-- use({
+	-- 	"jackMort/ChatGPT.nvim",
+	-- 	config = function()
+	-- 		require("chatgpt").setup({
+	-- 			-- api_key_cmd = "cat ~/.openai-api-key",
+	-- 		})
+	-- 	end,
+	-- 	requires = {
+	-- 		"MunifTanjim/nui.nvim",
+	-- 		"nvim-lua/plenary.nvim",
+	-- 		"nvim-telescope/telescope.nvim",
+	-- 	},
+	-- })
+
 	-- Snippet
 	use({ "L3MON4D3/LuaSnip" }) -- Snippet engine for cmp_luasnip
 	use({ "rafamadriz/friendly-snippets" }) -- Extra snippets
-
-	-- Movement and Productivity
-	use({ "knubie/vim-kitty-navigator", run = "cp ./*.py ~/.config/kitty/" }) -- for movement between kitty windows
 
 	-- surround text with stuff
 	use({
@@ -208,15 +220,15 @@ return packer.startup(function(use)
 	}) -- documentation generation
 
 	-- image viewing
-	use({
-		"edluffy/hologram.nvim",
-		config = function()
-			require("hologram").setup({
-				-- WIP automatic markdown image display, may be prone to breaking
-				auto_display = true,
-			})
-		end,
-	})
+	-- use({
+	-- 	"edluffy/hologram.nvim",
+	-- 	config = function()
+	-- 		require("hologram").setup({
+	-- 			-- WIP automatic markdown image display, may be prone to breaking
+	-- 			auto_display = true,
+	-- 		})
+	-- 	end,
+	-- })
 
 	-- faster startuptime
 	use({
@@ -231,6 +243,28 @@ return packer.startup(function(use)
 	use({ "kenn7/vim-arsync", requires = {
 		{ "prabirshrestha/async.vim" },
 	} })
+
+	-- Markdown preview
+	use({
+		"iamcco/markdown-preview.nvim",
+		run = "cd app && npm install",
+		setup = function()
+			vim.g.mkdp_filetypes = { "markdown" }
+		end,
+		ft = { "markdown" },
+	})
+
+	use({ "chrisbra/csv.vim" })
+
+	-- Jupyter Notebook
+	use({
+		"kiyoon/jupynium.nvim",
+		build = "micromamba run -n jupyter --no-capture-output pip install .",
+		-- enabled = vim.fn.isdirectory(vim.fn.expand "~/miniconda3/envs/jupynium"),
+	})
+
+	-- Movement and Productivity
+	use({ "knubie/vim-kitty-navigator", run = "cp ./*.py ~/.config/kitty/" }) -- for movement between kitty windows
 
 	-- Automatically set up your configuration after cloning packer.nvim
 	-- Put this at the end after all plugins

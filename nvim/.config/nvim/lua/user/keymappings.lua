@@ -17,10 +17,10 @@ vim.g.mapleader = " "
 
 -- Normal --
 -- Better window navigation
-keymap("n", "<C-h>", "<C-w>h", opts)
-keymap("n", "<C-j>", "<C-w>j", opts)
-keymap("n", "<C-k>", "<C-w>k", opts)
-keymap("n", "<C-l>", "<C-w>l", opts)
+-- keymap("n", "<C-h>", "<C-w>h", opts)
+-- keymap("n", "<C-j>", "<C-w>j", opts)
+-- keymap("n", "<C-k>", "<C-w>k", opts)
+-- keymap("n", "<C-l>", "<C-w>l", opts)
 
 -- Resize with arrows
 keymap("n", "<C-Up>", "<cmd>resize -2<CR>", opts)
@@ -131,22 +131,19 @@ vim.keymap.set("n", "z=", function()
 	)
 end)
 
-
-
 function DisableCopilot()
-    local target_name = "copilot"
-    local clients = vim.lsp.get_active_clients()
+	local target_name = "copilot"
+	local clients = vim.lsp.get_active_clients()
 
-    for _, client in ipairs(clients) do
-        if client.name == target_name then
-            vim.lsp.stop_client(client.id)
-            print("Copilot client detached.")
-            return
-        end
-    end
+	for _, client in ipairs(clients) do
+		if client.name == target_name then
+			vim.lsp.stop_client(client.id)
+			print("Copilot client detached.")
+			return
+		end
+	end
 
-    print("Copilot client not found.")
-
+	print("Copilot client not found.")
 end
 
 vim.cmd("command! DisableCopilot lua DisableCopilot()")

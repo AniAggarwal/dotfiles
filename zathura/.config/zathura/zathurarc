@@ -1,2 +1,5 @@
 # copy to clipboard
 set selection-clipboard clipboard
+
+# open links, etc.
+set sandbox none

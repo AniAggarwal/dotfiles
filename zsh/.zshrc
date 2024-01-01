@@ -25,6 +25,10 @@ export PATH="$HOME/bin:$PATH"
 export PATH=$PATH:/home/ani/.spicetify
 export MAMBA_ROOT_PREFIX=/home/ani/micromamba
 
+# For TF to work properly
+# export XLA_FLAGS=--xla_gpu_cuda_data_dir=/opt/cuda/nvvm/libdevice/libdevice.10.bc
+export XLA_FLAGS=--xla_gpu_cuda_data_dir=/opt/cuda/
+
 # Append to hist file rather than overwrite
 setopt INC_APPEND_HISTORY
 # Ignore duplicates when using up/down arrow
@@ -38,6 +42,7 @@ setopt globdots
 # Highlight matches when completing
 zstyle ':completion:*' menu select
 
+
 # Show hidden files when completing
 _comp_options+=(globdots)
 
@@ -45,6 +50,7 @@ _comp_options+=(globdots)
 ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 
 # TODO: wait util PR is merged to vi-mode for system clipboard
+
 
 ####################
 # Custom Functions #

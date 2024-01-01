@@ -118,6 +118,7 @@ cmp.setup({
 	sources = cmp.config.sources({
 		{ name = "copilot", keyword_length = 0, max_item_count = 5 }, -- Github copilot
 		{ name = "luasnip" }, -- snippets
+		{ name = "jupynium" }, -- consider higher priority than nvim_lsp since mirror jupyter
 		{ name = "nvim_lsp" }, -- native lsp
 		{ name = "nvim_lsp_signature_help" }, -- Display method signatures while typing
 		{ name = "nvim_lua" }, -- Neovim's lua api
