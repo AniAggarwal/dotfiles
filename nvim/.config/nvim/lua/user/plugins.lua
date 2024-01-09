@@ -70,6 +70,7 @@ return packer.startup(function(use)
 	use({
 		"simrat39/symbols-outline.nvim",
 	})
+	use({ "stevearc/aerial.nvim" })
 
 	-- LSP
 	use({ "williamboman/mason.nvim" })
@@ -259,7 +260,7 @@ return packer.startup(function(use)
 	-- Jupyter Notebook
 	use({
 		"kiyoon/jupynium.nvim",
-		build = "micromamba run -n jupyter --no-capture-output pip install .",
+		build = "micromamba run -n jupyter pip install .",
 		-- enabled = vim.fn.isdirectory(vim.fn.expand "~/miniconda3/envs/jupynium"),
 	})
 

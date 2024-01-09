@@ -1,8 +1,6 @@
 require("jupynium").setup({
-	--- For Conda environment named "jupynium",
-	python_host = { "micromamba", "run", "--no-capture-output", "-n", "jupyter", "python" },
+	python_host = { "micromamba", "run", "-n", "jupyter", "python" },
 	-- python_host = vim.g.python3_host_prog or "python3",
-
 	default_notebook_URL = "localhost:8888/nbclassic",
 
 	-- Write jupyter command but without "notebook"
@@ -14,13 +12,11 @@ require("jupynium").setup({
 	jupyter_command = {
 		"micromamba",
 		"run",
-		"--no-capture-output",
 		"-n",
 		"jupyter",
 		"jupyter",
-		"notebook",
-		"--browser",
-		"firefox",
+		"--config",
+		"/home/ani/.jupyter/jupyter_notebook_config.py",
 	},
 
 	-- Used when notebook is launched by using jupyter_command.
@@ -34,7 +30,7 @@ require("jupynium").setup({
 	firefox_profiles_ini_path = nil,
 	-- nil means the profile with Default=1
 	-- or set to something like 'default-release'
-	firefox_profile_name = nil,
+	firefox_profile_name = "jupyter",
 
 	-- Open the Jupynium server if it is not already running
 	-- which means that it will open the Selenium browser when you open this file.
