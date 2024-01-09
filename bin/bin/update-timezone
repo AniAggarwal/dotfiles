@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+echo "Updating timezone..."
+curl -s https://ipapi.co/timezone | xargs timedatectl set-timezone
+echo -n "New timezone: "
+echo $(timedatectl | grep "Time zone")
