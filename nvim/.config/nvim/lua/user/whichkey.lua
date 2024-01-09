@@ -17,8 +17,8 @@ which_key.register({
 	Q = { "<cmd>q!<CR>", "Quit without saving" },
 	H = { "<cmd>nohlsearch<CR>", "Clear highlights" },
 	L = { "<cmd>let &colorcolumn=(&colorcolumn == 81 ? 0 : 81)<CR>", "Highlight column 81" },
-    C = { "<cmd>Neogen<CR>", "Generate Documentation" },
-    D = { "<cmd>DiffviewToggleFiles<CR>", "Toggle Diffview"},
+	C = { "<cmd>Neogen<CR>", "Generate Documentation" },
+	D = { "<cmd>DiffviewToggleFiles<CR>", "Toggle Diffview" },
 
 	-- NvimTree
 	e = { "<cmd>NvimTreeToggle<CR>", "Explorer" },
@@ -66,7 +66,7 @@ which_key.register({
 
 	-- Symbols outline
 	s = {
-		"<cmd>SymbolsOutline<CR>",
+		"<cmd>AerialToggle<CR>",
 		"Symbols Outline",
 	},
 

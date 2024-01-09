@@ -24,7 +24,7 @@ require("user.alpha")
 require("user.vimilluminate")
 require("user.dressing")
 require("user.todo_comments")
-require("user.symbols_outline")
+require("user.aerial")
 
 require("user.gitsigns")
 require("user.diffview")
