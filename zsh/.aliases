@@ -22,6 +22,11 @@ mnt-usb() {
     cd /media/usb
 }
 
+umnt-usb() {
+    cd "$HOME"
+    sudo umount /media/usb
+}
+
 alias mnt="sudo mount -o uid=$UID"
 
 alias op='xdg-open'
@@ -35,7 +40,7 @@ alias ma="micromamba"
 # Alias for shortening lazygit
 alias lg="lazygit"
 
-alias mpv="mpv --vo=gpu-next"
+alias mpv="mpv --vo=gpu-next --gpu-api=vulkan --hwdec=nvdec"
 
 # Alias for shortening command to display line length of java files
 alias len-java="find . -iname '*.java' -exec wc -L {} \;"
