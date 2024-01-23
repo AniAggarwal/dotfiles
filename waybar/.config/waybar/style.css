@@ -16,6 +16,7 @@
 #pulseaudio,
 #clock,
 #network,
+#idle_inhibitor,
 #battery,
 #custom-current-media {
   border: 1px solid #242738;
@@ -23,7 +24,6 @@
   opacity: 0.9;
 }
 
-#pulseaudio,
 #temperature,
 #tray,
 #custom-current-media {
@@ -116,15 +116,12 @@
 
 #custom-radio-toggle {
   background-color: transparent;
-  border: 2px solid #242738;
   border-right: none;
+  border-left: none;
   border-top: none;
-  border-radius: 0px 0px 0px 8px;
-  margin-left: 5px;
-  margin-right: 0px;
+  border-bottom: 2px solid #242738;
 
-  padding: 0 0px 0 8px;
-  color: #ffffff;
+  padding: 0px 0px 0px 5px;
 }
 
 #network {
@@ -135,6 +132,18 @@
   border-bottom: 2px solid #242738;
 
   padding: 0px 8px 0px 0px;
+}
+
+#idle_inhibitor {
+  background-color: transparent;
+  border: 2px solid #242738;
+  border-right: none;
+  border-top: none;
+  border-radius: 0px 0px 0px 8px;
+  margin-left: 5px;
+  margin-right: 0px;
+  padding: 2px 0px 0px 8px;
+  color: #ffffff;
 }
 
 #temperature {
