@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+# to paste as well, with ctrl+shift+v
+# cliphist list | rofi -dmenu -theme ~/.config/rofi/rofi-config.rasi | cliphist decode | wl-copy && wtype -M ctrl shift -P v -m ctrl
+cliphist list | rofi -dmenu -theme ~/.config/rofi/rofi-config.rasi | cliphist decode | wl-copy

@@ -27,10 +27,25 @@ fi
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ "$device" = "source" ]; then
     source "$script_dir/get-running-source.sh"
-else 
+else
     source "$script_dir/get-running-sink.sh"
 fi
 
 # Adjust the volume of the running sink using wpctl
 echo "wpctl set-volume -l 1.0 $object_id $adjustment"
 wpctl set-volume -l 1.0 $object_id $adjustment
+
+# # Send a notification with the new volume
+# # first get current volume
+# volume_str=$(wpctl get-volume $object_id)
+# # volume in format: Volume: 0.15 [MUTED]
+# volume_str=$(echo $volume_str | awk '{print $2*100"%"}')
+#
+# # if muted, add 󰖁, else add 󰕾
+# if [[ $volume_str == *"MUTED"* ]]; then
+#     volume_str="$volume_str 󰖁 "
+# else
+#     volume_str="$volume_str 󰕾 "
+# fi
+#
+# notify-send -t 300 "$volume_str"
