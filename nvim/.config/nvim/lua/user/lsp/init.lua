@@ -90,6 +90,13 @@ mason_lspconfig.setup_handlers({
 		local mount_commands = function()
 			require("jdtls.setup").add_commands()
 		end
+		local bundles = {
+			vim.fn.glob(
+				"/opt/java-dap/java-debug/com.microsoft.java.debug.plugin/target/com.microsoft.java.debug.plugin-*.jar",
+				1
+			),
+		}
+		vim.list_extend(bundles, vim.split(vim.fn.glob("/opt/java-dap/vscode-java-test/server/*.jar", 1), "\n"))
 		local config = {
 			-- The command that starts the language server
 			filetypes = { "java" },
@@ -136,11 +143,11 @@ mason_lspconfig.setup_handlers({
 						runtimes = {
 							{
 								name = "JavaSE-11",
-								path = "/usr/lib/jvm/java-11-openjdk/"
+								path = "/usr/lib/jvm/java-11-openjdk/",
 							},
 							{
 								name = "JavaSE-21",
-								path = "/usr/lib/jvm/java-21-openjdk/"
+								path = "/usr/lib/jvm/java-21-openjdk/",
 							},
 						},
 					},
@@ -150,10 +157,7 @@ mason_lspconfig.setup_handlers({
 			-- You need to extend the `bundles` with paths to jar files
 			-- if you want to use additional eclipse.jdt.ls plugins.
 			init_options = {
-				bundles = {
-					-- TODO: add my own path
-					-- "/home/owhan/projects/java-debug/com.microsoft.java.debug.plugin/target/com.microsoft.java.debug.plugin-0.40.0.jar",
-				},
+				bundles = bundles,
 			},
 		}
 
