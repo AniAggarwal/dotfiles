@@ -96,8 +96,7 @@ mason_lspconfig.setup_handlers({
 			autostart = true,
 			on_attach = mount_commands,
 			cmd = {
-
-				"java",
+				"/usr/lib/jvm/java-21-openjdk/bin/java",
 
 				"-Declipse.application=org.eclipse.jdt.ls.core.id1",
 				"-Dosgi.bundles.defaultStartLevel=4",
@@ -112,7 +111,7 @@ mason_lspconfig.setup_handlers({
 				"java.base/java.lang=ALL-UNNAMED",
 
 				"-jar",
-				jdtls_path .. "/plugins/org.eclipse.equinox.launcher_1.6.400.v20210924-0641.jar",
+				jdtls_path .. "/plugins/org.eclipse.equinox.launcher_1.6.700.v20231214-2017.jar",
 
 				"-configuration",
 				jdtls_path .. "/config_linux",
@@ -127,7 +126,22 @@ mason_lspconfig.setup_handlers({
 					format = {
 						settings = {
 							url = os.getenv("HOME")
-								.. "/dotfiles/.config/nvim/language-configs/java/cmsc-132-style.xml",
+								.. "/dotfiles/.config/nvim/language-configs/java/custom-google-style.xml",
+						},
+					},
+					configuration = {
+						-- See https://github.com/eclipse/eclipse.jdt.ls/wiki/Running-the-JAVA-LS-server-from-the-command-line#initialize-request
+						-- And search for `interface RuntimeOption`
+						-- The `name` is NOT arbitrary, but must match one of the elements from `enum ExecutionEnvironment` in the link above
+						runtimes = {
+							{
+								name = "JavaSE-11",
+								path = "/usr/lib/jvm/java-11-openjdk/"
+							},
+							{
+								name = "JavaSE-21",
+								path = "/usr/lib/jvm/java-21-openjdk/"
+							},
 						},
 					},
 				},
