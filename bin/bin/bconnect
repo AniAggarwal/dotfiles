@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+
+# Function to display usage information
+usage() {
+    echo "Usage: $0 [-d | -dd] <Device Name>"
+    echo "  -d    Disconnect from the device"
+    echo "  -dd   Disconnect from the device and turn off Bluetooth"
+    exit 1
+}
+
+# Check if at least one argument is provided
+if [ "$#" -lt 1 ]; then
+    usage
+fi
+
+# Default action is to connect
+ACTION="connect"
+SHUTDOWN_BLUETOOTH_AFTER_DISCONNECT=false
+
+# Parse command line options
+while getopts ":dd" opt; do
+    case $opt in
+        d)
+            if [ "$SHUTDOWN_BLUETOOTH_AFTER_DISCONNECT" = true ]; then
+                usage
+            fi
+            ACTION="disconnect"
+            ;;
+        dd)
+            ACTION="disconnect"
+            SHUTDOWN_BLUETOOTH_AFTER_DISCONNECT=true
+            ;;
+        \?)
+            echo "Invalid option: -$OPTARG" >&2
+            usage
+            ;;
+    esac
+done
+
+# Remove parsed options from the arguments list
+shift $((OPTIND-1))
+
+# Check if device name is provided after option parsing
+if [ "$#" -ne 1 ]; then
+    usage
+fi
+
+DEVICE_NAME="$1" # The device name
+
+# Check if Bluetooth service is active
+if [ "$ACTION" = "connect" ]; then
+    if ! systemctl is-active --quiet bluetooth.service; then
+        echo "Bluetooth is off. Turning it on..."
+        systemctl start bluetooth.service
+    fi
+fi
+
+# Get the MAC address of the device with the specified name
+MAC_ADDRESS=$(bluetoothctl devices | grep "$DEVICE_NAME" | awk '{print $2}')
+
+if [ -z "$MAC_ADDRESS" ]; then
+    echo "Device not found."
+    exit 1
+fi
+
+# Connect or disconnect to/from the device based on the action
+echo "${ACTION^}ing to $DEVICE_NAME..."
+bluetoothctl "$ACTION" "$MAC_ADDRESS"
+
+# Turn off Bluetooth if -dd flag was used
+if [ "$SHUTDOWN_BLUETOOTH_AFTER_DISCONNECT" = true ]; then
+    echo "Turning off Bluetooth..."
+    systemctl stop bluetooth.service
+fi

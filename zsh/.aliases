@@ -45,6 +45,9 @@ alias mpv="mpv --vo=gpu-next --gpu-api=vulkan --hwdec=nvdec"
 # Alias for shortening command to display line length of java files
 alias len-java="find . -iname '*.java' -exec wc -L {} \;"
 
+# Alias for running JUnit tests
+alias junit="java -cp ./bin:./lib/junit-4.12.jar:./lib/hamcrest-core-1.3.jar org.junit.runner.JUnitCore"
+
 # Add an "alert" alias for long running commands.  Use like so:
 #   sleep 10; alert
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
