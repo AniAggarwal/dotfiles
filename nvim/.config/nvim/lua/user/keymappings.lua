@@ -90,6 +90,9 @@ keymap("n", "<F6>", "<cmd>lua require'dap'.step_into()<CR>", opts)
 keymap("n", "<F7>", "<cmd>lua require'dap'.step_over()<CR>", opts)
 keymap("n", "<F8>", "<cmd>lua require'dap'.step_out()<CR>", opts)
 
+vim.cmd("command! JdtDebugJUnitMethod lua require'jdtls'.test_nearest_method()")
+vim.cmd("command! JdtDebugJUnitClass lua require'jdtls'.test_class()")
+
 -- Todo Comments
 vim.keymap.set("n", "]t", function()
 	require("todo-comments").jump_next()
