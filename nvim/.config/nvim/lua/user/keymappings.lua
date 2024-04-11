@@ -150,3 +150,14 @@ function DisableCopilot()
 end
 
 vim.cmd("command! DisableCopilot lua DisableCopilot()")
+
+-- Check if the environment variable is set to not start Copilot
+if os.getenv("NVIM_DISABLE_COPILOT") then
+    -- Define an autocmd to run DisableCopilot when a buffer is opened
+    vim.cmd([[
+    augroup DisableCopilotOnBufferOpen
+        autocmd!
+        autocmd BufEnter * lua DisableCopilot()
+    augroup END
+    ]])
+end

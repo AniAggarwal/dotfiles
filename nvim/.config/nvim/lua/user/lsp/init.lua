@@ -132,8 +132,9 @@ mason_lspconfig.setup_handlers({
 				java = {
 					format = {
 						settings = {
-							url = os.getenv("HOME")
-								.. "/dotfiles/.config/nvim/language-configs/java/custom-google-style.xml",
+							-- url = os.getenv("HOME")
+							-- 	.. "/dotfiles/.config/nvim/language-configs/java/cmsc-420-style.xml",
+							url = "https://raw.githubusercontent.com/google/styleguide/gh-pages/eclipse-java-google-style.xml",
 						},
 					},
 					configuration = {

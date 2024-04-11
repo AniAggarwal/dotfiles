@@ -52,6 +52,7 @@ if [ "$ACTION" = "connect" ]; then
     if ! systemctl is-active --quiet bluetooth.service; then
         echo "Bluetooth is off. Turning it on..."
         systemctl start bluetooth.service
+        sleep 1
     fi
 fi
 

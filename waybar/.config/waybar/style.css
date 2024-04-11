@@ -18,7 +18,7 @@
 #network,
 #idle_inhibitor,
 #battery,
-#custom-current-media {
+#custom-media {
   border: 1px solid #242738;
   background-color: #1a1b26;
   opacity: 0.9;
@@ -26,9 +26,6 @@
 
 #temperature,
 #tray,
-#custom-current-media {
-  border-radius: 10px;
-}
 #workspaces {
   margin-left: 0px;
   margin-right: 1px;
@@ -40,10 +37,6 @@
 
 #workspaces button.active {
   color: #a8773b;
-}
-
-#custom-current-media {
-  padding: 0 15px;
 }
 
 #clock {

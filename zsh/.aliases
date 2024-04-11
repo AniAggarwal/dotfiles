@@ -1,8 +1,8 @@
 
 # Set of aliases to use for both bash and zsh
 alias ls='eza --group-directories-first --icons=always'
-alias ll='eza -alFh --icons=always'
-alias l='eza -alFh --icons=always'
+alias ll='eza -alhF --icons=always'
+alias l='eza -alhF --icons=always'
 
 alias grep='grep --color=auto'
 alias fgrep='fgrep --color=auto'
@@ -29,10 +29,13 @@ umnt-usb() {
 
 alias mnt="sudo mount -o uid=$UID"
 
-alias op='xdg-open'
+op() {
+    xdg-open "$1" &> /dev/null &; disown
+}
 
 alias hconf='nvim ~/.config/hypr/hyprland.conf'
 alias nconf='nvim ~/.config/nvim/init.lua'
+alias wlog='nvim ~/data/work-log.txt'
 
 alias mamba="micromamba"
 alias ma="micromamba"
@@ -40,7 +43,8 @@ alias ma="micromamba"
 # Alias for shortening lazygit
 alias lg="lazygit"
 
-alias mpv="mpv --vo=gpu-next --gpu-api=vulkan --hwdec=nvdec"
+# alias mpv="mpv --vo=gpu-next --gpu-api=vulkan --hwdec=nvdec"
+alias mpv="prime-run mpv --vo=gpu --hwdec=vdpau --gpu-api=opengl"
 
 # Alias for shortening command to display line length of java files
 alias len-java="find . -iname '*.java' -exec wc -L {} \;"
@@ -76,7 +80,7 @@ leetcode_create_edit() {
     mkdir "$formatted_input"
 
     echo "from typing import *" > "$formatted_input/$formatted_input.py"
-    nvim "$formatted_input/$formatted_input.py"
+    export NVIM_DISABLE_COPILOT=1; nvim "$formatted_input/$formatted_input.py"
 }
 
 alias leet="leetcode_create_edit"

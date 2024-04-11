@@ -6,7 +6,7 @@ telescope.setup({
 		prompt_prefix = " ",
 		selection_caret = " ",
 		path_display = { "smart" }, -- only display important part of file path
-		file_ignore_patterns = { ".git/" }, -- ignore file paths matching these regex
+		file_ignore_patterns = { ".git/", "doc/" }, -- ignore file paths matching these regex
 		mappings = {
 			i = {
 				["<C-s>"] = actions.select_horizontal,

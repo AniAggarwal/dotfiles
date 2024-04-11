@@ -1,0 +1,25 @@
+# Maintainer: Ani Aggarwal <antiani100@gmail.com>
+pkgname='chakobsa-font-ttf'
+pkgver=0.0.1
+pkgrel=1
+pkgdesc="TTF Dune Chakobsa Font"
+arch=('x86_64')
+url="https://www.reddit.com/r/dune/comments/qoocjv/i_reproduced_the_chakobsa_font_from_the_movie_and/"
+license=('GPL')
+groups=()
+depends=()
+makedepends=()
+provides=('ttf-font')
+replaces=()
+backup=()
+options=()
+install=
+source=("https://drive.google.com/uc?export=download&id=1rhs2euzynAPGyKNkQmvBJ9w9q00vaHmP")
+noextract=()
+md5sums=('SKIP')
+
+package() {
+    install -d $pkgdir/usr/share/fonts/TTF
+    # install -m644 *.ttf $pkgdir/usr/share/fonts/TTF
+    curl -L -o "$pkgdir/usr/share/fonts/TTF/chakobsa.ttf" "$source"
+}
