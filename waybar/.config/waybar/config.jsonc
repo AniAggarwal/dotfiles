@@ -7,6 +7,8 @@
   "modules-left": ["hyprland/workspaces", "tray"],
   "modules-center": [],
   "modules-right": [
+    // "custom/media",
+    // "custom/spotify",
     "cpu",
     "custom/gpu-usage",
     "memory",
@@ -17,10 +19,11 @@
     "pulseaudio",
     "backlight",
     "battery",
-    "clock"
+    "clock",
   ],
   "hyprland/workspaces": {
     "format": "{icon}",
+    // "format": " ",
     "tooltip": true,
     "all-outputs": false,
     "format-icons": {
@@ -32,40 +35,27 @@
       "6": "六",
       "7": "七",
       "8": "八",
-      "9": "九"
+      "9": "九",
     },
-    "on-click": "activate"
+    "on-click": "activate",
   },
   "cpu": {
     "format": "{usage}%  <big></big>",
     "tooltip": false,
-    "on-click": "kitty 'btop'"
+    "on-click": "kitty 'btop'",
   },
   "custom/gpu-usage": {
     "exec": "nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits",
     "format": "{}% <big>󰢮</big>",
     "return-type": "",
-    "interval": 1,
+    "interval": 2,
 
-    "on-click": "kitty 'nvitop-utils'"
+    "on-click": "kitty 'nvitop-utils'",
   },
   "memory": {
-    "interval": 20,
+    "interval": 8,
     "format": "{used}GiB  <big></big>",
-    "on-click": "kitty 'btop'"
-  },
-  "custom/current-media": {
-    "format": "<span rise='+1pt'>{icon}</span>   {}",
-    "return-type": "json",
-    "max-length": 30,
-    "format-icons": {
-      "firefox": "󰈹",
-      "spotify": "󰓇",
-      "brave": ""
-    },
-    "exec": "~/.config/waybar/scripts/get-media.sh",
-    "tooltip": true,
-    "on-click": "exec playerctl play-pause"
+    "on-click": "kitty 'btop'",
   },
   "pulseaudio": {
     "format": "{volume}%  <big>{icon}</big>",
@@ -79,20 +69,23 @@
       "portable": " ",
       "car": " ",
       "default": ["󰕿", "󰖀", "󰕾"],
-      "alsa_output.pci-0000_00_1f.3.hdmi-stereo": ""
+      "alsa_output.pci-0000_00_1f.3.hdmi-stereo": "",
     },
     "on-click": "pavucontrol",
     "scroll-step": 1,
-    "reverse-scrolling": true
+    "reverse-scrolling": true,
   },
   "clock": {
     "format": "{:%a %m/%d  󰃮      %I:%M %p  }",
-    "format-alt": "{:%Y-%m-%d  󰃮      %I:%M %p  }"
+    "format-alt": "{:%Y-%m-%d  󰃮      %I:%M %p  }",
+    // when hovering, show the calendar by running cal
+    "tooltip": true,
+    "tooltip-format": "<tt><big>{calendar}</big></tt>",
   },
   "battery": {
     "states": {
       "warning": 25,
-      "critical": 10
+      "critical": 10,
     },
     "interval": 2,
     "format": "{capacity}%  <big>{icon}</big>",
@@ -100,22 +93,22 @@
     "format-plugged": "{capacity}%  ",
     // "format-alt": "{time} {icon}",
     "format-icons": ["󱃍", "󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"],
-    "on-click": "kitty 'battop'"
+    "on-click": "kitty 'battop'",
   },
   "custom/radio-toggle": {
     "exec": "nmcli radio wifi | awk '//{print \"{\\\"alt\\\": \\\"\"$1\"\\\"}\"}'",
     "format": "<big>{icon}</big>",
     "format-icons": {
       "enabled": "󰴾 ",
-      "disabled": "󱧝 "
+      "disabled": "󱧝 ",
     },
     "return-type": "json",
     "interval": 1,
     "tooltip": false,
-    "on-click": "nmcli radio wifi | grep -q 'enabled' && nmcli radio wifi off || nmcli radio wifi on"
+    "on-click": "nmcli radio wifi | grep -q 'enabled' && nmcli radio wifi off || nmcli radio wifi on",
   },
   "network": {
-    "interval": 5,
+    "interval": 2,
     "format-wifi": "{essid}   <big></big>",
     "format-ethernet": "{ipaddr}    <big></big>",
     "format-disconnected": "<big>󱚵</big>    Disconnected",
@@ -123,41 +116,73 @@
     "tooltip": false,
     "max-length": 20,
 
-    "on-click": "kitty 'nmtui'"
+    "on-click": "kitty 'nmtui'",
   },
   "idle_inhibitor": {
     "format": "{icon}",
     "format-icons": {
       "activated": "󰅶 ",
-      "deactivated": "󰾪 "
-    }
+      "deactivated": "󰾪 ",
+    },
   },
   "temperature": {
-    // "thermal-zone": 2,
     "hwmon-path": "/sys/class/hwmon/hwmon6/temp1_input",
     "critical-threshold": 80,
     // "format-critical": "{temperatureC}°C {icon}",
     "format": "{temperatureC}°C  <big>{icon}</big>",
     "format-icons": ["", "", ""],
-    "on-click": "kitty 'btop'"
+    "on-click": "kitty 'btop'",
+    "interval": 2,
+  },
+  "custom/cpu-temperature": {
+    "exec": "sensors | grep -A 0 'Package id' | awk '{print $4}' |  tr -d '+'",
+    "return-type": "json",
   },
   "backlight": {
     "format": "{percent}% {icon}",
     "format-icons": ["", "", "", "", "", "", "", "", ""],
-    "reverse-scrolling": true
-  }
-  // "custom/spotify": {
-  //     "format": "{icon} {}",
-  //     "escape": true,
-  //     "return-type": "json",
-  //     "max-length": 40,
-  //     "interval": 30, // Remove this if your script is endless and write in loop
-  //     "on-click": "playerctl -p spotify play-pause",
-  //     "on-click-right": "killall spotify",
-  //     "smooth-scrolling-threshold": 10, // This value was tested using a trackpad, it should be lowered if using a mouse.
-  //     "on-scroll-up" : "playerctl -p spotify next",
-  //     "on-scroll-down" : "playerctl -p spotify previous",
-  //     "exec": "$HOME/.config/waybar/mediaplayer.py 2> /dev/null", // Script in resources/custom_modules folder
-  //     "exec-if": "pgrep spotify"
-  // }
+    "reverse-scrolling": true,
+  },
+  "custom/media": {
+    "format": "{icon} {}",
+    "escape": true,
+    "return-type": "json",
+    "max-length": 40,
+    "on-click": "playerctl play-pause",
+    "on-click-right": "playerctl stop",
+    "smooth-scrolling-threshold": 10,
+    "on-scroll-up": "playerctl next",
+    "on-scroll-down": "playerctl previous",
+    "exec": "$HOME/.config/hypr/scripts/mediaplayer.py 2> /dev/null",
+    "interval": 30, // Remove this if your script is endless and write in loop
+  },
+
+  // "custom/current-media": {
+  //   "format": "<span rise='+1pt'>{icon}</span>   {}",
+  //   "return-type": "json",
+  //   "max-length": 30,
+  //   "format-icons": {
+  //     "firefox": "󰈹",
+  //     "spotify": "󰓇",
+  //     "brave": "",
+  //   },
+  //   "exec": "~/.config/waybar/scripts/get-media.sh",
+  //   "tooltip": true,
+  //   "on-click": "exec playerctl play-pause",
+  // },
+
+  "custom/spotify": {
+    "format": "{icon} {}",
+    "escape": true,
+    "return-type": "json",
+    "max-length": 40,
+    "interval": 30, // Remove this if your script is endless and write in loop
+    "on-click": "playerctl -p spotify play-pause",
+    "on-click-right": "killall spotify",
+    "smooth-scrolling-threshold": 10, // This value was tested using a trackpad, it should be lowered if using a mouse.
+    "on-scroll-up": "playerctl -p spotify next",
+    "on-scroll-down": "playerctl -p spotify previous",
+    "exec": "$HOME/.config/hypr/scripts/mediaplayer.py 2> /dev/null",
+    "exec-if": "pgrep spotify",
+  },
 }

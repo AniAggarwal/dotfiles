@@ -25,9 +25,21 @@ export PATH="$HOME/bin:$PATH"
 export PATH=$PATH:/home/ani/.spicetify
 export MAMBA_ROOT_PREFIX=/home/ani/micromamba
 
+# QT theme
+export QT_QPA_PLATFORMTHEME=qt5ct
+
 # For TF to work properly
 # export XLA_FLAGS=--xla_gpu_cuda_data_dir=/opt/cuda/nvvm/libdevice/libdevice.10.bc
 export XLA_FLAGS=--xla_gpu_cuda_data_dir=/opt/cuda/
+
+# Flags for Japanese input
+# env = GTK_IM_MODULE,fcitx # don't need for wayland
+export GTK_IM_MODULE=wayland # may use
+export QT_IM_MODULE=fcitx
+export XMODIFIERS=@im=fcitx
+# maybe be needed for kitty support
+export GLFW_IM_MODULE=ibus
+
 
 # Append to hist file rather than overwrite
 setopt INC_APPEND_HISTORY

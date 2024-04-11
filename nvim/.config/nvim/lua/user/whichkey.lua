@@ -81,6 +81,10 @@ which_key.register({
 		S = { "<cmd>lua require'dap'.close()<CR>", "Stop" },
 		k = { "<cmd>lua require'dap.ui.widgets'.hover()<CR>", "Hover info" },
 		u = { "<cmd>lua require'dapui'.toggle()<CR>", "Toggle DAP UI" },
+		c = { require("jdtls").test_class, "Unit test class" },
+		m = { require("jdtls").test_nearest_method, "Unit test nearest method" },
+
+		r = { require("dap").repl.open, "Open REPL" },
 	},
 }, { prefix = "<leader>", mode = "n" })
 

@@ -20,16 +20,19 @@ null_ls.setup({
 			extra_args = {
 				"--line-length",
 				"79",
-				"--experimental-string-processing",
+				-- "--enable-unstable-feature",
+				-- "string_processing",
+				-- "--enable-unstable-feature",
+				-- "multiline_string_handling",
 			},
 		}),
 		-- for Python imports
 		formatting.isort.with({
 			command = "/home/ani/.local/share/nvim/mason/packages/isort/venv/bin/isort",
-            extra_args = {
-                "-SKIP",
-                "~/dev/work/*"
-            }
+			extra_args = {
+				"-SKIP",
+				"~/dev/work/*",
+			},
 		}),
 		-- for Lua formatting
 		formatting.stylua,
@@ -44,9 +47,9 @@ null_ls.setup({
 			command = "/home/ani/.local/share/nvim/mason/packages/beautysh/venv/bin/beautysh",
 		}),
 
-        formatting.prettier,
-        formatting.ocamlformat,
-        formatting.rustfmt,
+		formatting.prettier,
+		formatting.ocamlformat,
+		formatting.rustfmt,
 
 		-- for Python linting
 		diagnostics.flake8.with({
