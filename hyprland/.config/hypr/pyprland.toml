@@ -1,10 +1,31 @@
 [pyprland]
-plugins = ["scratchpads"]
+plugins = ["scratchpads", "shortcuts_menu"]
+
+[pyprland.variables]
+headphones = "WH-1000XM5"
 
 [scratchpads.term]
-animation = "fromTop"
-command = "kitty --class kitty-dropterm"
+animation = ""
+command = "kitty --class kitty-dropterm --directory ~"
 class = "kitty-dropterm"
-size = "75% 70%"
-max_size = "1920px 100%"
-margin = "5%"
+size = "80% 80%"
+# margin = "5%"
+# position = "20% 20%"
+
+[shortcuts_menu]
+engine = "rofi"
+parameters = "-theme ~/.config/rofi/rofi-config.rasi -dmenu"
+submenu_start = " "
+submenu_end = ""
+
+[shortcuts_menu.entries."Bluetooth"]
+"Connect to Headphones" = "bconnect [headphones]"
+"Disconnect from Headphones" = "bconnect -d [headphones]"
+"Turn Bluetooth On" = "systemctl start bluetooth.service; notify-send 'Bluetooth' 'Turned Bluetooth on'"
+"Turn Bluetooth Off" = "systemctl stop bluetooth.service; notify-send 'Bluetooth' 'Turned Bluetooth off'"
+
+[shortcuts_menu.entries."Power"]
+"Suspend" = "systemctl suspend"
+"Hibernate" = "systemctl hibernate"
+"Reboot" = "systemctl reboot"
+"Shutdown" = "systemctl poweroff"
