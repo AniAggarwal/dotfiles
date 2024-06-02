@@ -46,7 +46,31 @@ return packer.startup(function(use)
 	use({ "wbthomason/packer.nvim" }) -- Have packer manage itself
 
 	-- Colorschemes and looks
-	use({ "joshdick/onedark.vim" }) -- A lua alternative to look into monsonjeremy/onedark.nvim
+	-- use({
+	-- 	"joshdick/onedark.vim",
+	-- 	config = function()
+	-- 		vim.cmd([[colorscheme onedark]])
+	-- 		vim.cmd([[set background=dark]])
+	-- 	end,
+	-- })
+	use({
+		"ii14/onedark.nvim",
+		config = function()
+			vim.cmd([[colorscheme onedark]])
+			vim.cmd([[set background=dark]])
+		end,
+	})
+
+	-- Temp replacement for joshdick onedark since its broken on 0.10
+	-- use({
+	-- 	"navarasu/onedark.nvim",
+	-- 	config = function()
+	-- 		local c = require("onedark.palette").darker
+	-- 		require("onedark").setup()
+	-- 		require("onedark").load()
+	-- 	end,
+	-- })
+
 	use({
 		"nvim-tree/nvim-web-devicons",
 		config = function()
@@ -98,7 +122,7 @@ return packer.startup(function(use)
 	-- DAP
 	use({ "mfussenegger/nvim-dap" }) -- For debugger
 	use({ "jay-babu/mason-nvim-dap.nvim" })
-	use({ "rcarriga/nvim-dap-ui", requires = { "mfussenegger/nvim-dap" } })
+	use({ "rcarriga/nvim-dap-ui", requires = { "mfussenegger/nvim-dap", "nvim-neotest/nvim-nio" } })
 	use({ "nvim-telescope/telescope-dap.nvim" })
 	use({ "theHamsta/nvim-dap-virtual-text" })
 
