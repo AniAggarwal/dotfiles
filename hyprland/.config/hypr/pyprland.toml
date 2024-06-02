@@ -1,5 +1,5 @@
 [pyprland]
-plugins = ["scratchpads", "shortcuts_menu"]
+plugins = ["scratchpads", "shortcuts_menu", "expose"]
 
 [pyprland.variables]
 headphones = "WH-1000XM5"
