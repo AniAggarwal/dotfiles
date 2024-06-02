@@ -1,2 +1,0 @@
-#!/bin/bash
-micromamba run -n utils nvitop

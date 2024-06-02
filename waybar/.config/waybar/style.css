@@ -1,38 +1,44 @@
 * {
-  padding: 0px 0px 0px 0px;
   font-size: 10px;
   font-weight: bold;
-  margin-bottom: 0px;
+  margin: 0px 0px 0px 0px;
+  padding: 0px 0px 0px 0px;
 }
 
 #waybar {
   background: transparent;
-  margin: 0 0 0 0;
 }
 
-#workspaces,
-#memory,
-#backlight,
-#pulseaudio,
-#clock,
-#network,
-#idle_inhibitor,
-#battery,
-#custom-media {
-  border: 1px solid #242738;
-  background-color: #1a1b26;
-  opacity: 0.9;
-}
+#tray {
+  background-color: transparent;
+  border: 2px solid #242738;
+  border-top: none;
+  border-radius: 0px 0px 8px 8px;
 
-#temperature,
-#tray,
+  margin-left: 0px;
+  margin-right: 8px;
+  padding-left: 6px;
+  padding-right: 6px;
+  color: #ffffff;
+}
 #workspaces {
   margin-left: 0px;
   margin-right: 1px;
-  padding-left: 0px;
-  padding-right: 1px;
+  margin-top: 0px;
+  margin-bottom: 0px;
   background: transparent;
   border: none;
+  padding: 0 0px 0 0px;
+
+  /* for a border around workspaces */
+  /* background-color: transparent; */
+  /* border: 2px solid #242738; */
+  /* border-top: none; */
+  /* border-radius: 0px 0px 8px 8px; */
+  /* margin-right: 0px; */
+  /**/
+  /* padding: 0 8px 0 8px; */
+  /* color: #ffffff; */
 }
 
 #workspaces button.active {
@@ -162,10 +168,6 @@
   border-top: none;
   border-bottom: 2px solid #242738;
 
-  /* border: none; */
-  /* margin-right: 0px; */
-  /* background: transparent; */
-  /* margin-right: 3px; */
   padding: 0 8px 0 8px;
   color: #ffffff;
 }
@@ -194,9 +196,8 @@
   color: #ffffff;
 }
 
-#tray {
-  background: transparent;
-  margin-right: 0px;
-  padding: 0 8px 0 8px;
-  border-radius: 0px 0px 0px 0px;
+#custom-media {
+  border: 1px solid #242738;
+  background-color: #1a1b26;
+  opacity: 0.9;
 }

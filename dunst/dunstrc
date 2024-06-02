@@ -333,10 +333,16 @@
     #default_icon = /path/to/icon
 
 
-
 [skip-rule] 
     appname=Spotify
     skip_display=true
+
+
+[rule]
+    appname = "signal-desktop"
+    format = "<b>%s</b>\n%b"
+    icon = ""
+
 
 # Every section that isn't one of the above is interpreted as a rules to
 # override settings for certain messages.
