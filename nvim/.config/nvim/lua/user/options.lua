@@ -45,10 +45,21 @@ vim.opt.wrap = false -- display lines as one long line
 -- vim.opt.textwidth = 79 -- max line length
 vim.opt.spelloptions:append({ "camel" }) -- allow camel case words to be detected correctly for spell check
 
+-- soft wrap text files
 vim.api.nvim_create_autocmd(
 	"FileType",
 	{ pattern = "text", command = "setlocal wrap | setlocal tw=0 | setlocal linebreak | setlocal spell" }
-) -- wrap text files
+)
+-- remap gj, gk to j, k, for wrapped line navigation
+vim.keymap.set({ "n", "x" }, "j", "gj", { noremap = true, silent = true })
+vim.keymap.set({ "n", "x" }, "k", "gk", { noremap = true, silent = true })
+
+-- hard wrap text files
+-- vim.api.nvim_create_autocmd(
+-- 	"FileType",
+-- 	{ pattern = "text", command = "setlocal wrap | setlocal tw=80 | setlocal linebreak | setlocal spell" }
+-- )
+
 vim.api.nvim_create_autocmd("FileType", { pattern = "Outline", command = "setlocal nospell" }) -- No spelling on symbols outline
 vim.api.nvim_create_autocmd(
 	"FileType",

@@ -19,7 +19,7 @@ mason_lspconfig.setup({
 	ensure_installed = {
 		"bashls",
 		"lua_ls",
-		"matlab_ls",
+		"clangd",
 		-- "ocamllsp",
 		"pyright",
 		"texlab",
@@ -118,7 +118,7 @@ mason_lspconfig.setup_handlers({
 				"java.base/java.lang=ALL-UNNAMED",
 
 				"-jar",
-				jdtls_path .. "/plugins/org.eclipse.equinox.launcher_1.6.700.v20231214-2017.jar",
+				jdtls_path .. "/plugins/org.eclipse.equinox.launcher_1.6.800.v20240330-1250.jar",
 
 				"-configuration",
 				jdtls_path .. "/config_linux",
@@ -171,6 +171,14 @@ mason_lspconfig.setup_handlers({
 			end,
 			group = lsp_group,
 			desc = "Checks if LSP jdtls should start a new instance or attach an existing one.",
+		})
+	end,
+
+	["clangd"] = function()
+		lspconfig.clangd.setup({
+			on_attach = custom_attach,
+			-- capabilities but with offsetEncoding utf-16
+			capabilities = vim.tbl_deep_extend("force", capabilities, { offsetEncoding = { "utf-16" } }),
 		})
 	end,
 })
