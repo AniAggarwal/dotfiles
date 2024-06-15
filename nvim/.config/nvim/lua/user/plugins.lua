@@ -53,12 +53,11 @@ return packer.startup(function(use)
 	-- 		vim.cmd([[set background=dark]])
 	-- 	end,
 	-- })
+	-- use({
+	-- 	"ii14/onedark.nvim",
+	-- })
 	use({
-		"ii14/onedark.nvim",
-		config = function()
-			vim.cmd([[colorscheme onedark]])
-			vim.cmd([[set background=dark]])
-		end,
+	    "navarasu/onedark.nvim"
 	})
 
 	-- Temp replacement for joshdick onedark since its broken on 0.10
