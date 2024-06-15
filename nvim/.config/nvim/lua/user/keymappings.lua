@@ -136,7 +136,7 @@ end)
 
 function DisableCopilot()
 	local target_name = "copilot"
-	local clients = vim.lsp.get_active_clients()
+	local clients = vim.lsp.get_clients()
 
 	for _, client in ipairs(clients) do
 		if client.name == target_name then
@@ -152,12 +152,30 @@ end
 vim.cmd("command! DisableCopilot lua DisableCopilot()")
 
 -- Check if the environment variable is set to not start Copilot
+-- if os.getenv("NVIM_DISABLE_COPILOT") then
+-- 	-- Define an autocmd to run DisableCopilot when a buffer is opened
+-- 	vim.cmd([[
+--     augroup DisableCopilotOnBufferOpen
+--         autocmd!
+--         autocmd BufEnter * lua DisableCopilot()
+--     augroup END
+--     ]])
+-- end
+
+
 if os.getenv("NVIM_DISABLE_COPILOT") then
-    -- Define an autocmd to run DisableCopilot when a buffer is opened
-    vim.cmd([[
+  -- Define a function to disable Copilot after a delay
+  function DelayedDisableCopilot()
+    vim.defer_fn(function()
+      DisableCopilot()
+    end, 3000)
+  end
+
+  -- Define an autocmd to run DelayedDisableCopilot when a buffer is opened
+  vim.cmd([[
     augroup DisableCopilotOnBufferOpen
-        autocmd!
-        autocmd BufEnter * lua DisableCopilot()
+      autocmd!
+      autocmd BufEnter * lua DelayedDisableCopilot()
     augroup END
-    ]])
+  ]])
 end
