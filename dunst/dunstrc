@@ -339,9 +339,10 @@
 
 
 [rule]
-    appname = "signal-desktop"
+    appname = "Signal"
     format = "<b>%s</b>\n%b"
     icon = ""
+    max_icon_size = 32
 
 
 # Every section that isn't one of the above is interpreted as a rules to
