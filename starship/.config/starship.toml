@@ -93,6 +93,9 @@ format = '\[[$symbol($version)]($style)\]'
 symbol = " "
 format = '\[[$symbol($version)]($style)\]'
 
+[jobs]
+symbol = "󰫢 "
+
 [kotlin]
 format = '\[[$symbol($version)]($style)\]'
 
