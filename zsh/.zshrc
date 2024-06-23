@@ -61,6 +61,10 @@ _comp_options+=(globdots)
 # Try searching history before using zsh's completion
 ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 
+# disable right arrow and click from completion
+# Based on this stack overflow answer of how to remove an element from an array https://stackoverflow.com/a/25172688/154703
+ZSH_AUTOSUGGEST_ACCEPT_WIDGETS[$ZSH_AUTOSUGGEST_ACCEPT_WIDGETS[(i)vi-forward-char]]=()
+
 # TODO: wait util PR is merged to vi-mode for system clipboard
 
 
