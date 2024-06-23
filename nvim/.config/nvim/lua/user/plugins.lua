@@ -46,30 +46,9 @@ return packer.startup(function(use)
 	use({ "wbthomason/packer.nvim" }) -- Have packer manage itself
 
 	-- Colorschemes and looks
-	-- use({
-	-- 	"joshdick/onedark.vim",
-	-- 	config = function()
-	-- 		vim.cmd([[colorscheme onedark]])
-	-- 		vim.cmd([[set background=dark]])
-	-- 	end,
-	-- })
-	-- use({
-	-- 	"ii14/onedark.nvim",
-	-- })
 	use({
-	    "navarasu/onedark.nvim"
+		"navarasu/onedark.nvim",
 	})
-
-	-- Temp replacement for joshdick onedark since its broken on 0.10
-	-- use({
-	-- 	"navarasu/onedark.nvim",
-	-- 	config = function()
-	-- 		local c = require("onedark.palette").darker
-	-- 		require("onedark").setup()
-	-- 		require("onedark").load()
-	-- 	end,
-	-- })
-
 	use({
 		"nvim-tree/nvim-web-devicons",
 		config = function()
@@ -288,7 +267,7 @@ return packer.startup(function(use)
 	})
 
 	-- Movement and Productivity
-	use({ "knubie/vim-kitty-navigator", run = "cp ./*.py ~/.config/kitty/" }) -- for movement between kitty windows
+	use({ "mrjones2014/smart-splits.nvim", run = "./kitty/install-kittens.bash" })
 
 	-- Automatically set up your configuration after cloning packer.nvim
 	-- Put this at the end after all plugins

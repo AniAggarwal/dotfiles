@@ -17,20 +17,33 @@ vim.g.mapleader = " "
 
 -- Normal --
 -- Better window navigation
--- keymap("n", "<C-h>", "<C-w>h", opts)
--- keymap("n", "<C-j>", "<C-w>j", opts)
--- keymap("n", "<C-k>", "<C-w>k", opts)
--- keymap("n", "<C-l>", "<C-w>l", opts)
 
--- Resize with arrows
-keymap("n", "<C-Up>", "<cmd>resize -2<CR>", opts)
-keymap("n", "<C-Down>", "<cmd>resize +2<CR>", opts)
-keymap("n", "<C-Left>", "<cmd>vertical resize -2<CR>", opts)
-keymap("n", "<C-Right>", "<cmd>vertical resize +2<CR>", opts)
+-- resizing splits
+-- these keymaps will also accept a range,
+-- for example `10<A-h>` will `resize_left` by `(10 * config.default_amount)`
+vim.keymap.set('n', '<A-H>', require('smart-splits').resize_left)
+vim.keymap.set('n', '<A-J>', require('smart-splits').resize_down)
+vim.keymap.set('n', '<A-K>', require('smart-splits').resize_up)
+vim.keymap.set('n', '<A-L>', require('smart-splits').resize_right)
+-- moving between splits
+vim.keymap.set('n', '<C-h>', require('smart-splits').move_cursor_left)
+vim.keymap.set('n', '<C-j>', require('smart-splits').move_cursor_down)
+vim.keymap.set('n', '<C-k>', require('smart-splits').move_cursor_up)
+vim.keymap.set('n', '<C-l>', require('smart-splits').move_cursor_right)
+vim.keymap.set('n', '<C-\\>', require('smart-splits').move_cursor_previous)
+-- swapping buffers between windows
+vim.keymap.set('n', '<leader><leader>h', require('smart-splits').swap_buf_left)
+vim.keymap.set('n', '<leader><leader>j', require('smart-splits').swap_buf_down)
+vim.keymap.set('n', '<leader><leader>k', require('smart-splits').swap_buf_up)
+vim.keymap.set('n', '<leader><leader>l', require('smart-splits').swap_buf_right)
 
 -- Navigate buffers
 keymap("n", "<S-l>", "<cmd>BufferLineCycleNext<CR>", opts)
 keymap("n", "<S-h>", "<cmd>BufferLineCyclePrev<CR>", opts)
+
+keymap("n", "<C-S-M-l>", ":BufferLineMoveNext<CR>", opts)
+keymap("n", "<C-S-M-h>", ":BufferLineMovePrev<CR>", opts)
+
 
 -- Close buffers
 keymap("n", "<S-q>", "<cmd>Bdelete<CR>", opts)
@@ -113,10 +126,6 @@ keymap("n", "gL", "<cmd>TroubleToggle document_diagnostics<CR>", opts)
 -- Git
 keymap("n", "]c", "<cmd>Gitsigns next_hunk<CR>", opts)
 keymap("n", "[c", "<cmd>Gitsigns prev_hunk<CR>", opts)
-
--- Bufferline
-keymap("n", "<S-M-l>", ":BufferLineMoveNext<CR>", opts)
-keymap("n", "<S-M-h>", ":BufferLineMovePrev<CR>", opts)
 
 -- Dressing
 vim.keymap.set("n", "z=", function()
