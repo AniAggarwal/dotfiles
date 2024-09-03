@@ -12,11 +12,10 @@ null_ls.setup({
 		new_client.offset_encoding = "utf-16"
 	end,
 
-	debug = false,
 	sources = {
 		-- for Python formatting
 		formatting.black.with({
-			command = "/home/ani/.local/share/nvim/mason/packages/black/venv/bin/black",
+			-- command = os.getenv("HOME") .. ".local/share/nvim/mason/packages/black/venv/bin/black",
 			extra_args = {
 				"--line-length",
 				"79",
@@ -27,34 +26,35 @@ null_ls.setup({
 			},
 		}),
 		-- for Python imports
-		formatting.isort.with({
-			command = "/home/ani/.local/share/nvim/mason/packages/isort/venv/bin/isort",
-			extra_args = {
-				"-SKIP",
-				"~/dev/work/*",
-			},
-		}),
+		-- formatting.isort.with({
+		-- 	command = os.getenv("HOME") .. "/.local/share/nvim/mason/packages/isort/venv/bin/isort",
+		-- 	extra_args = {
+		-- 		"-SKIP",
+		-- 		"~/dev/work/*",
+		-- 	},
+		-- }),
+
 		-- for Lua formatting
 		formatting.stylua,
 
 		-- Pass path to custom config file for clang_format
 		formatting.clang_format.with({
-			extra_args = { "--style=file:/home/ani/.config/nvim/language-configs/c/.clang-format" },
+			extra_args = { "--style=file:" .. os.getenv("HOME") .. "/.config/nvim/language-configs/c/.clang-format" },
 		}),
 
 		-- For Bash/Zsh formatting
-		formatting.beautysh.with({
-			command = "/home/ani/.local/share/nvim/mason/packages/beautysh/venv/bin/beautysh",
-		}),
+		-- formatting.beautysh.with({
+		-- 	command = "/home/ani/.local/share/nvim/mason/packages/beautysh/venv/bin/beautysh",
+		-- }),
 
 		formatting.prettier,
-		formatting.ocamlformat,
-		formatting.rustfmt,
+		-- formatting.ocamlformat,
+		-- formatting.rustfmt,
 
 		-- for Python linting
-		diagnostics.flake8.with({
-			command = "/home/ani/.local/share/nvim/mason/packages/flake8/venv/bin/flake8",
-			extra_args = { "--config=/home/ani/.config/nvim/language-configs/python/.flake8" },
+        require("none-ls.diagnostics.flake8").with({
+			command = os.getenv("HOME") .. "/.local/share/nvim/mason/packages/flake8/venv/bin/flake8",
+			extra_args = { "--config=" .. os.getenv("HOME") .. "/.config/nvim/language-configs/python/.flake8" },
 		}),
 
 		-- gitsigns intergration

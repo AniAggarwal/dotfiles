@@ -17,12 +17,13 @@ require("mason").setup()
 local mason_lspconfig = require("mason-lspconfig")
 mason_lspconfig.setup({
 	ensure_installed = {
+		"basedpyright",
 		"bashls",
+		"jdtls",
 		"lua_ls",
 		"clangd",
-		-- "ocamllsp",
-		"pyright",
 		"texlab",
+		-- "ocamllsp",
 	},
 })
 
@@ -38,6 +39,24 @@ mason_lspconfig.setup_handlers({
 			capabilities = capabilities,
 		})
 	end,
+
+	["basedpyright"] = function()
+		lspconfig.basedpyright.setup({
+			on_attach = custom_attach,
+			capabilities = capabilities,
+			settings = {
+				python = {
+					analysis = {
+						typeCheckingMode = "basic",
+						diagnosticSeverityOverrides = {
+							reportUnknownArgumentType = "warning",
+						},
+					},
+				},
+			},
+		})
+	end,
+
 	-- Custom handler for ocamllsp
 	["ocamllsp"] = function()
 		lspconfig.ocamllsp.setup({
@@ -209,10 +228,10 @@ vim.diagnostic.config({
 	},
 })
 
--- TODO: this may be causing issues with some buffers not letting hover work
--- properly
+-- TODO: this may be causing issues with some buffers not letting hover work properly
 lsp.handlers["textDocument/hover"] = lsp.with(lsp.handlers.hover, {
 	border = "rounded",
+    focus = false,
 })
 
 lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, {

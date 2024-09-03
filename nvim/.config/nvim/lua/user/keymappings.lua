@@ -21,29 +21,28 @@ vim.g.mapleader = " "
 -- resizing splits
 -- these keymaps will also accept a range,
 -- for example `10<A-h>` will `resize_left` by `(10 * config.default_amount)`
-vim.keymap.set('n', '<A-H>', require('smart-splits').resize_left)
-vim.keymap.set('n', '<A-J>', require('smart-splits').resize_down)
-vim.keymap.set('n', '<A-K>', require('smart-splits').resize_up)
-vim.keymap.set('n', '<A-L>', require('smart-splits').resize_right)
+vim.keymap.set("n", "<A-H>", require("smart-splits").resize_left)
+vim.keymap.set("n", "<A-J>", require("smart-splits").resize_down)
+vim.keymap.set("n", "<A-K>", require("smart-splits").resize_up)
+vim.keymap.set("n", "<A-L>", require("smart-splits").resize_right)
 -- moving between splits
-vim.keymap.set('n', '<C-h>', require('smart-splits').move_cursor_left)
-vim.keymap.set('n', '<C-j>', require('smart-splits').move_cursor_down)
-vim.keymap.set('n', '<C-k>', require('smart-splits').move_cursor_up)
-vim.keymap.set('n', '<C-l>', require('smart-splits').move_cursor_right)
-vim.keymap.set('n', '<C-\\>', require('smart-splits').move_cursor_previous)
+vim.keymap.set("n", "<C-h>", require("smart-splits").move_cursor_left)
+vim.keymap.set("n", "<C-j>", require("smart-splits").move_cursor_down)
+vim.keymap.set("n", "<C-k>", require("smart-splits").move_cursor_up)
+vim.keymap.set("n", "<C-l>", require("smart-splits").move_cursor_right)
+vim.keymap.set("n", "<C-\\>", require("smart-splits").move_cursor_previous)
 -- swapping buffers between windows
-vim.keymap.set('n', '<leader><leader>h', require('smart-splits').swap_buf_left)
-vim.keymap.set('n', '<leader><leader>j', require('smart-splits').swap_buf_down)
-vim.keymap.set('n', '<leader><leader>k', require('smart-splits').swap_buf_up)
-vim.keymap.set('n', '<leader><leader>l', require('smart-splits').swap_buf_right)
+vim.keymap.set("n", "<leader><leader>h", require("smart-splits").swap_buf_left)
+vim.keymap.set("n", "<leader><leader>j", require("smart-splits").swap_buf_down)
+vim.keymap.set("n", "<leader><leader>k", require("smart-splits").swap_buf_up)
+vim.keymap.set("n", "<leader><leader>l", require("smart-splits").swap_buf_right)
 
 -- Navigate buffers
 keymap("n", "<S-l>", "<cmd>BufferLineCycleNext<CR>", opts)
 keymap("n", "<S-h>", "<cmd>BufferLineCyclePrev<CR>", opts)
 
-keymap("n", "<C-S-M-l>", ":BufferLineMoveNext<CR>", opts)
-keymap("n", "<C-S-M-h>", ":BufferLineMovePrev<CR>", opts)
-
+keymap("n", "<C-M-l>", ":BufferLineMoveNext<CR>", opts)
+keymap("n", "<C-M-h>", ":BufferLineMovePrev<CR>", opts)
 
 -- Close buffers
 keymap("n", "<S-q>", "<cmd>Bdelete<CR>", opts)
@@ -160,28 +159,16 @@ end
 
 vim.cmd("command! DisableCopilot lua DisableCopilot()")
 
--- Check if the environment variable is set to not start Copilot
--- if os.getenv("NVIM_DISABLE_COPILOT") then
--- 	-- Define an autocmd to run DisableCopilot when a buffer is opened
--- 	vim.cmd([[
---     augroup DisableCopilotOnBufferOpen
---         autocmd!
---         autocmd BufEnter * lua DisableCopilot()
---     augroup END
---     ]])
--- end
-
-
 if os.getenv("NVIM_DISABLE_COPILOT") then
-  -- Define a function to disable Copilot after a delay
-  function DelayedDisableCopilot()
-    vim.defer_fn(function()
-      DisableCopilot()
-    end, 3000)
-  end
+	-- Define a function to disable Copilot after a delay
+	-- function DelayedDisableCopilot()
+	-- 	vim.defer_fn(function()
+	-- 		DisableCopilot()
+	-- 	end, 3000)
+	-- end
 
-  -- Define an autocmd to run DelayedDisableCopilot when a buffer is opened
-  vim.cmd([[
+	-- Define an autocmd to run DelayedDisableCopilot when a buffer is opened
+	vim.cmd([[
     augroup DisableCopilotOnBufferOpen
       autocmd!
       autocmd BufEnter * lua DelayedDisableCopilot()
