@@ -6,6 +6,41 @@ local capabilities = lsp.protocol.make_client_capabilities()
 capabilities = require("cmp_nvim_lsp").default_capabilities(capabilities)
 capabilities.textDocument.completion.completionItem.snippetSupport = true
 
+-- Change diagnostic signs.
+fn.sign_define("DiagnosticSignError", { numhl = "LspDiagnosticsLineNrError", text = "" })
+fn.sign_define("DiagnosticSignWarn", { numhl = "LspDiagnosticsLineNrWarning", text = "" })
+fn.sign_define("DiagnosticSignInformation", { numhl = "LspDiagnosticsLineNrInfo", text = "" })
+fn.sign_define("DiagnosticSignHint", { numhl = "LspDiagnosticsLineNrHint", text = "" })
+vim.cmd("highlight LspDiagnosticsLineNrError guifg=#eb6f92 guibg=#412d44 gui=bold")
+vim.cmd("highlight LspDiagnosticsLineNrWarning guifg=#f6c177 guibg=#433940 gui=bold")
+vim.cmd("highlight LspDiagnosticsLineNrInfo guifg=#569fba guibg=#2b344a gui=bold")
+vim.cmd("highlight LspDiagnosticsLineNrHint guifg=#a3be8c guibg=#363943 gui=bold")
+
+-- global config for diagnostic
+vim.diagnostic.config({
+	virtual_text = false,
+	underline = true,
+	signs = true,
+	severity_sort = true,
+	float = {
+		focusable = true,
+		style = "minimal",
+		border = "rounded",
+		source = true,
+		header = "",
+		prefix = "",
+	},
+})
+
+lsp.handlers["textDocument/hover"] = lsp.with(lsp.handlers.hover, {
+	border = "rounded",
+	focus = false,
+})
+
+lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, {
+	border = "rounded",
+})
+
 local custom_attach = function(client, bufnr)
 	-- Disable so that null-ls' formatting can be used without asking for null-ls or lua_ls each time
 	if client.name == "lua_ls" then
@@ -23,7 +58,6 @@ mason_lspconfig.setup({
 		"lua_ls",
 		"clangd",
 		"texlab",
-		-- "ocamllsp",
 	},
 })
 
@@ -200,42 +234,6 @@ mason_lspconfig.setup_handlers({
 			capabilities = vim.tbl_deep_extend("force", capabilities, { offsetEncoding = { "utf-16" } }),
 		})
 	end,
-})
-
--- Change diagnostic signs.
-fn.sign_define("DiagnosticSignError", { numhl = "LspDiagnosticsLineNrError" })
-fn.sign_define("DiagnosticSignWarn", { numhl = "LspDiagnosticsLineNrWarning" })
-fn.sign_define("DiagnosticSignInformation", { numhl = "LspDiagnosticsLineNrInfo" })
-fn.sign_define("DiagnosticSignHint", { numhl = "LspDiagnosticsLineNrHint" })
-vim.cmd("highlight LspDiagnosticsLineNrError guifg=#eb6f92 guibg=#412d44 gui=bold")
-vim.cmd("highlight LspDiagnosticsLineNrWarning guifg=#f6c177 guibg=#433940 gui=bold")
-vim.cmd("highlight LspDiagnosticsLineNrInfo guifg=#569fba guibg=#2b344a gui=bold")
-vim.cmd("highlight LspDiagnosticsLineNrHint guifg=#a3be8c guibg=#363943 gui=bold")
-
--- global config for diagnostic
-vim.diagnostic.config({
-	virtual_text = false,
-	underline = false,
-	signs = true,
-	severity_sort = true,
-	float = {
-		focusable = true,
-		style = "minimal",
-		border = "rounded",
-		source = "always",
-		header = "",
-		prefix = "",
-	},
-})
-
--- TODO: this may be causing issues with some buffers not letting hover work properly
-lsp.handlers["textDocument/hover"] = lsp.with(lsp.handlers.hover, {
-	border = "rounded",
-    focus = false,
-})
-
-lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, {
-	border = "rounded",
 })
 
 require("user.lsp.null-ls")
