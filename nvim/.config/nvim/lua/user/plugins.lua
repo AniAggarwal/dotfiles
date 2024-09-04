@@ -59,12 +59,12 @@ return packer.startup(function(use)
 			})
 		end,
 	})
-    use({
-          "folke/zen-mode.nvim",
-        config = function ()
-            require("zen-mode")
-        end
-    })
+	use({
+		"folke/zen-mode.nvim",
+		config = function()
+			require("zen-mode")
+		end,
+	})
 
 	use({ "akinsho/bufferline.nvim" }) -- Bufferline
 	use({ "moll/vim-bbye" }) -- allow buffers to be closed properly
@@ -85,9 +85,7 @@ return packer.startup(function(use)
 	use({ "williamboman/mason-lspconfig.nvim" }) -- grab lsp and similar
 	use({ "neovim/nvim-lspconfig" }) -- enable LSP
 
-	use({ "nvimtools/none-ls.nvim",
-        requires = "nvimtools/none-ls-extras.nvim"
-    }) -- for formatters and linters
+	use({ "nvimtools/none-ls.nvim", requires = "nvimtools/none-ls-extras.nvim" }) -- for formatters and linters
 	use({ "RRethy/vim-illuminate" })
 	use({ "nvim-lua/plenary.nvim" }) -- Useful lua functions used by lots of plugins
 
@@ -230,6 +228,14 @@ return packer.startup(function(use)
 		requires = "nvim-treesitter/nvim-treesitter",
 	}) -- documentation generation
 
+	use({
+		"chipsenkbeil/distant.nvim",
+		branch = "v0.3",
+		config = function()
+			require("distant"):setup()
+		end,
+	})
+
 	-- image viewing
 	-- use({
 	-- 	"edluffy/hologram.nvim",
@@ -275,9 +281,7 @@ return packer.startup(function(use)
 	})
 
 	-- Movement and Productivity
-    use({ "mrjones2014/smart-splits.nvim", run = "./kitty/install-kittens.bash" })
-
-
+	use({ "mrjones2014/smart-splits.nvim", run = "./kitty/install-kittens.bash" })
 
 	-- Automatically set up your configuration after cloning packer.nvim
 	-- Put this at the end after all plugins
