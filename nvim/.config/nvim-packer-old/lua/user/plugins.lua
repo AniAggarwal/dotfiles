@@ -103,6 +103,13 @@ return packer.startup(function(use)
 
 	use({ "lervag/vimtex" })
 
+	use({
+		"fei6409/log-highlight.nvim",
+		config = function()
+			require("log-highlight").setup({})
+		end,
+	}) -- log file highlighting
+
 	-- DAP
 	use({ "mfussenegger/nvim-dap" }) -- For debugger
 	use({ "jay-babu/mason-nvim-dap.nvim" })
@@ -211,12 +218,6 @@ return packer.startup(function(use)
 	use({ "ahmedkhalf/project.nvim" }) -- easily move between projects
 	use({ "folke/which-key.nvim" }) -- show key maps
 	use({ "mrjones2014/legendary.nvim" }) -- search key maps
-	use({
-		"fei6409/log-highlight.nvim",
-		config = function()
-			require("log-highlight").setup({})
-		end,
-	}) -- log file highlighting
 	use({
 		"danymat/neogen",
 		config = function()
