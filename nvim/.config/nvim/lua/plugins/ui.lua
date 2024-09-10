@@ -9,20 +9,20 @@ return {
 
       -- TODO: figure out color highlighting and whatnot later
       require("onedark").setup({
-        -- style = "dark",
+        style = "dark",
         -- colors = {
         --   bg = palette.bg0,
         --   bg2 = palette.bg1,
         --   fg = palette.fg,
         --   blue = palette.blue,
         -- },
-        -- highlights = {
-        --   Pmenu = { fg = palette.fg, bg = palette.bg1 },
-        --   PmenuSel = { fg = palette.bg1, bg = palette.blue },
-        --   CmpItemMenu = { fg = palette.fg, bg = palette.bg1 },
-        --   NormalFloat = { bg = palette.bg0 }, -- Match the background of the floating window to the main background
-        --   FloatBorder = { bg = palette.bg0, fg = palette.fg }, -- Keep the border but match the background to the main background
-        -- },
+        highlights = {
+          FloatBorder = { bg = palette.bg0, fg = palette.fg }, -- Keep the border but match the background to the main background
+          NormalFloat = { bg = palette.bg0 }, -- Match the background of the floating window to the main background
+          -- Pmenu = { fg = palette.fg, bg = palette.bg1 },
+          -- PmenuSel = { fg = palette.bg1, bg = palette.blue },
+          -- CmpItemMenu = { fg = palette.fg, bg = palette.bg1 },
+        },
       })
 
       -- Load the color scheme
@@ -278,9 +278,10 @@ end
   event = "VeryLazy",
   opts = {
     stages = "fade",
-    timeout = 3000,
+    timeout = 500,
   },
-  config = function()
+  config = function(_, opts)
+    require("notify").setup(opts)
     -- Set notify as the default notification handler for Neovim
     vim.notify = require("notify")
   end,

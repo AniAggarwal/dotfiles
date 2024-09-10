@@ -117,6 +117,28 @@ return {
       { "<leader>L", "<cmd>let &colorcolumn=(&colorcolumn == 81 ? 0 : 81)<CR>", desc = "Highlight column 81" },
       { "<leader>C", "<cmd>Neogen<CR>", desc = "Generate Documentation" },
       { "<leader>D", "<cmd>DiffviewToggleFiles<CR>", desc = "Toggle Diffview" },
+{
+    "g",
+    group = "LSP",
+    { "]g", vim.diagnostic.goto_next, desc = "Goto next diagnostic" },
+    { "[g", vim.diagnostic.goto_prev, desc = "Goto prev diagnostic" },
+    { "gd", vim.lsp.buf.definition, desc = "To definition" },
+    { "gD", vim.lsp.buf.declaration, desc = "To declaration" },
+    { "gK", vim.lsp.buf.hover, desc = "Hover" },
+    { "gI", vim.lsp.buf.implementation, desc = "To implementation" },
+    { "gl", vim.diagnostic.open_float, desc = "Open Diagnostic" },
+    { "gf", vim.lsp.buf.format, desc = "Format" },
+    { "gs", vim.lsp.buf.signature_help, desc = "Signature help" },
+    { "ga", vim.lsp.buf.code_action, desc = "Code action" },
+    { "gn", vim.lsp.buf.rename, desc = "Rename" },
+    -- TODO: figure out if this is needed or if it automatically works
+    -- vim.keymap.set("n", "K", vim.lsp.buf.hover, { noremap = true, silent = true })
+  },
+{
+    "z",
+    { "zn", "]s1z=", desc = "Correct next misspelling." },
+    { "zp", "[s1z=", desc = "Correct prev misspelling." },
+  }
     }
 }
 },
