@@ -1,0 +1,18 @@
+BasedOnStyle: LLVM
+ColumnLimit: 79
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+
+#ContinuationIndentWidth: 8
+#AlignAfterOpenBracket: Align
+#AllowShortEnumsOnASingleLine: false
+#AllowShortIfStatementsOnASingleLine: false
+#AlwaysBreakAfterReturnType: TopLevel
+#BreakBeforeBraces: Stroustrup
+#DerivePointerAlignment: false
+#IncludeBlocks: Regroup
+#PointerAlignment: Right
+#ReflowComments: true
+#SpaceBeforeParens: ControlStatements
+#SpacesInParentheses: false

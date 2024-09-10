@@ -2,9 +2,10 @@
 local keymap = vim.keymap.set
 local opts = { silent = true }
 
--- Remap space as leader key
-keymap("", "<Space>", "<Nop>", opts)
+-- Remap space as leader key. Must be done before setup of lazy
+vim.keymap.set("", "<Space>", "<Nop>", { silent = true })
 vim.g.mapleader = " "
+vim.g.maplocalleader = " "
 
 -- Better paste - pasting on highlighted text keeps the original yanked text
 keymap("v", "p", '"_dP', opts)
@@ -46,4 +47,5 @@ keymap("c", "<C-l>", "<Right>", {})
 -- Terminal mode keymaps --
 keymap("t", "<C-\\>", "<C-\\><C-n>", opts)
 
-
+-- User commands
+keymap("n", "z=", SpellSuggest)
