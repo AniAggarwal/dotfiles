@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+read -p "Enter the string in the format '<number>. <words>': " input
+
+formatted_input=$(echo $input | sed 's/\. / /g' | tr '[:upper:]' '[:lower:]' | tr -d '[:punct:]' | tr ' ' '-')
+
+cd "$HOME/dev/leetcode/"
+
+if [ -d "$formatted_input" ]; then
+    echo "The directory already exists."
+else
+    mkdir "$formatted_input"
+fi
+
+if [ -f "$formatted_input/$formatted_input.py" ]; then
+    echo "The file already exists."
+else
+
+    cat >> "$formatted_input/$formatted_input.py"<< EOF
+from typing import *
+
+"""
+Time Complexity: O( )
+Space Complexity: O( )
+"""
+EOF
+
+fi
+
+export NVIM_DISABLE_COPILOT=1; nvim "$formatted_input/$formatted_input.py"
