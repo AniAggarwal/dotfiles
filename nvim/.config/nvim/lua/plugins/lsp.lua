@@ -24,7 +24,7 @@ return {
 
 	{
 		"nvim-treesitter/nvim-treesitter-textobjects",
-		event = "BufReadPost", -- Lazy load after opening a buffer
+		event = "BufReadPost",
 		dependencies = { "nvim-treesitter/nvim-treesitter" }, -- Ensure nvim-treesitter is loaded first
 	},
 
@@ -45,7 +45,7 @@ return {
 	{
 		"williamboman/mason-lspconfig.nvim",
 		dependencies = { "williamboman/mason.nvim", "neovim/nvim-lspconfig" },
-		event = { "BufReadPre", "BufNewFile" },
+		event = { "BufReadPre", "BufNewFile", "BufEnter", "FileType" },
 		opts = {
 			ensure_installed = {
 				"basedpyright",
@@ -68,7 +68,7 @@ return {
 			-- TODO: investigate if this true setting is needed
 			-- capabilities.textDocument.completion.completionItem.snippetSupport = true
 
-            -- Can define a custom_attach and pass into setup just as the custom capabilities is passed in
+			-- Can define a custom_attach and pass into setup just as the custom capabilities is passed in
 			-- local custom_attach = function(client, bufnr) -- do something end
 
 			mason_lspconfig.setup_handlers({
