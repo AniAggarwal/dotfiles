@@ -102,6 +102,7 @@ return {
 
 {
   "kyazdani42/nvim-tree.lua",
+  lazy = false,
   keys = {
     { "<leader>e", "<cmd>NvimTreeToggle<CR>", desc = "Toggle Explorer" },
   },

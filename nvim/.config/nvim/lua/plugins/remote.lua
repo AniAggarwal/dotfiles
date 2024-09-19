@@ -7,5 +7,13 @@ return {
 		end,
 	},
 
-	-- previously used vim-arysnc
+	{
+		"KenN7/vim-arsync",
+		dependencies = { "prabirshrestha/async.vim" },
+        cmd = { "ARshowConf", "ARsyncDown", "ARsyncUp", "ARsyncUpDelete" },
+        keys = {
+            {"<leader>au", "<cmd>ARsyncUp<CR>", desc = "Rsync Up to Remote" },
+            {"<leader>ad", "<cmd>ARsyncDown<CR>", desc = "Rsync Down from Remote" },
+        }
+	},
 }
