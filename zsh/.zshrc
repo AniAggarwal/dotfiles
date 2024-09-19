@@ -22,7 +22,8 @@ COMPLETION_WAITING_DOTS="false"
 
 export EDITOR="/usr/bin/nvim"
 export PATH="$HOME/bin:$PATH"
-export PATH=$PATH:/home/ani/.spicetify
+export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/.cargo/bin:$PATH"
 export MAMBA_ROOT_PREFIX=/home/ani/micromamba
 
 # QT theme
@@ -34,7 +35,7 @@ export XLA_FLAGS=--xla_gpu_cuda_data_dir=/opt/cuda/
 
 # Flags for Japanese input
 # env = GTK_IM_MODULE,fcitx # don't need for wayland
-export GTK_IM_MODULE=wayland # may use
+# export GTK_IM_MODULE=wayland # may use
 export QT_IM_MODULE=fcitx
 export XMODIFIERS=@im=fcitx
 # maybe be needed for kitty support
