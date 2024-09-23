@@ -18,7 +18,6 @@ return {
 					"isort", -- Python import sorter
 					"flake8", -- Python linter
 					"stylua", -- Lua formatter
-					"clang_format", -- C/C++ formatter
 					"beautysh", -- Bash/Zsh formatter
 					"prettier", -- Formatter for Markdown, JSON, YAML, etc.
 				},

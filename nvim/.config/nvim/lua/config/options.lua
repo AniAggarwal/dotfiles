@@ -7,6 +7,18 @@ vim.opt.fileencoding = "utf-8"    -- Use UTF-8 encoding for files
 
 -- Clipboard and Mouse
 vim.opt.clipboard = "unnamedplus" -- Access system clipboard
+vim.g.clipboard = {
+  name = 'OSC 52',
+  copy = {
+    ['+'] = require('vim.ui.clipboard.osc52').copy('+'),
+    ['*'] = require('vim.ui.clipboard.osc52').copy('*'),
+  },
+  paste = {
+    ['+'] = require('vim.ui.clipboard.osc52').paste('+'),
+    ['*'] = require('vim.ui.clipboard.osc52').paste('*'),
+  },
+}
+
 vim.opt.mouse = "a"               -- Enable mouse support
 
 -- Interface Options
@@ -61,4 +73,4 @@ vim.opt.whichwrap:append("<,>,[,],h,l") -- Allow movement across wrapped lines
 vim.opt.spelloptions:append({ "camel" }) -- Handle camel case in spell check
 
 -- Set python interpreter for Neovim
-vim.g.python3_host_prog = os.getenv("HOME") .. "/micromamba/envs/nvim/bin/python"
+vim.g.python3_host_prog = "/vulcanscratch/" .. os.getenv("USER") .. "/micromamba/envs/nvim/bin/python"
