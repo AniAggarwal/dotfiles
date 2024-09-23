@@ -49,8 +49,6 @@ return {
 		opts = {
 			ensure_installed = {
 				"basedpyright",
-				"clangd",
-				"jdtls",
 				"bashls",
 				"lua_ls",
 				"texlab",
@@ -65,6 +63,12 @@ return {
 
 			local capabilities = vim.lsp.protocol.make_client_capabilities()
 			capabilities = require("cmp_nvim_lsp").default_capabilities(capabilities)
+
+			-- TODO: does this fix HTML render issues in hugginface docs?
+			capabilities.textDocument.hover = {
+				contentFormat = { "markdown", "plaintext", "html" },
+			}
+
 			-- TODO: investigate if this true setting is needed
 			-- capabilities.textDocument.completion.completionItem.snippetSupport = true
 
@@ -79,7 +83,6 @@ return {
 					})
 				end,
 
-				-- TODO: enable these later
 				["basedpyright"] = function()
 					lspconfig.basedpyright.setup({
 						capabilities = capabilities,
