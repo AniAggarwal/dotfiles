@@ -2,4 +2,5 @@
 format = pylint
 # ignore import not at top of file
 # E203 - ignore whitespace before ':'
-extend-ignore = E402, E501, E203
+# E731 - ignore do not assign a lambda expression, use a def
+extend-ignore = E402, E501, E203, E731

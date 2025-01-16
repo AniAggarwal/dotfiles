@@ -45,10 +45,17 @@ vim.opt.expandtab = true          -- Convert tabs to spaces
 vim.opt.shiftwidth = 4            -- Number of spaces per indentation
 vim.opt.tabstop = 4               -- Insert 4 spaces for a tab
 
--- Folding (Treesitter)
-vim.opt.foldmethod = "expr"       -- Use Treesitter for folding
-vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
-vim.opt.foldenable = false        -- Disable folding by default
+-- -- Folding (Treesitter)
+-- vim.opt.foldmethod = "expr"       -- Use Treesitter for folding
+-- vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
+-- vim.opt.foldenable = false        -- Disable folding by default
+
+-- Folding (UFO)
+vim.opt.foldenable = true
+vim.opt.foldcolumn = "0"
+vim.opt.foldlevel = 99
+vim.opt.foldlevelstart = 99
+
 
 -- Text Wrapping and Line Breaks
 vim.opt.wrap = false              -- Don't wrap lines

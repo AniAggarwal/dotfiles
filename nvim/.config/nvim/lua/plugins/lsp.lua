@@ -17,7 +17,7 @@ return {
 			},
 			indent = {
 				enable = true,
-				disable = { "python", "latex" }, -- Disable indent for these languages
+				disable = { "python" }, -- Disable indent for these languages
 			},
 		},
 	},
@@ -68,6 +68,11 @@ return {
 			-- TODO: investigate if this true setting is needed
 			-- capabilities.textDocument.completion.completionItem.snippetSupport = true
 
+			capabilities.textDocument.foldingRange = {
+				dynamicRegistration = false,
+				lineFoldingOnly = true,
+			}
+
 			-- Can define a custom_attach and pass into setup just as the custom capabilities is passed in
 			-- local custom_attach = function(client, bufnr) -- do something end
 
@@ -84,7 +89,7 @@ return {
 					lspconfig.basedpyright.setup({
 						capabilities = capabilities,
 						settings = {
-							python = {
+							basedpyright = {
 								analysis = {
 									typeCheckingMode = "basic",
 									diagnosticSeverityOverrides = {
