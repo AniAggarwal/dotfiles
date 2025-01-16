@@ -1,0 +1,19 @@
+root = /media/nexusvulcan/vulcanscratch/editing-DiTs
+root = ssh://anirud@nexusvulcan.umiacs.umd.edu//nfshomes/anirud/dev/editing-DiTs
+
+servercmd = /nfshomes/anirud/.local/bin/unison
+confirmbigdel = true
+
+prefer = newer
+# repeat = watch
+
+# Include everything except results/*
+ignore = Path results/*
+ignorenot = Path results/plots
+
+ignore = Name .git
+# ignore = Name .git/index.lock
+# ignore = Name .git/refs/heads/lock
+
+ignore = Name __pycache__
+ignore = Path editing_DiTs.egg-info
