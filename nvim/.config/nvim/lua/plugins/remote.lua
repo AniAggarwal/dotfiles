@@ -26,11 +26,11 @@ return {
 		},
 		config = true,
 		opts = {
-			-- offline_mode = {
-			--     enabled = true,
-			--     no_github = true,
-			--     -- cache_dir = vim.fn.stdpath(".local") .. "/bin"
-			-- }
+			offline_mode = {
+			    enabled = true,
+			    -- no_github = true,
+			    -- cache_dir = vim.fn.stdpath(".local") .. "/bin"
+			}
 		},
 	},
 }

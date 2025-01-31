@@ -28,7 +28,7 @@ op() {
 }
 
 alias hconf='nvim ~/.config/hypr/hyprland.conf'
-alias nconf='nvim ~/.config/nvim/init.lua'
+alias nconf='cd ~/.config/nvim/;nvim ~/.config/nvim/init.lua'
 alias kconf='nvim ~/.config/kitty/kitty.conf'
 alias wlog='nvim ~/data/work-log.txt'
 
@@ -43,7 +43,7 @@ alias spotify="NVD_BACKEND=direct LIBVA_DRIVER_NAME=nvidia prime-run spotify-lau
 # Alias for shortening lazygit
 alias lg="lazygit"
 
-alias mpv="mpv --gpu-api=vulkan --hwdec=nvdec"
+# alias mpv="mpv --gpu-api=vulkan --hwdec=nvdec"
 # alias mpv="mpv --hwdec=vdpau --gpu-api=vulkan"
 
 # Alias for shortening command to display line length of java files
