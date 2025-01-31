@@ -1,0 +1,24 @@
+Battery Opts:
+
+https://github.com/rickysarraf/laptop-mode-tools
+https://wiki.archlinux.org/title/Laptop_Mode_Tools
+
+Config powertop and measure
+    try using autotune if docs say to use 
+
+
+use ASPM
+    try:
+        echo powersupersave > /sys/module/pcie_aspm/parameters/policy
+    kernel param for boot:
+        pcie_aspm.policy=powersupersave
+
+
+see if any BIOS options for battery
+
+
+hibernate on low battery:
+    https://wiki.archlinux.org/title/Laptop
+
+
+look into bumblebee + bbswitch
