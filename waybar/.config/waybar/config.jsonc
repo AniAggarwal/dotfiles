@@ -52,8 +52,7 @@
     "exec": "nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits",
     "format": "{}% <big>󰢮</big>",
     "return-type": "",
-    "interval": 2,
-
+    "interval": 5,
     "on-click": "kitty 'nvitop-utils'",
   },
   "memory": {
@@ -91,7 +90,7 @@
       "warning": 25,
       "critical": 10,
     },
-    "interval": 2,
+    "interval": 30,
     "format": "{capacity}%  <big>{icon}</big>",
     "format-charging": "{capacity}%  <big>󰂄</big>",
     "format-plugged": "{capacity}%  ",
@@ -107,12 +106,12 @@
       "disabled": "󱧝 ",
     },
     "return-type": "json",
-    "interval": 1,
+    "interval": 60,
     "tooltip": false,
     "on-click": "nmcli radio wifi | grep -q 'enabled' && nmcli radio wifi off || nmcli radio wifi on",
   },
   "network": {
-    "interval": 2,
+    "interval": 60,
     "format-wifi": "{essid}   <big></big>",
     "format-ethernet": "{ipaddr}    <big></big>",
     "format-disconnected": "<big>󱚵</big>    Disconnected",
@@ -136,7 +135,7 @@
     "format": "{temperatureC}°C  <big>{icon}</big>",
     "format-icons": ["", "", ""],
     "on-click": "kitty 'btop'",
-    "interval": 2,
+    "interval": 5,
   },
   "custom/cpu-temperature": {
     "exec": "sensors | grep -A 0 'Package id' | awk '{print $4}' |  tr -d '+'",
@@ -147,19 +146,19 @@
     "format-icons": ["", "", "", "", "", "", "", "", ""],
     "reverse-scrolling": true,
   },
-  "custom/media": {
-    "format": "{icon} {}",
-    "escape": true,
-    "return-type": "json",
-    "max-length": 40,
-    "on-click": "playerctl play-pause",
-    "on-click-right": "playerctl stop",
-    "smooth-scrolling-threshold": 10,
-    "on-scroll-up": "playerctl next",
-    "on-scroll-down": "playerctl previous",
-    "exec": "$HOME/.config/hypr/scripts/mediaplayer.py 2> /dev/null",
-    "interval": 30, // Remove this if your script is endless and write in loop
-  },
+  // "custom/media": {
+  //   "format": "{icon} {}",
+  //   "escape": true,
+  //   "return-type": "json",
+  //   "max-length": 40,
+  //   "on-click": "playerctl play-pause",
+  //   "on-click-right": "playerctl stop",
+  //   "smooth-scrolling-threshold": 10,
+  //   "on-scroll-up": "playerctl next",
+  //   "on-scroll-down": "playerctl previous",
+  //   "exec": "$HOME/.config/hypr/scripts/mediaplayer.py 2> /dev/null",
+  //   "interval": 30, // Remove this if your script is endless and write in loop
+  // },
 
   // "custom/current-media": {
   //   "format": "<span rise='+1pt'>{icon}</span>   {}",
@@ -175,18 +174,18 @@
   //   "on-click": "exec playerctl play-pause",
   // },
 
-  "custom/spotify": {
-    "format": "{icon} {}",
-    "escape": true,
-    "return-type": "json",
-    "max-length": 40,
-    "interval": 30, // Remove this if your script is endless and write in loop
-    "on-click": "playerctl -p spotify play-pause",
-    "on-click-right": "killall spotify",
-    "smooth-scrolling-threshold": 10, // This value was tested using a trackpad, it should be lowered if using a mouse.
-    "on-scroll-up": "playerctl -p spotify next",
-    "on-scroll-down": "playerctl -p spotify previous",
-    "exec": "$HOME/.config/hypr/scripts/mediaplayer.py 2> /dev/null",
-    "exec-if": "pgrep spotify",
-  },
+  // "custom/spotify": {
+  //   "format": "{icon} {}",
+  //   "escape": true,
+  //   "return-type": "json",
+  //   "max-length": 40,
+  //   "interval": 30, // Remove this if your script is endless and write in loop
+  //   "on-click": "playerctl -p spotify play-pause",
+  //   "on-click-right": "killall spotify",
+  //   "smooth-scrolling-threshold": 10, // This value was tested using a trackpad, it should be lowered if using a mouse.
+  //   "on-scroll-up": "playerctl -p spotify next",
+  //   "on-scroll-down": "playerctl -p spotify previous",
+  //   "exec": "$HOME/.config/hypr/scripts/mediaplayer.py 2> /dev/null",
+  //   "exec-if": "pgrep spotify",
+  // },
 }
