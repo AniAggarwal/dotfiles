@@ -21,10 +21,12 @@ ENABLE_CORRECTION="true"
 COMPLETION_WAITING_DOTS="false"
 
 export EDITOR="/usr/bin/nvim"
+export MANPAGER='nvim +Man!'
 export PATH="$HOME/bin:$PATH"
 export PATH="$HOME/.local/bin:$PATH"
 export PATH="$HOME/.cargo/bin:$PATH"
-export MAMBA_ROOT_PREFIX=/home/ani/micromamba
+export MAMBA_ROOT_PREFIX="/home/ani/micromamba"
+export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
 
 # QT theme
 export QT_QPA_PLATFORMTHEME=qt5ct
@@ -96,7 +98,7 @@ function fzf_config {
 
 function fzf_open_file {
     local file
-    { file="$(fzf)" && [ -f "$file" ] && xdg-open "$file" &> /dev/null } </dev/tty
+    { file="$(fzf)" && [ -f "$file" ] && xdg-open "$file" &> /dev/null &; disown} </dev/tty
 }
 
 
@@ -189,7 +191,7 @@ eval "$(starship init zsh)"
 # SSH Agent #
 #############
 
-# TODO: do I need this?
+# TODO: do I need this? or is systemd sufficent
 
 # if ! pgrep -u "$USER" ssh-agent > /dev/null; then
 #     ssh-agent -t 1h > "$XDG_RUNTIME_DIR/ssh-agent.env"
