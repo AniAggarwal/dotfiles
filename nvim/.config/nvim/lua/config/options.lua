@@ -20,6 +20,8 @@ vim.opt.cursorline = true         -- Highlight the current line
 vim.opt.signcolumn = "yes"        -- Always show the sign column
 vim.opt.fillchars.eob = " "       -- Fill empty buffer with spaces
 
+vim.opt.winborder = "rounded"
+
 -- Search and Display Options
 vim.opt.hlsearch = true           -- Highlight search results
 vim.opt.ignorecase = true         -- Ignore case when searching
@@ -69,3 +71,7 @@ vim.opt.spelloptions:append({ "camel" }) -- Handle camel case in spell check
 
 -- Set python interpreter for Neovim
 vim.g.python3_host_prog = os.getenv("HOME") .. "/micromamba/envs/nvim/bin/python"
+
+
+-- Set copilot model
+vim.g.copilot_settings = { selectedCompletionModel = 'calude-4' }

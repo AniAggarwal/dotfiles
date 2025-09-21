@@ -48,6 +48,7 @@ return {
 
     local source_names = {
         copilot = "[ COPILOT]",
+        codeium = "[󰞍 WINDSURF]",
         nvim_lsp = "[󰒋LSP]",
         nvim_lsp_signature_help = "[󰃣 SIGNATURE]",
         path = "[~ PATH]",
@@ -126,7 +127,8 @@ return {
 
         -- Order matters: nvim_lsp is shown before nvim_lua in this case
         sources = cmp.config.sources({
-            { name = "copilot", keyword_length = 0, max_item_count = 5 }, -- Github copilot
+            { name = "codeium", max_item_count = 3 },
+            { name = "copilot", keyword_length = 0, max_item_count = 3 },
             { name = "luasnip" }, -- snippets
             { name = "nvim_lsp" }, -- native lsp
             { name = "nvim_lsp_signature_help" }, -- Display method signatures while typing

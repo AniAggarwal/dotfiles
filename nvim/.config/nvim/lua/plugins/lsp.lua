@@ -265,6 +265,7 @@ return {
 
 	{
 		"lervag/vimtex",
+		lazy = false, -- inverse search doesn't work with lazy
 		ft = { "tex" },
 		config = function()
 			vim.api.nvim_command("filetype plugin indent on")
@@ -277,6 +278,26 @@ return {
 			-- Auto Indent and Syntax Highlighting
 			vim.g.vimtex_indent_enabled = 0 -- Disable auto-indent
 			vim.g.vimtex_syntax_enabled = 1 -- Enable syntax highlighting
+
+			-- Use lualatex as the default engine
+			vim.g.vimtex_compiler_method = "latexmk"
+			vim.g.vimtex_compiler_latexmk_engines = {
+				_ = "-lualatex",
+			}
 		end,
+	},
+
+	{
+		"MeanderingProgrammer/render-markdown.nvim",
+		dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' }, -- if you prefer nvim-web-devicons
+		---@module 'render-markdown'
+		---@type render.md.UserConfig
+		opts = {
+            pipe_table = {
+                preset = "round",
+                cell = "padded"
+            }
+
+        },
 	},
 }
