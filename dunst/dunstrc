@@ -33,7 +33,7 @@
     origin = top-right
 
     # Offset from the origin
-    offset = 14x14
+    offset = (14, 14)
 
     # Scale factor. It is auto-detected if value is 0.
     scale = 0
@@ -209,10 +209,10 @@
     # Scale small icons up to this size, set to 0 to disable. Helpful
     # for e.g. small files or high-dpi screens. In case of conflict,
     # max_icon_size takes precedence over this.
-    min_icon_size = 32
+    min_icon_size = 8
 
     # Scale larger icons down to this size, set to 0 to disable
-    max_icon_size = 128
+    max_icon_size = 50
 
     # Paths to default icons (only neccesary when not using recursive icon lookup)
     icon_path = /usr/share/icons/gnome/16x16/status/:/usr/share/icons/gnome/16x16/devices/
@@ -314,35 +314,43 @@
     background = "#0000008f"
     foreground = "#ffffff"
     timeout = 3
-    # Icon for notifications with low urgency, uncomment to enable
-    #default_icon = /path/to/icon
+    override_pause_level = 10
 
 [urgency_normal]
     background = "#0000008f"
     foreground = "#ffffff"
     timeout = 3
-    # Icon for notifications with normal urgency, uncomment to enable
-    #default_icon = /path/to/icon
+    override_pause_level = 25
 
 [urgency_critical]
     background = "#900000"
     foreground = "#ffffff"
     frame_color = "#ffffff"
     timeout = 0
-    # Icon for notifications with critical urgency, uncomment to enable
-    #default_icon = /path/to/icon
+    override_pause_level = 75
 
+[battery_notifications]
+    appname="Battery Notifications"
+    history_ignore=true
 
-[skip-rule] 
+[spotify] 
     appname=Spotify
     skip_display=true
 
 
-[rule]
+[signal]
     appname = "Signal"
     format = "<b>%s</b>\n%b"
     icon = ""
     max_icon_size = 32
+    urgency = low
+
+[slack]
+    appname = "Slack"
+    format = "<b>%s</b>\n%b"
+    icon = ""
+    max_icon_size = 32
+    urgency = normal
 
 
 # Every section that isn't one of the above is interpreted as a rules to
