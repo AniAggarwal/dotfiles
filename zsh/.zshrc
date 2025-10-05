@@ -28,6 +28,14 @@ export PATH="$HOME/.cargo/bin:$PATH"
 export MAMBA_ROOT_PREFIX="/home/ani/micromamba"
 export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
 
+# for UMOBJ store
+# OBJ_ACCESS_KEY_ID, OBJ_SECRET_ACCESS_KEY set in .secrets
+export OBJ_SERVER="obj.umiacs.umd.edu"
+
+# For Ruby Gems
+export GEM_HOME="$(gem env user_gemhome)"
+export PATH="$PATH:$GEM_HOME/bin"
+
 # QT theme
 export QT_QPA_PLATFORMTHEME=qt5ct
 
@@ -68,8 +76,8 @@ ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 # Based on this stack overflow answer of how to remove an element from an array https://stackoverflow.com/a/25172688/154703
 ZSH_AUTOSUGGEST_ACCEPT_WIDGETS[$ZSH_AUTOSUGGEST_ACCEPT_WIDGETS[(i)vi-forward-char]]=()
 
-# TODO: wait util PR is merged to vi-mode for system clipboard
-
+# Source secret keys, etc.
+[ -f ~/.secrets ] && source ~/.secrets
 
 ####################
 # Custom Functions #
@@ -117,6 +125,8 @@ function zvm_before_init_opts() {
     ZVM_VI_ESCAPE_BINDKEY=jk
     # Switching between Insert and Normal mode have less timeout but not too low so that jk works
     ZVM_KEYTIMEOUT=0.1
+    # Enable system clipboard support
+    ZVM_SYSTEM_CLIPBOARD_ENABLED=true
 
     # Change highlight colors
     ZVM_VI_HIGHLIGHT_BACKGROUND=#3e4452
