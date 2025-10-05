@@ -14,6 +14,7 @@
     "memory",
     "temperature",
     "idle_inhibitor",
+    "custom/pause-notifications",
     "custom/radio-toggle",
     "network",
     "pulseaudio",
@@ -40,11 +41,22 @@
       "7": "七",
       "8": "八",
       "9": "九",
+      "10": "十",
+      "11": "  十一  ",
+      "12": "  十二  ",
+      "13": "  十三  ",
+      "14": "  十四  ",
+      "15": "  十五  ",
+      "16": "  十六  ",
+      "17": "  十七  ",
+      "18": "  十八  ",
+      "19": "  十九  ",
+      "20": "  二十  "
     },
     "on-click": "activate",
   },
   "cpu": {
-    "format": "{usage}%  <big></big>",
+    "format": "{usage}%  <big></big>",
     "tooltip": false,
     "on-click": "kitty 'btop'",
   },
@@ -97,6 +109,19 @@
     // "format-alt": "{time} {icon}",
     "format-icons": ["󱃍", "󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"],
     "on-click": "kitty 'battop'",
+  },
+  "custom/pause-notifications": {
+    "type":        "custom/script",
+    "exec":        "sh -c 'dunstctl is-paused | tr -d \"\\n\" | xargs -I{} printf \"{\\\"alt\\\":\\\"%s\\\"}\" {}'",
+    "return-type": "json",
+    "interval":    5,
+    "tooltip":     false,
+    "format":      "{icon}",
+    "format-icons": {
+      "true": "󰂛 ",
+      "false":  "󰂚 "
+    },
+    "on-click":    "sh -c 'dunstctl set-paused toggle'"
   },
   "custom/radio-toggle": {
     "exec": "nmcli radio wifi | awk '//{print \"{\\\"alt\\\": \\\"\"$1\"\\\"}\"}'",
