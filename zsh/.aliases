@@ -62,9 +62,9 @@ alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo
 alias icat="kitty +kitten icat"
 # Alias for using kitty wrapper over ssh
 alias kssh="kitty +kitten ssh"
+alias kpy="kitty +kitten clipboard"
 
-alias umiacs-vpn="/opt/pulsesecure/bin/pulselauncher -U vpn.umiacs.umd.edu"
-alias nv="kitty +kitten ssh anirud@nexusvulcan.umiacs.umd.edu"
+alias nv="kitty +kitten ssh -Y anirud@nexusvulcan.umiacs.umd.edu"
 
 alias jlab='micromamba run -n jupyter jupyter lab'
 alias nvitop='micromamba run -n utils nvitop'
