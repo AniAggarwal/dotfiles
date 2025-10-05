@@ -1,0 +1,11 @@
+ /* offwhite: dcd7c8 */
+
+* {
+    background:     #2D2D2D;
+    background-alt: #3C3C3C;
+    foreground:     #FFFFFFFF;
+    selected:       #8B6F58;
+    active:         #C89F6B;
+    urgent:         #B65C4D;
+}
+
