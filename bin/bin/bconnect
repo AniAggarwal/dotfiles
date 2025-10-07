@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 
 usage() {
-    printf "Usage: %s [-d | --dd] [-s | --ss] <Device Name>\n" "$0"
-    printf "  -d    Disconnect from the device\n"
-    printf "  --dd  Disconnect from the device and turn off Bluetooth\n"
-    printf "  -s    Silent mode, no notifications\n"
-    printf "  --ss  Super silent mode, no output at all\n"
+    printf "Usage: %s [-d | --dd] [-s | --ss] [--rfkill] <Device Name>\n" "$0"
+    printf "  -d         Disconnect from the device\n"
+    printf "  --dd       Disconnect from the device and turn off Bluetooth\n"
+    printf "  -s         Silent mode, no notifications\n"
+    printf "  --ss       Super silent mode, no output at all\n"
+    printf "  --rfkill   Use rfkill to block BT when turning it off, and unblock when turning it on\n"
     exit 1
 }
 
@@ -24,7 +25,18 @@ send_notification() {
     body=$(echo "$2" | parse_notification)
 
     notify-send -t 1500 "$title" "$body" &
+}
 
+has_rfkill() {
+    command -v rfkill >/dev/null 2>&1
+}
+
+rfkill_block_bt() {
+    rfkill block bluetooth 2>/dev/null
+}
+
+rfkill_unblock_bt() {
+    rfkill unblock bluetooth 2>/dev/null
 }
 
 parse_options() {
@@ -33,7 +45,8 @@ parse_options() {
     local -n notify_ref=$3
     local -n print_ref=$4
     local -n device_name_ref=$5
-    shift 5
+    local -n rfkill_ref=$6
+    shift 6
 
     while (( "$#" )); do
         case "$1" in
@@ -55,13 +68,16 @@ parse_options() {
                 print_ref=false
                 shift
                 ;;
+            --rfkill)
+                rfkill_ref=true
+                shift
+                ;;
             -*)
                 printf "Invalid option: %s\n" "$1" >&2
                 usage
                 ;;
             *)
-                # Assuming the first non-option argument is the device name
-                # and capturing the rest as part of the device name if spaces are present.
+                # Capture device name (may contain spaces)
                 if [[ -z "$device_name_ref" ]]; then
                     device_name_ref="$1"
                 else
@@ -85,17 +101,36 @@ main() {
     local NOTIFY=true
     local PRINT=true
     local DEVICE_NAME=""
+    local USE_RFKILL=false
 
-    parse_options ACTION SHUTDOWN_BLUETOOTH_AFTER_DISCONNECT NOTIFY PRINT DEVICE_NAME "$@"
+    parse_options ACTION SHUTDOWN_BLUETOOTH_AFTER_DISCONNECT NOTIFY PRINT DEVICE_NAME USE_RFKILL "$@"
 
-    if [ "$ACTION" = "connect" ] && ! systemctl is-active --quiet bluetooth.service; then
-        [[ "$PRINT" == true ]] && printf "Bluetooth is off. Turning it on...\n"
-        [[ "$NOTIFY" == true ]] && send_notification "Bluetooth" "Turning on Bluetooth..."
-        systemctl start bluetooth.service
-        sleep 1
+    # If rfkill requested but not available, warn (unless super silent)
+    if [[ "$USE_RFKILL" == true ]] && ! has_rfkill; then
+        [[ "$PRINT" == true ]] && printf "Warning: --rfkill specified but 'rfkill' command not found.\n"
+        [[ "$NOTIFY" == true ]] && send_notification "Bluetooth" "Warning: --rfkill specified but 'rfkill' not found."
+        USE_RFKILL=false
     fi
 
-    local MAC_ADDRESS=$(bluetoothctl devices | grep "$DEVICE_NAME" | awk '{print $2}')
+    if [ "$ACTION" = "connect" ]; then
+        # If requested, ensure any soft block is lifted first
+        if [[ "$USE_RFKILL" == true ]]; then
+            [[ "$PRINT" == true ]] && printf "Ensuring Bluetooth is unblocked via rfkill...\n"
+            [[ "$NOTIFY" == true ]] && send_notification "Bluetooth" "Unblocking via rfkill..."
+            rfkill_unblock_bt
+            sleep 1
+        fi
+
+        if ! systemctl is-active --quiet bluetooth.service; then
+            [[ "$PRINT" == true ]] && printf "Bluetooth is off. Turning it on...\n"
+            [[ "$NOTIFY" == true ]] && send_notification "Bluetooth" "Turning on Bluetooth..."
+            systemctl start bluetooth.service
+            sleep 1
+        fi
+    fi
+
+    local MAC_ADDRESS
+    MAC_ADDRESS=$(bluetoothctl devices | grep -i -- "$DEVICE_NAME" | awk '{print $2}' | head -n1)
 
     if [[ -z "$MAC_ADDRESS" ]]; then
         [[ "$PRINT" == true ]] && printf "Failed: device not found.\n"
@@ -120,6 +155,13 @@ main() {
         [[ "$PRINT" == true ]] && printf "Turning off Bluetooth...\n"
         [[ "$NOTIFY" == true ]] && send_notification "Bluetooth" "Turning off Bluetooth..."
         systemctl stop bluetooth.service
+
+        if [[ "$USE_RFKILL" == true ]]; then
+            [[ "$PRINT" == true ]] && printf "Blocking Bluetooth via rfkill...\n"
+            [[ "$NOTIFY" == true ]] && send_notification "Bluetooth" "Blocking via rfkill..."
+            rfkill_block_bt
+        fi
+
         [[ "$NOTIFY" == true ]] && send_notification "Bluetooth" "Turned Bluetooth off."
     fi
 }

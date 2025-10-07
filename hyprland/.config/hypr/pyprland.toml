@@ -19,10 +19,10 @@ submenu_start = " "
 submenu_end = ""
 
 [shortcuts_menu.entries."Bluetooth"]
-"Connect to Headphones" = "bconnect [headphones]"
+"Connect to Headphones" = "bconnect --rfkill [headphones]"
 "Disconnect from Headphones" = "bconnect -d [headphones]"
-"Turn Bluetooth On" = "systemctl start bluetooth.service; notify-send 'Bluetooth' 'Turned Bluetooth on'"
-"Turn Bluetooth Off" = "systemctl stop bluetooth.service; notify-send 'Bluetooth' 'Turned Bluetooth off'"
+"Turn Bluetooth On" = "systemctl start bluetooth.service; rfkill unblock bluetooth; notify-send 'Bluetooth' 'Turned Bluetooth on'"
+"Turn Bluetooth Off" = "systemctl stop bluetooth.service; rfkill block bluetooth; notify-send 'Bluetooth' 'Turned Bluetooth off'"
 
 [shortcuts_menu.entries."Power"]
 "Suspend" = "systemctl suspend"
