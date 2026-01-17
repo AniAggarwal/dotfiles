@@ -4,12 +4,12 @@ return {
 		"nvim-treesitter/nvim-treesitter",
 		build = ":TSUpdate", -- Automatically update parsers on install/update
 		-- event = { "BufReadPost", "BufNewFile" }, -- Lazy load treesitter when opening a file
-        lazy = false, -- doesn't work w lazy loading
-        branch = "master",
+		lazy = false, -- doesn't work w lazy loading
+		branch = "master",
 		opts = {
 			ensure_installed = { "python", "c", "lua", "bash" }, -- List of languages to install
 			auto_install = true,
-			ignore_install = { "latex" }, -- Parsers to ignore
+			ignore_install = {}, -- Parsers to ignore
 			highlight = {
 				enable = true,
 				disable = { "latex" }, -- Languages for which highlighting is disabled
@@ -44,122 +44,133 @@ return {
 			},
 		},
 	},
-    {
-      "williamboman/mason-lspconfig.nvim",
-      dependencies = { "williamboman/mason.nvim", "neovim/nvim-lspconfig", "hrsh7th/cmp-nvim-lsp" },
-      event = { "BufReadPre", "BufNewFile", "BufEnter", "FileType" },
-      opts = {
-        ensure_installed = { "basedpyright", "clangd", "jdtls", "bashls", "lua_ls", "texlab" },
-        -- Let mason-lspconfig auto-enable all except jdtls (we handle jdtls ourselves)
-        automatic_enable = { exclude = { "jdtls" } },
-      },
-      config = function(_, opts)
-        require("mason").setup()
+	{
+		"williamboman/mason-lspconfig.nvim",
+		dependencies = { "williamboman/mason.nvim", "neovim/nvim-lspconfig", "hrsh7th/cmp-nvim-lsp" },
+		event = { "BufReadPre", "BufNewFile", "BufEnter", "FileType" },
+		opts = {
+			ensure_installed = { "basedpyright", "clangd", "jdtls", "bashls", "lua_ls", "texlab" },
+			-- Let mason-lspconfig auto-enable all except jdtls (we handle jdtls ourselves)
+			automatic_enable = { exclude = { "jdtls" } },
+		},
+		config = function(_, opts)
+			require("mason").setup()
 
-        -- Default LSP config (applies to all mason-enabled servers)
-        local capabilities = require("cmp_nvim_lsp").default_capabilities(
-          vim.lsp.protocol.make_client_capabilities()
-        )
-        capabilities.textDocument.foldingRange = { dynamicRegistration = false, lineFoldingOnly = true }
+			-- Default LSP config (applies to all mason-enabled servers)
+			local capabilities =
+				require("cmp_nvim_lsp").default_capabilities(vim.lsp.protocol.make_client_capabilities())
+			capabilities.textDocument.foldingRange = { dynamicRegistration = false, lineFoldingOnly = true }
 
-        vim.lsp.config("*", { capabilities = capabilities })
+			vim.lsp.config("*", { capabilities = capabilities })
 
-        -- basedpyright
-        vim.lsp.config("basedpyright", {
-          capabilities = capabilities,
-          settings = {
-            basedpyright = {
-              analysis = {
-                typeCheckingMode = "basic",
-                diagnosticSeverityOverrides = { reportUnknownArgumentType = "warning" },
-              },
-            },
-          },
-        })
+			-- basedpyright
+			vim.lsp.config("basedpyright", {
+				capabilities = capabilities,
+				settings = {
+					basedpyright = {
+						analysis = {
+							typeCheckingMode = "basic",
+							diagnosticSeverityOverrides = { reportUnknownArgumentType = "warning" },
+						},
+					},
+				},
+			})
 
-        -- clangd: utf-16 offsets
-        vim.lsp.config("clangd", {
-          capabilities = vim.tbl_deep_extend("force", capabilities, { offsetEncoding = { "utf-16" } }),
-        })
+			-- clangd: utf-16 offsets
+			vim.lsp.config("clangd", {
+				capabilities = vim.tbl_deep_extend("force", capabilities, { offsetEncoding = { "utf-16" } }),
+			})
 
-        -- lua_ls
-        vim.lsp.config("lua_ls", {
-          capabilities = capabilities,
-          settings = {
-            Lua = {
-              diagnostics = { globals = { "vim", "use" } },
-              workspace = {
-                library = {
-                  [vim.fn.expand("$VIMRUNTIME/lua")] = true,
-                  [vim.fn.stdpath("config") .. "/lua"] = true,
-                },
-              },
-              format = { enable = false },
-            },
-          },
-        })
+			-- lua_ls
+			vim.lsp.config("lua_ls", {
+				capabilities = capabilities,
+				settings = {
+					Lua = {
+						diagnostics = { globals = { "vim", "use" } },
+						workspace = {
+							library = {
+								[vim.fn.expand("$VIMRUNTIME/lua")] = true,
+								[vim.fn.stdpath("config") .. "/lua"] = true,
+							},
+						},
+						format = { enable = false },
+					},
+				},
+			})
 
-        -- Install + auto-enable (uses the configs above)
-        require("mason-lspconfig").setup(opts)
+			-- Install + auto-enable (uses the configs above)
+			require("mason-lspconfig").setup(opts)
 
-        -- ===== jdtls (manual) =====
-        local jdtls_path = vim.fn.stdpath("data") .. "/mason/packages/jdtls"
-        local function jdtls_start()
-          local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":p:h:t")
-          local workspace_dir = vim.env.HOME .. "/.cache/jdtls/workspace/" .. project_name
-          local mount_commands = function() require("jdtls.setup").add_commands() end
-          local bundles = {
-            vim.fn.glob("/opt/java-dap/java-debug/com.microsoft.java.debug.plugin/target/com.microsoft.java.debug.plugin-*.jar", 1),
-          }
-          vim.list_extend(bundles, vim.split(vim.fn.glob("/opt/java-dap/vscode-java-test/server/*.jar", 1), "\n"))
+			-- ===== jdtls (manual) =====
+			local jdtls_path = vim.fn.stdpath("data") .. "/mason/packages/jdtls"
+			local function jdtls_start()
+				local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":p:h:t")
+				local workspace_dir = vim.env.HOME .. "/.cache/jdtls/workspace/" .. project_name
+				local mount_commands = function()
+					require("jdtls.setup").add_commands()
+				end
+				local bundles = {
+					vim.fn.glob(
+						"/opt/java-dap/java-debug/com.microsoft.java.debug.plugin/target/com.microsoft.java.debug.plugin-*.jar",
+						1
+					),
+				}
+				vim.list_extend(bundles, vim.split(vim.fn.glob("/opt/java-dap/vscode-java-test/server/*.jar", 1), "\n"))
 
-          local config = {
-            filetypes = { "java" },
-            autostart = true,
-            on_attach = mount_commands,
-            cmd = {
-              "/usr/lib/jvm/java-21-openjdk/bin/java",
-              "-Declipse.application=org.eclipse.jdt.ls.core.id1",
-              "-Dosgi.bundles.defaultStartLevel=4",
-              "-Declipse.product=org.eclipse.jdt.ls.core.product",
-              "-Dlog.protocol=true",
-              "-Dlog.level=ALL",
-              "-Xms1g",
-              "--add-modules=ALL-SYSTEM",
-              "--add-opens", "java.base/java.util=ALL-UNNAMED",
-              "--add-opens", "java.base/java.lang=ALL-UNNAMED",
-              "-jar", jdtls_path .. "/plugins/org.eclipse.equinox.launcher_1.6.900.v20240613-2009.jar",
-              "-configuration", jdtls_path .. "/config_linux",
-              "-data", workspace_dir,
-            },
-            root_dir = require("jdtls.setup").find_root({ ".git", "mvnw", "gradlew" }),
-            settings = {
-              java = {
-                format = {
-                  settings = { url = "https://raw.githubusercontent.com/google/styleguide/gh-pages/eclipse-java-google-style.xml" },
-                },
-                configuration = {
-                  runtimes = {
-                    { name = "JavaSE-11", path = "/usr/lib/jvm/java-11-openjdk/" },
-                    { name = "JavaSE-21", path = "/usr/lib/jvm/java-21-openjdk/" },
-                  },
-                },
-              },
-            },
-            init_options = { bundles = bundles },
-          }
-          require("jdtls").start_or_attach(config)
-        end
+				local config = {
+					filetypes = { "java" },
+					autostart = true,
+					on_attach = mount_commands,
+					cmd = {
+						"/usr/lib/jvm/java-21-openjdk/bin/java",
+						"-Declipse.application=org.eclipse.jdt.ls.core.id1",
+						"-Dosgi.bundles.defaultStartLevel=4",
+						"-Declipse.product=org.eclipse.jdt.ls.core.product",
+						"-Dlog.protocol=true",
+						"-Dlog.level=ALL",
+						"-Xms1g",
+						"--add-modules=ALL-SYSTEM",
+						"--add-opens",
+						"java.base/java.util=ALL-UNNAMED",
+						"--add-opens",
+						"java.base/java.lang=ALL-UNNAMED",
+						"-jar",
+						jdtls_path .. "/plugins/org.eclipse.equinox.launcher_1.6.900.v20240613-2009.jar",
+						"-configuration",
+						jdtls_path .. "/config_linux",
+						"-data",
+						workspace_dir,
+					},
+					root_dir = require("jdtls.setup").find_root({ ".git", "mvnw", "gradlew" }),
+					settings = {
+						java = {
+							format = {
+								settings = {
+									url = "https://raw.githubusercontent.com/google/styleguide/gh-pages/eclipse-java-google-style.xml",
+								},
+							},
+							configuration = {
+								runtimes = {
+									{ name = "JavaSE-11", path = "/usr/lib/jvm/java-11-openjdk/" },
+									{ name = "JavaSE-21", path = "/usr/lib/jvm/java-21-openjdk/" },
+								},
+							},
+						},
+					},
+					init_options = { bundles = bundles },
+				}
+				require("jdtls").start_or_attach(config)
+			end
 
-        local lsp_group = vim.api.nvim_create_augroup("lspconfig", { clear = false })
-        vim.api.nvim_create_autocmd("FileType", {
-          pattern = "java",
-          callback = jdtls_start,
-          group = lsp_group,
-          desc = "Start or attach jdtls",
-        })
-      end,
-    },
+			local lsp_group = vim.api.nvim_create_augroup("lspconfig", { clear = false })
+			vim.api.nvim_create_autocmd("FileType", {
+				pattern = "java",
+				callback = jdtls_start,
+				group = lsp_group,
+				desc = "Start or attach jdtls",
+			})
+		end,
+	},
 	-- {
 	-- 	"williamboman/mason-lspconfig.nvim",
 	-- 	dependencies = { "williamboman/mason.nvim", "neovim/nvim-lspconfig" },
@@ -407,15 +418,104 @@ return {
 
 	{
 		"MeanderingProgrammer/render-markdown.nvim",
-		dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' }, -- if you prefer nvim-web-devicons
+		dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-tree/nvim-web-devicons" }, -- if you prefer nvim-web-devicons
 		---@module 'render-markdown'
 		---@type render.md.UserConfig
 		opts = {
-            pipe_table = {
-                preset = "round",
-                cell = "padded"
-            }
-
-        },
+			pipe_table = {
+				preset = "round",
+				cell = "padded",
+			},
+			latex = {
+				enabled = true,
+				converter = "latex2text", -- or "utftex"
+				highlight = "RenderMarkdownMath",
+			},
+			html = {
+				comment = {
+					conceal = false,
+				},
+			},
+		},
+	},
+	{
+		"epwalsh/obsidian.nvim",
+		version = "*", -- recommended, use latest release instead of latest commit
+		lazy = true,
+		-- ft = "markdown",
+		-- Replace the above line with this if you only want to load obsidian.nvim for markdown files in your vault:
+		event = {
+			-- If you want to use the home shortcut '~' here you need to call 'vim.fn.expand'.
+			-- E.g. "BufReadPre " .. vim.fn.expand "~" .. "/my-vault/*.md"
+			"BufReadPre /home/ani/data/obsidian-vault/*.md",
+			"BufNewFile /home/ani/data/obsidian-vault/*.md",
+		},
+		dependencies = {
+			"nvim-lua/plenary.nvim",
+			"hrsh7th/nvim-cmp",
+			"nvim-telescope/telescope.nvim",
+			"nvim-treesitter/nvim-treesitter",
+		},
+		opts = {
+			workspaces = {
+				{
+					name = "personal",
+					path = "~/data/obsidian-vault/personal",
+					strict = true,
+					overrides = {
+						attachments = {
+							img_folder = "attachments",
+						},
+					},
+				},
+				{
+					name = "vamana",
+					path = "/home/ani/data/obsidian-vault/work/vamana/",
+					strict = true, -- Use workspace path directly, don't search for parent .obsidian
+					-- Override settings specific to this workspace
+					overrides = {
+						notes_subdir = "notes", -- new standard notes in a specific subdir
+						daily_notes = {
+							folder = "daily", -- Custom daily notes folder
+							date_format = "%Y-%m-%d",
+							-- template = "work_daily.md", -- specific template for work
+						},
+						attachments = {
+							img_folder = "attachments",
+						},
+					},
+				},
+			},
+			ui = {
+				enable = false, -- using render-markdown.nvim instead
+			},
+			mappings = {
+                -- Defines "gd" conditionally for Obsidian buffers
+				["gd"] = {
+					action = function()
+						if require("obsidian").util.cursor_on_markdown_link() then
+							return vim.cmd("ObsidianFollowLink")
+						else
+							return vim.lsp.buf.definition()
+						end
+					end,
+					opts = { buffer = true, expr = false },
+				},
+				-- Toggle check-boxes.
+				["<leader>ch"] = {
+					action = function()
+						return require("obsidian").util.toggle_checkbox()
+					end,
+					opts = { buffer = true },
+				},
+				-- Smart action depending on context, either follow link or toggle checkbox.
+				["<cr>"] = {
+					action = function()
+						return require("obsidian").util.smart_action()
+					end,
+					opts = { buffer = true, expr = true },
+				},
+			},
+		},
 	},
 }
