@@ -2,7 +2,7 @@
 plugins = ["scratchpads", "shortcuts_menu", "expose", "toggle_special"]
 
 [pyprland.variables]
-headphones = "WH-1000XM5"
+headphones = "WH-1000XM6"
 
 [scratchpads.term]
 animation = ""
@@ -21,8 +21,8 @@ submenu_end = ""
 [shortcuts_menu.entries."Bluetooth"]
 "Connect to Headphones" = "bconnect --rfkill [headphones]"
 "Disconnect from Headphones" = "bconnect -d [headphones]"
-"Turn Bluetooth On" = "systemctl start bluetooth.service; rfkill unblock bluetooth; notify-send 'Bluetooth' 'Turned Bluetooth on'"
-"Turn Bluetooth Off" = "systemctl stop bluetooth.service; rfkill block bluetooth; notify-send 'Bluetooth' 'Turned Bluetooth off'"
+"Turn Bluetooth On" = "bluetooth_toggle on"
+"Turn Bluetooth Off" = "bluetooth_toggle off"
 
 [shortcuts_menu.entries."Power"]
 "Suspend" = "systemctl suspend"
