@@ -30,10 +30,18 @@
     height = (0, 500)
 
     # Position the notification in the top right corner
-    origin = top-right
+    origin = bottom-right
 
     # Offset from the origin
-    offset = (14, 14)
+    offset = (15, 15)
+
+    # for top-right:
+    # origin = top-right
+    # offset = (14, 14)
+
+    # for top-center:
+    # origin = top-center
+    # offset = (0, -20)
 
     # Scale factor. It is auto-detected if value is 0.
     scale = 0
@@ -314,29 +322,43 @@
     background = "#0000008f"
     foreground = "#ffffff"
     timeout = 3
-    override_pause_level = 10
 
 [urgency_normal]
     background = "#0000008f"
     foreground = "#ffffff"
     timeout = 3
-    override_pause_level = 25
 
 [urgency_critical]
     background = "#900000"
     foreground = "#ffffff"
     frame_color = "#ffffff"
     timeout = 0
-    override_pause_level = 75
+
+[system_notifications]
+    cateogry=system
+    history_ignore=true
+    override_pause_level=90
 
 [battery_notifications]
-    appname="Battery Notifications"
+    cateogry=battery
     history_ignore=true
+    override_pause_level=10
+
+[critical-through-pause]
+msg_urgency = critical
+override_pause_level = 75
+
+[normal-through-pause]
+msg_urgency = normal
+override_pause_level = 25
+
+[low-through-pause]
+msg_urgency = low
+override_pause_level = 10
 
 [spotify] 
     appname=Spotify
     skip_display=true
-
 
 [signal]
     appname = "Signal"
@@ -351,7 +373,7 @@
     icon = ""
     max_icon_size = 32
     urgency = normal
-
+    override_pause_level = 50
 
 # Every section that isn't one of the above is interpreted as a rules to
 # override settings for certain messages.
