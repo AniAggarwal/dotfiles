@@ -1,6 +1,8 @@
 #!/bin/env bash
 
 APPNAME="Battery Notifications"
+CATEGORY_PLUGGED="battery"
+CATEGORY_LEVEL="system"
 # Battery level thresholds (in percent)
 LOW_THRESHOLD=25
 VERY_LOW_THRESHOLD=10
@@ -25,11 +27,15 @@ notify() {
     urgency="$1"
     title="$2"
     message="$3"
-    dunstify -u "$urgency" -a "$APPNAME" "$title" "$message"
+    category="$4"
+    dunstify -u "$urgency" -a "$APPNAME" -c "$category" "$title" "$message"
 }
 
 # Use UPower to monitor battery details in an event-driven fashion.
 upower --monitor-detail | while read -r line; do
+    # Refresh waybar battery module on any battery event
+    pkill -SIGRTMIN+3 waybar 2>/dev/null
+
     # Process state changes.
     if [[ "$line" =~ "state:" ]]; then
         # Extract the state value (e.g. "charging", "discharging", etc.)
@@ -39,11 +45,11 @@ upower --monitor-detail | while read -r line; do
 
         if [[ "$current_state" != "$prev_plug_status" ]]; then
             if [[ "$current_state" == "$CHARGING" || "$current_state" == "$FULL" ]]; then
-                notify normal "Battery Charging" "Battery is now charging."
+                notify low "Battery Charging" "Battery is now charging." $CATEGORY_PLUGGED"
                 # Reset the last notification when state changes.
                 last_notified_level="none"
             elif [[ "$current_state" == "$DISCHARGING" ]]; then
-                notify normal "Battery Unplugged" "Battery is now discharging."
+                notify low "Battery Unplugged" "Battery is now discharging." $CATEGORY_PLUGGED"
                 last_notified_level="none"
             fi
             prev_plug_status="$current_state"
@@ -69,11 +75,11 @@ upower --monitor-detail | while read -r line; do
             # Only send a notification if we've crossed into a new category.
             if [[ "$current_category" != "none" && "$current_category" != "$last_notified_level" ]]; then
                 if [[ "$current_category" == "critical" ]]; then
-                    notify critical "Critical Battery" "Battery level is ${current_percentage}%"
+                    notify critical "Critical Battery" "Battery level is ${current_percentage}%" "$CATEGORY_LEVEL"
                 elif [[ "$current_category" == "very_low" ]]; then
-                    notify critical "Very Low Battery" "Battery level is ${current_percentage}%"
+                    notify critical "Very Low Battery" "Battery level is ${current_percentage}%" "$CATEGORY_LEVEL"
                 elif [[ "$current_category" == "low" ]]; then
-                    notify normal "Low Battery" "Battery level is ${current_percentage}%"
+                    notify normal "Low Battery" "Battery level is ${current_percentage}%" "$CATEGORY_LEVEL"
                 fi
                 last_notified_level="$current_category"
             fi

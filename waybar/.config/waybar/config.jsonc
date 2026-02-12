@@ -3,7 +3,7 @@
   "margin-top": 0,
   "margin-left": 3,
   "margin-right": 3,
-  "margin-bottom": 0,
+  "margin-bottom": 1,
   "modules-left": ["tray", "hyprland/workspaces"],
   "modules-center": [],
   "modules-right": [
@@ -14,7 +14,7 @@
     "memory",
     "temperature",
     "idle_inhibitor",
-    "custom/pause-notifications",
+    "custom/dunst-level",
     "custom/radio-toggle",
     "network",
     "pulseaudio",
@@ -61,11 +61,14 @@
     "on-click": "kitty 'btop'",
   },
   "custom/gpu-usage": {
-    "exec": "nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits",
-    "format": "{}% <big>󰢮</big>",
-    "return-type": "",
-    "interval": 5,
-    "on-click": "kitty 'nvitop-utils'",
+    "exec": "~/.config/hypr/scripts/gpu-usage.sh",
+    "format": "<big>{}</big>   <big>󰢮</big>",
+    "return-type": "json",
+    "interval": 10,
+    "signal": 5,
+    "tooltip": true,
+    "on-click": "kitty 'nvitop'",
+    "on-click-right": "sudo gpu-toggle --notify; pkill -SIGRTMIN+5 waybar"
   },
   "memory": {
     "interval": 8,
@@ -102,7 +105,8 @@
       "warning": 25,
       "critical": 10,
     },
-    "interval": 30,
+    "interval": 45,
+    "signal": 3,
     "format": "{capacity}%  <big>{icon}</big>",
     "format-charging": "{capacity}%  <big>󰂄</big>",
     "format-plugged": "{capacity}%  ",
@@ -110,18 +114,34 @@
     "format-icons": ["󱃍", "󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"],
     "on-click": "kitty 'battop'",
   },
-  "custom/pause-notifications": {
-    "type":        "custom/script",
-    "exec":        "sh -c 'dunstctl is-paused | tr -d \"\\n\" | xargs -I{} printf \"{\\\"alt\\\":\\\"%s\\\"}\" {}'",
+  // "custom/pause-notifications": {
+  //   "type":        "custom/script",
+  //   "exec":        "sh -c 'dunstctl is-paused | tr -d \"\\n\" | xargs -I{} printf \"{\\\"alt\\\":\\\"%s\\\"}\" {}'",
+  //   "return-type": "json",
+  //   "interval":    5,
+  //   "tooltip":     false,
+  //   "format":      "{icon}",
+  //   "format-icons": {
+  //     "true": "󰂛 ",
+  //     "false":  "󰂚 "
+  //   },
+  //   "on-click":    "sh -c 'dunstctl set-paused toggle'"
+  // },
+  "custom/dunst-level": {
     "return-type": "json",
-    "interval":    5,
-    "tooltip":     false,
-    "format":      "{icon}",
+    "format": "<big>{icon}</big>",
     "format-icons": {
-      "true": "󰂛 ",
-      "false":  "󰂚 "
+      "all":"󰂞 ",
+      "reduced":"󰂚 ",
+      "quiet":"󰂠 ",
+      "critical":"󰵙 ",
+      "none": "󰂛 "
     },
-    "on-click":    "sh -c 'dunstctl set-paused toggle'"
+    "exec": "~/.config/hypr/scripts/dunst-pause-leve.sh",
+    "on-click": "~/.config/hypr/scripts/dunst-pause-leve.sh --cycle; pkill -SIGRTMIN+1 waybar",
+    "signal": 1,
+    "interval": "once",
+    "tooltip": true
   },
   "custom/radio-toggle": {
     "exec": "nmcli radio wifi | awk '//{print \"{\\\"alt\\\": \\\"\"$1\"\\\"}\"}'",
@@ -131,12 +151,14 @@
       "disabled": "󱧝 ",
     },
     "return-type": "json",
-    "interval": 60,
+    "interval": "once",
+    "signal": 2,
     "tooltip": false,
-    "on-click": "nmcli radio wifi | grep -q 'enabled' && nmcli radio wifi off || nmcli radio wifi on",
+    "on-triple-click": "nmcli radio wifi | grep -q 'enabled' && nmcli radio wifi off || nmcli radio wifi on; pkill -SIGRTMIN+2 waybar",
   },
   "network": {
-    "interval": 60,
+    "interval": "once",
+    "signal": 4,
     "format-wifi": "{essid}   <big></big>",
     "format-ethernet": "{ipaddr}    <big></big>",
     "format-disconnected": "<big>󱚵</big>    Disconnected",
@@ -147,7 +169,7 @@
     "on-click": "kitty 'nmtui'",
   },
   "idle_inhibitor": {
-    "format": "{icon}",
+    "format": "<big>{icon}</big>",
     "format-icons": {
       "activated": "󰅶 ",
       "deactivated": "󰾪 ",
@@ -160,7 +182,7 @@
     "format": "{temperatureC}°C  <big>{icon}</big>",
     "format-icons": ["", "", ""],
     "on-click": "kitty 'btop'",
-    "interval": 5,
+    "interval": 8,
   },
   "custom/cpu-temperature": {
     "exec": "sensors | grep -A 0 'Package id' | awk '{print $4}' |  tr -d '+'",
