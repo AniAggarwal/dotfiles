@@ -45,7 +45,7 @@ return {
 
 	{
 		"akinsho/bufferline.nvim",
-		dependencies = { "nvim-tree/nvim-web-devicons", "nvimdev/lspsaga.nvim" },
+		dependencies = { "nvim-tree/nvim-web-devicons" },
 		event = "BufRead", -- Lazy load when a buffer is opened
 		opts = {
 			options = {
@@ -157,20 +157,14 @@ return {
 			vim.api.nvim_create_autocmd({ "VimEnter" }, { callback = open_nvim_tree })
 		end,
 	},
+	-- Code actions with preview (replaces lspsaga code actions)
 	{
-		"nvimdev/lspsaga.nvim",
-		dependencies = {
-			"nvim-treesitter/nvim-treesitter",
-			"nvim-tree/nvim-web-devicons",
-		},
-		lazy = false,
-		opts = {
-			ui = {
-				code_action = "",
-			},
-			keys = {
-				{ "K", "<cmd>Lspsaga hover_doc<CR>", "n", desc = "Hover with Lspsaga" },
-			},
+		"aznhe21/actions-preview.nvim",
+		event = "LspAttach",
+		dependencies = { "nvim-telescope/telescope.nvim" },
+		opts = {},
+		keys = {
+			{ "ga", function() require("actions-preview").code_actions() end, mode = { "n", "v" }, desc = "Code Actions (Preview)" },
 		},
 	},
 	{
@@ -399,6 +393,27 @@ return {
 		},
 		opts = {
 			enable_get_fold_virt_text = false,
+		},
+	},
+
+	-- Image support in Neovim using Kitty graphics protocol
+	{
+		"3rd/image.nvim",
+		build = false,
+		opts = {
+			backend = "kitty",
+			processor = "magick_cli",
+			integrations = {
+				markdown = {
+					enabled = true,
+					clear_in_insert_mode = false,
+					download_remote_images = true,
+					only_render_image_at_cursor = false,
+					filetypes = { "markdown", "vimwiki" },
+				},
+			},
+			max_height_window_percentage = 50,
+			hijack_file_patterns = { "*.png", "*.jpg", "*.jpeg", "*.gif", "*.webp", "*.avif" },
 		},
 	},
 }
