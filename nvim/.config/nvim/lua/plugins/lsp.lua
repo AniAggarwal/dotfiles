@@ -7,7 +7,7 @@ return {
 		lazy = false, -- doesn't work w lazy loading
 		branch = "master",
 		opts = {
-			ensure_installed = { "python", "c", "lua", "bash" }, -- List of languages to install
+			ensure_installed = { "python", "c", "lua", "bash", "markdown", "markdown_inline" }, -- List of languages to install
 			auto_install = true,
 			ignore_install = {}, -- Parsers to ignore
 			highlight = {
@@ -49,7 +49,7 @@ return {
 		dependencies = { "williamboman/mason.nvim", "neovim/nvim-lspconfig", "hrsh7th/cmp-nvim-lsp" },
 		event = { "BufReadPre", "BufNewFile", "BufEnter", "FileType" },
 		opts = {
-			ensure_installed = { "basedpyright", "clangd", "jdtls", "bashls", "lua_ls", "texlab" },
+			ensure_installed = { "basedpyright", "ty", "ruff", "clangd", "jdtls", "bashls", "lua_ls", "texlab" },
 			-- Let mason-lspconfig auto-enable all except jdtls (we handle jdtls ourselves)
 			automatic_enable = { exclude = { "jdtls" } },
 		},
@@ -63,17 +63,66 @@ return {
 
 			vim.lsp.config("*", { capabilities = capabilities })
 
-			-- basedpyright
+			-- basedpyright (LSP features only: hover, go-to-def, completions, references)
+			-- Type checking handled by ty, linting/formatting by ruff
 			vim.lsp.config("basedpyright", {
 				capabilities = capabilities,
 				settings = {
 					basedpyright = {
+						disableOrganizeImports = true,
 						analysis = {
-							typeCheckingMode = "basic",
-							diagnosticSeverityOverrides = { reportUnknownArgumentType = "warning" },
+							typeCheckingMode = "off",
 						},
 					},
 				},
+			})
+
+			-- ty (type checking, strict mode)
+			vim.lsp.config("ty", {
+				capabilities = capabilities,
+				settings = {
+					ty = {
+						-- Using defaults with strict checking
+					},
+				},
+			})
+
+			-- ruff (linting + formatting, replaces black/isort/flake8)
+			vim.lsp.config("ruff", {
+				capabilities = capabilities,
+				init_options = {
+					settings = {
+						lineLength = 79,
+						lint = {
+							select = {
+								"E", -- pycodestyle errors (PEP8)
+								"W", -- pycodestyle warnings (PEP8)
+								"F", -- pyflakes
+								"I", -- isort
+								"N", -- pep8-naming (variable/function naming conventions)
+								"UP", -- pyupgrade
+								"B", -- flake8-bugbear
+								"C4", -- flake8-comprehensions
+								"SIM", -- flake8-simplify
+							},
+							-- Migrated from .flake8 extend-ignore
+							ignore = { "E402", "E501", "E203", "E731" },
+						},
+					},
+				},
+			})
+
+			-- Disable hover/definition for ruff and ty, let basedpyright handle it
+			vim.api.nvim_create_autocmd("LspAttach", {
+				group = vim.api.nvim_create_augroup("lsp_attach_disable_duplicate_providers", { clear = true }),
+				callback = function(args)
+					local client = vim.lsp.get_client_by_id(args.data.client_id)
+					if client and (client.name == "ruff" or client.name == "ty") then
+						client.server_capabilities.hoverProvider = false
+						client.server_capabilities.definitionProvider = false
+					end
+				end,
+				desc = "Disable ruff/ty hover/definition in favor of basedpyright",
 			})
 
 			-- clangd: utf-16 offsets
@@ -425,6 +474,15 @@ return {
 			pipe_table = {
 				preset = "round",
 				cell = "padded",
+				-- -- Compensate for emphasis markers that get concealed
+				-- -- Each ** or * pair loses characters when concealed
+				-- cell_offset = function(ctx)
+				-- 	local text = vim.treesitter.get_node_text(ctx.node, 0)
+				-- 	-- Count emphasis markers: ** (bold) and * (italic)
+				-- 	local bold_count = select(2, text:gsub("%*%*", "")) * 2
+				-- 	local italic_count = select(2, text:gsub("%*", "")) - (bold_count)
+				-- 	return bold_count + italic_count
+				-- end,
 			},
 			latex = {
 				enabled = true,

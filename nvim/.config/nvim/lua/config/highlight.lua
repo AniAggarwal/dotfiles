@@ -20,11 +20,7 @@ vim.api.nvim_set_hl(0, "CmpItemKindKeyword", { bg = "NONE", fg = "#D4D4D4" })
 vim.api.nvim_set_hl(0, "CmpItemKindProperty", { bg = "NONE", fg = "#D4D4D4" })
 vim.api.nvim_set_hl(0, "CmpItemKindUnit", { bg = "NONE", fg = "#D4D4D4" })
 
--- Define Diagnostic Signs without text and with number highlights
-vim.fn.sign_define("DiagnosticSignError", { numhl = "LspDiagnosticsLineNrError", text = "" })
-vim.fn.sign_define("DiagnosticSignWarn", { numhl = "LspDiagnosticsLineNrWarning", text = "" })
-vim.fn.sign_define("DiagnosticSignInformation", { numhl = "LspDiagnosticsLineNrInfo", text = "" })
-vim.fn.sign_define("DiagnosticSignHint", { numhl = "LspDiagnosticsLineNrHint", text = "" })
+-- Diagnostic sign numhl configured in lua/config/lsp.lua via vim.diagnostic.config()
 
 -- Set highlight groups for diagnostic signs with foreground, background colors, and bold text
 vim.api.nvim_set_hl(0, "LspDiagnosticsLineNrError", { fg = "#eb6f92", bg = "#412d44", bold = true })
