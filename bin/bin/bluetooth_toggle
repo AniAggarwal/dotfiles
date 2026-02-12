@@ -1,0 +1,39 @@
+#!/bin/env bash
+# Toggle Bluetooth On/Off with optional rfkill control
+# Usage: bluetooth_toggle.sh on|off [rfkill=true|false]
+
+APPNAME="Bluetooth Toggle"
+CATEGORY="system"
+
+# Parse arguments
+ACTION="$1"
+RFKILL="${2:-true}"
+
+notify() {
+    urgency="$1"
+    title="$2"
+    message="$3"
+    dunstify -u "$urgency" -a "$APPNAME" -c "$CATEGORY" "$title" "$message"
+}
+
+case "$ACTION" in
+    on)
+        systemctl start bluetooth.service
+        if [[ "$RFKILL" == "true" ]]; then
+            rfkill unblock bluetooth
+        fi
+        notify normal "Bluetooth" "Turned Bluetooth on"
+        ;;
+    off)
+        systemctl stop bluetooth.service
+        if [[ "$RFKILL" == "true" ]]; then
+            rfkill block bluetooth
+        fi
+        notify normal "Bluetooth" "Turned Bluetooth off"
+        ;;
+    *)
+        echo "Usage: $0 on|off [rfkill=true|false]"
+        exit 1
+        ;;
+esac
+

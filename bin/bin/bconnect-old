@@ -1,0 +1,131 @@
+#!/usr/bin/env bash
+
+usage() {
+    printf "Usage: %s [-d | --dd] [-s | --ss] <Device Name>\n" "$0"
+    printf "  -d    Disconnect from the device\n"
+    printf "  --dd  Disconnect from the device and turn off Bluetooth\n"
+    printf "  -s    Silent mode, no notifications\n"
+    printf "  --ss  Super silent mode, no output at all\n"
+    exit 1
+}
+
+parse_notification() {
+    # sed 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g'
+    # This sed command does two things:
+    # 1. Removes ANSI color codes with the first pattern.
+    # 2. Deletes lines that start with '[' and end with ']' before a newline.
+    sed -E '/^\[.*\].*$/d; s/\x1B\[[0-9;]*[A-Za-z]//g'
+}
+
+send_notification() {
+    local title body
+
+    title=$(echo "$1" | parse_notification)
+    body=$(echo "$2" | parse_notification)
+
+    notify-send -t 1500 "$title" "$body" &
+
+}
+
+parse_options() {
+    local -n action_ref=$1
+    local -n shutdown_bt_ref=$2
+    local -n notify_ref=$3
+    local -n print_ref=$4
+    local -n device_name_ref=$5
+    shift 5
+
+    while (( "$#" )); do
+        case "$1" in
+            -d)
+                action_ref="disconnect"
+                shift
+                ;;
+            --dd)
+                action_ref="disconnect"
+                shutdown_bt_ref=true
+                shift
+                ;;
+            -s)
+                notify_ref=false
+                shift
+                ;;
+            --ss)
+                notify_ref=false
+                print_ref=false
+                shift
+                ;;
+            -*)
+                printf "Invalid option: %s\n" "$1" >&2
+                usage
+                ;;
+            *)
+                # Assuming the first non-option argument is the device name
+                # and capturing the rest as part of the device name if spaces are present.
+                if [[ -z "$device_name_ref" ]]; then
+                    device_name_ref="$1"
+                else
+                    device_name_ref+=" $1"
+                fi
+                shift
+                ;;
+        esac
+    done
+
+    # Ensure device name is provided after options
+    if [[ -z "$device_name_ref" ]]; then
+        printf "Error: Device name not provided.\n" >&2
+        usage
+    fi
+}
+
+main() {
+    local ACTION="connect"
+    local SHUTDOWN_BLUETOOTH_AFTER_DISCONNECT=false
+    local NOTIFY=true
+    local PRINT=true
+    local DEVICE_NAME=""
+
+    parse_options ACTION SHUTDOWN_BLUETOOTH_AFTER_DISCONNECT NOTIFY PRINT DEVICE_NAME "$@"
+
+    if [ "$ACTION" = "connect" ] && ! systemctl is-active --quiet bluetooth.service; then
+        [[ "$PRINT" == true ]] && printf "Bluetooth is off. Turning it on...\n"
+        [[ "$NOTIFY" == true ]] && send_notification "Bluetooth" "Turning on Bluetooth..."
+        systemctl start bluetooth.service
+        sleep 1
+    fi
+
+    local MAC_ADDRESS=$(bluetoothctl devices | grep "$DEVICE_NAME" | awk '{print $2}')
+
+    if [[ -z "$MAC_ADDRESS" ]]; then
+        [[ "$PRINT" == true ]] && printf "Failed: device not found.\n"
+        [[ "$NOTIFY" == true ]] && send_notification "Bluetooth" "Failed: device not found."
+        exit 1
+    fi
+
+    [[ "$PRINT" == true ]] && printf "%sing %s...\n" "${ACTION^}" "$DEVICE_NAME"
+    [[ "$NOTIFY" == true ]] && send_notification "Bluetooth" "${ACTION^}ing $DEVICE_NAME..."
+
+    local bctl_output
+    if ! bctl_output=$(bluetoothctl "$ACTION" "$MAC_ADDRESS" 2>&1); then
+        [[ "$PRINT" == true ]] && printf "Error: %s\n" "$bctl_output"
+        [[ "$NOTIFY" == true ]] && send_notification "Bluetooth" "Error: $bctl_output"
+        exit 1
+    fi
+
+    [[ "$PRINT" == true ]] && printf "%s\n" "$bctl_output"
+    [[ "$NOTIFY" == true ]] && send_notification "Bluetooth" "$bctl_output"
+
+    if [ "$SHUTDOWN_BLUETOOTH_AFTER_DISCONNECT" = true ]; then
+        [[ "$PRINT" == true ]] && printf "Turning off Bluetooth...\n"
+        [[ "$NOTIFY" == true ]] && send_notification "Bluetooth" "Turning off Bluetooth..."
+        systemctl stop bluetooth.service
+        [[ "$NOTIFY" == true ]] && send_notification "Bluetooth" "Turned Bluetooth off."
+    fi
+}
+
+if [[ "$#" -lt 1 ]]; then
+    usage
+else
+    main "$@"
+fi

@@ -1,0 +1,116 @@
+#!/bin/env bash
+# Toggle dGPU On/Off
+# Usage: gpu-toggle [--waybar|--notify|--status]
+
+APPNAME="GPU Toggle"
+CATEGORY="system"
+GPU_PCI="0000:01:00.0"
+
+notify() {
+    urgency="$1"
+    title="$2"
+    message="$3"
+    # Run as the original user to access dbus session
+    if [[ -n "$SUDO_USER" ]]; then
+        sudo -u "$SUDO_USER" DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u "$SUDO_USER")/bus" \
+            dunstify -u "$urgency" -a "$APPNAME" -c "$CATEGORY" "$title" "$message"
+    else
+        dunstify -u "$urgency" -a "$APPNAME" -c "$CATEGORY" "$title" "$message"
+    fi
+}
+
+is_gpu_on() {
+    [ -d "/sys/bus/pci/devices/$GPU_PCI" ]
+}
+
+gpu_off() {
+    # Stop nvidia services that hold the GPU
+    systemctl stop nvidia-powerd.service 2>/dev/null
+    systemctl stop nvidia-persistenced.service 2>/dev/null
+
+    # Unload nvidia modules
+    modprobe -r nvidia_uvm nvidia_drm nvidia_modeset nvidia 2>/dev/null
+
+    # Remove the device (if still present after module unload)
+    if [ -d "/sys/bus/pci/devices/$GPU_PCI" ]; then
+        echo 1 > "/sys/bus/pci/devices/$GPU_PCI/remove"
+    fi
+}
+
+gpu_on() {
+    # Rescan PCI bus to bring GPU back
+    echo 1 > /sys/bus/pci/rescan
+
+    # Wait for device to appear
+    for i in {1..10}; do
+        if [ -d "/sys/bus/pci/devices/$GPU_PCI" ]; then
+            break
+        fi
+        sleep 0.2
+    done
+
+    # Give device time to initialize before loading driver
+    sleep 1
+
+    # Load nvidia modules
+    modprobe nvidia
+
+    # Restart nvidia services
+    systemctl start nvidia-persistenced.service 2>/dev/null
+    systemctl start nvidia-powerd.service 2>/dev/null
+}
+
+print_waybar() {
+    if is_gpu_on; then
+        echo '{"alt": "on", "tooltip": "dGPU on (click to disable)", "class": "on"}'
+    else
+        echo '{"alt": "off", "tooltip": "dGPU off (click to enable)", "class": "off"}'
+    fi
+}
+
+print_status() {
+    if is_gpu_on; then
+        echo "dGPU ON"
+    else
+        echo "dGPU OFF"
+    fi
+}
+
+toggle() {
+    if is_gpu_on; then
+        gpu_off
+        echo "dGPU OFF"
+    else
+        gpu_on
+        echo "dGPU ON"
+    fi
+}
+
+toggle_notify() {
+    if is_gpu_on; then
+        gpu_off
+        notify normal "dGPU" "Turned dGPU off"
+    else
+        gpu_on
+        notify normal "dGPU" "Turned dGPU on"
+    fi
+}
+
+case "$1" in
+    --waybar)
+        print_waybar
+        ;;
+    --status)
+        print_status
+        ;;
+    --notify)
+        toggle_notify
+        ;;
+    "")
+        toggle
+        ;;
+    *)
+        echo "Usage: $0 [--waybar|--notify|--status]"
+        exit 1
+        ;;
+esac
