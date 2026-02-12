@@ -50,6 +50,7 @@ return {
         copilot = "[ COPILOT]",
         nvim_lsp = "[󰒋LSP]",
         nvim_lsp_signature_help = "[󰃣 SIGNATURE]",
+        nvim_lua = "[󰢱 Lua]",
         path = "[~ PATH]",
         luasnip = "[󰆐 Snippet]",
         buffer = "[ Buffer]",
@@ -112,16 +113,14 @@ return {
         }),
         formatting = {
             fields = { "kind", "abbr", "menu" },
-            format = lspkind.cmp_format({
-                mode = "symbol", -- show only symbol annotations
-                -- maxwidth = 50, -- prevent the popup from showing more than provided characters (e.g 50 will not show more than 50 characters)
-                -- The function below will be called before any actual modifications from lspkind
-                -- so that you can provide more controls on popup customization. (See [#30](https://github.com/onsails/lspkind-nvim/pull/30))
-                before = function(entry, vim_item)
-                    vim_item.menu = source_names[entry.source.name]
-                    return vim_item
-                end,
-            }),
+            format = function(entry, vim_item)
+                local kind_icon = lspkind.symbolic(vim_item.kind)
+                if kind_icon and kind_icon ~= "" then
+                    vim_item.kind = kind_icon
+                end
+                vim_item.menu = source_names[entry.source.name]
+                return vim_item
+            end,
         },
 
         -- Order matters: nvim_lsp is shown before nvim_lua in this case

@@ -8,10 +8,12 @@ return {
 	},
 
 	{
-		"ggandor/leap.nvim",
-		lazy = false, -- leap lazy loads itself; manual lazy load causes problems
+		url = "https://codeberg.org/andyg/leap.nvim",
+		lazy = false,
 		config = function()
-			require("leap").create_default_mappings()
+			-- Sneak-style mappings (replaces deprecated create_default_mappings)
+			vim.keymap.set({ "n", "x", "o" }, "s", "<Plug>(leap)")
+			vim.keymap.set("n", "S", "<Plug>(leap-from-window)")
 		end,
 		dependencies = "tpope/vim-repeat",
 	},
@@ -21,12 +23,13 @@ return {
 		build = "./kitty/install-kittens.bash", -- Build step for kitty integration
 		lazy = false, -- keybinds won't work if lazy loaded
 		keys = {
-			-- Resize splits
+			-- Resize splits (including from terminal mode)
 			{
 				"<A-H>",
 				function()
 					require("smart-splits").resize_left()
 				end,
+				mode = { "n", "t" },
 				desc = "Resize left",
 			},
 			{
@@ -34,6 +37,7 @@ return {
 				function()
 					require("smart-splits").resize_down()
 				end,
+				mode = { "n", "t" },
 				desc = "Resize down",
 			},
 			{
@@ -41,6 +45,7 @@ return {
 				function()
 					require("smart-splits").resize_up()
 				end,
+				mode = { "n", "t" },
 				desc = "Resize up",
 			},
 			{
@@ -48,15 +53,17 @@ return {
 				function()
 					require("smart-splits").resize_right()
 				end,
+				mode = { "n", "t" },
 				desc = "Resize right",
 			},
 
-			-- Move between splits
+			-- Move between splits (including from terminal mode)
 			{
 				"<C-h>",
 				function()
 					require("smart-splits").move_cursor_left()
 				end,
+				mode = { "n", "t" },
 				desc = "Move to left split",
 			},
 			{
@@ -64,6 +71,7 @@ return {
 				function()
 					require("smart-splits").move_cursor_down()
 				end,
+				mode = { "n", "t" },
 				desc = "Move to down split",
 			},
 			{
@@ -71,6 +79,7 @@ return {
 				function()
 					require("smart-splits").move_cursor_up()
 				end,
+				mode = { "n", "t" },
 				desc = "Move to up split",
 			},
 			{
@@ -78,22 +87,25 @@ return {
 				function()
 					require("smart-splits").move_cursor_right()
 				end,
+				mode = { "n", "t" },
 				desc = "Move to right split",
 			},
 			{
-				"<C-\\>",
+				"<C-;>",
 				function()
 					require("smart-splits").move_cursor_previous()
 				end,
+				mode = { "n", "t" },
 				desc = "Move to previous split",
 			},
 
-			-- Swap buffers between splits
+			-- Swap buffers between splits (including from terminal mode)
 			{
 				"<leader><leader>h",
 				function()
 					require("smart-splits").swap_buf_left()
 				end,
+				mode = { "n", "t" },
 				desc = "Swap buffer left",
 			},
 			{
@@ -101,6 +113,7 @@ return {
 				function()
 					require("smart-splits").swap_buf_down()
 				end,
+				mode = { "n", "t" },
 				desc = "Swap buffer down",
 			},
 			{
@@ -108,6 +121,7 @@ return {
 				function()
 					require("smart-splits").swap_buf_up()
 				end,
+				mode = { "n", "t" },
 				desc = "Swap buffer up",
 			},
 			{
@@ -115,6 +129,7 @@ return {
 				function()
 					require("smart-splits").swap_buf_right()
 				end,
+				mode = { "n", "t" },
 				desc = "Swap buffer right",
 			},
 		},
