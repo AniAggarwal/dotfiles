@@ -45,12 +45,7 @@ return {
 	{
 		"zbirenbaum/copilot-cmp",
 		dependencies = "zbirenbaum/copilot.lua",
-		opts = {
-			method = "getCompletionsCycling",
-			filetypes = {
-				VimspectorPrompt = false, -- Disable Copilot in VimspectorPrompt filetypes
-			},
-		},
+		opts = {},
 	},
 	{
 		{
@@ -58,7 +53,6 @@ return {
 			dependencies = {
 				{ "nvim-lua/plenary.nvim", branch = "master" },
 				{ "zbirenbaum/copilot.lua" },
-				{ "nvim-lua/plenary.nvim" },
 			},
 			build = "make tiktoken",
 			opts = {

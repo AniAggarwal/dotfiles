@@ -13,7 +13,7 @@ return {
 		config = function()
 			-- Sneak-style mappings (replaces deprecated create_default_mappings)
 			vim.keymap.set({ "n", "x", "o" }, "s", "<Plug>(leap)")
-			vim.keymap.set("n", "S", "<Plug>(leap-from-window)")
+			vim.keymap.set({ "n", "x", "o" }, "S", "<Plug>(leap-backward)")
 		end,
 		dependencies = "tpope/vim-repeat",
 	},
@@ -142,21 +142,13 @@ return {
 	{
 		"windwp/nvim-autopairs",
 		event = "InsertEnter", -- Lazy-load when entering Insert mode
-		opts = {
-			check_ts = true, -- Enable treesitter integration
-		},
-		-- TODO: make cmp integreation work
-		-- config = function(_, opts)
-		--   local npairs = require("nvim-autopairs")
-		--   npairs.setup(opts)
-		--
-		--   -- CMP integration
-		--   local cmp_autopairs = require("nvim-autopairs.completion.cmp")
-		--   local cmp_status_ok, cmp = pcall(require, "cmp")
-		--   if cmp_status_ok then
-		--     cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done({}))
-		--   end
-		-- end,
+		config = function()
+			require("nvim-autopairs").setup({
+				check_ts = true, -- Enable treesitter integration
+			})
+			local cmp_autopairs = require("nvim-autopairs.completion.cmp")
+			require("cmp").event:on("confirm_done", cmp_autopairs.on_confirm_done())
+		end,
 	},
 
 	{
@@ -221,13 +213,29 @@ return {
 					"<cmd>let &colorcolumn=(&colorcolumn == 81 ? 0 : 81)<CR>",
 					desc = "Highlight column 81",
 				},
-				{ "<leader>C", "<cmd>Neogen<CR>", desc = "Generate Documentation" },
-				{ "<leader>D", "<cmd>DiffviewToggleFiles<CR>", desc = "Toggle Diffview" },
+				{ "<leader>g", group = "Git" },
+				{ "<leader>f", group = "Find" },
+				{ "<leader>d", group = "Debug" },
+				{ "<leader>a", group = "AI" },
+				{ "]", group = "Next" },
+				{ "[", group = "Prev" },
 				{
 					"g",
 					group = "LSP",
-					{ "]g", vim.diagnostic.goto_next, desc = "Goto next diagnostic" },
-					{ "[g", vim.diagnostic.goto_prev, desc = "Goto prev diagnostic" },
+					{
+						"]g",
+						function()
+							vim.diagnostic.jump({ count = 1, float = true })
+						end,
+						desc = "Next diagnostic",
+					},
+					{
+						"[g",
+						function()
+							vim.diagnostic.jump({ count = -1, float = true })
+						end,
+						desc = "Prev diagnostic",
+					},
 					{ "gd", vim.lsp.buf.definition, desc = "To definition" },
 					{ "gD", vim.lsp.buf.declaration, desc = "To declaration" },
 					{ "gK", vim.lsp.buf.hover, desc = "Hover" },
