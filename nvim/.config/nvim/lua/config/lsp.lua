@@ -1,31 +1,30 @@
 vim.diagnostic.config({
-    virtual_text = false,
-    underline = false,
-    severity_sort = true,
-    float = {
-        focusable = true,
-        style = "minimal",
-        border = "rounded",
-        source = true,
-        header = "",
-        prefix = "",
-    },
-    signs = {
-        text = {
-            [vim.diagnostic.severity.ERROR] = "",
-            [vim.diagnostic.severity.WARN] = "",
-            [vim.diagnostic.severity.INFO] = "",
-            [vim.diagnostic.severity.HINT] = "",
-        },
-        numhl = {
-            [vim.diagnostic.severity.ERROR] = "LspDiagnosticsLineNrError",
-            [vim.diagnostic.severity.WARN] = "LspDiagnosticsLineNrWarning",
-            [vim.diagnostic.severity.INFO] = "LspDiagnosticsLineNrInfo",
-            [vim.diagnostic.severity.HINT] = "LspDiagnosticsLineNrHint",
-        },
-    },
+	virtual_text = false,
+	underline = false,
+	severity_sort = true,
+	float = {
+		focusable = true,
+		style = "minimal",
+		border = "rounded",
+		source = true,
+		header = "",
+		prefix = "",
+	},
+	signs = {
+		text = {
+			[vim.diagnostic.severity.ERROR] = "",
+			[vim.diagnostic.severity.WARN] = "",
+			[vim.diagnostic.severity.INFO] = "",
+			[vim.diagnostic.severity.HINT] = "",
+		},
+		numhl = {
+			[vim.diagnostic.severity.ERROR] = "LspDiagnosticsLineNrError",
+			[vim.diagnostic.severity.WARN] = "LspDiagnosticsLineNrWarning",
+			[vim.diagnostic.severity.INFO] = "LspDiagnosticsLineNrInfo",
+			[vim.diagnostic.severity.HINT] = "LspDiagnosticsLineNrHint",
+		},
+	},
 })
-
 
 -- Custom hover function for neovim 0.11+
 -- vim.lsp.handlers["textDocument/hover"] no longer works in 0.11 (breaking change)
@@ -85,11 +84,6 @@ end
 -- Override K to use our custom hover
 vim.keymap.set("n", "K", _G.custom_hover, { desc = "LSP Hover (with escape fix)" })
 
-vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {
-	border = "rounded",
-    focus = false
-})
-
 -- Simple code action lightbulb indicator (no plugin, no deprecation warnings)
 -- Uses extmarks instead of deprecated sign_define
 local lightbulb_ns = vim.api.nvim_create_namespace("code_action_lightbulb")
@@ -98,7 +92,9 @@ local lightbulb_icon = ""
 local function update_lightbulb()
 	vim.api.nvim_buf_clear_namespace(0, lightbulb_ns, 0, -1)
 	local clients = vim.lsp.get_clients({ bufnr = 0, method = "textDocument/codeAction" })
-	if #clients == 0 then return end
+	if #clients == 0 then
+		return
+	end
 
 	local client = clients[1]
 	local line = vim.api.nvim_win_get_cursor(0)[1] - 1
@@ -106,7 +102,9 @@ local function update_lightbulb()
 	params.context = { diagnostics = vim.diagnostic.get(0, { lnum = line }) }
 
 	client:request("textDocument/codeAction", params, function(err, result)
-		if err or not result or vim.tbl_isempty(result) then return end
+		if err or not result or vim.tbl_isempty(result) then
+			return
+		end
 		-- Show lightbulb on current line using extmark
 		local line = vim.api.nvim_win_get_cursor(0)[1] - 1
 		pcall(vim.api.nvim_buf_set_extmark, 0, lightbulb_ns, line, 0, {

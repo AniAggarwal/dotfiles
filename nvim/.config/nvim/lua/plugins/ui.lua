@@ -32,14 +32,12 @@ return {
 
 	-- nvim web devicons
 	{
-		{
-			"nvim-tree/nvim-web-devicons",
-			lazy = false, -- Ensure it loads at startup, many plugins use this
-			opts = {
-				color_icons = true,
-				default = true,
-				strict = true,
-			},
+		"nvim-tree/nvim-web-devicons",
+		lazy = false, -- Ensure it loads at startup, many plugins use this
+		opts = {
+			color_icons = true,
+			default = true,
+			strict = true,
 		},
 	},
 
@@ -164,7 +162,14 @@ return {
 		dependencies = { "nvim-telescope/telescope.nvim" },
 		opts = {},
 		keys = {
-			{ "ga", function() require("actions-preview").code_actions() end, mode = { "n", "v" }, desc = "Code Actions (Preview)" },
+			{
+				"ga",
+				function()
+					require("actions-preview").code_actions()
+				end,
+				mode = { "n", "v" },
+				desc = "Code Actions (Preview)",
+			},
 		},
 	},
 	{
@@ -185,8 +190,8 @@ return {
 				-- },
 				mappings = {
 					i = {
-						["<C-n>"] = "HistoryPrev",
-						["<C-p>"] = "HistoryNext",
+						["<C-n>"] = "HistoryNext",
+						["<C-p>"] = "HistoryPrev",
 					},
 				},
 				-- TODO: figure out if this is needed
@@ -253,15 +258,10 @@ return {
 	{
 		"folke/trouble.nvim",
 		cmd = "Trouble",
-		opts = {
-			position = "bottom",
-			open_split = { "<c-s>" }, -- Open buffer in horizontal split
-			auto_preview = false, -- Disable automatic preview, use <CR> or K to preview
-			use_diagnostic_signs = false, -- Don't use diagnostic signs
-		},
+		opts = {},
 		keys = {
-			{ "gr", "<cmd>TroubleToggle lsp_references<CR>", desc = "Trouble LSP References" },
-			{ "gL", "<cmd>TroubleToggle document_diagnostics<CR>", desc = "Trouble Document Diagnostics" },
+			{ "gr", "<cmd>Trouble lsp_references toggle<CR>", desc = "Trouble LSP References" },
+			{ "gL", "<cmd>Trouble diagnostics toggle filter.buf=0<CR>", desc = "Trouble Document Diagnostics" },
 		},
 	},
 
@@ -314,7 +314,11 @@ return {
 			dashboard.section.buttons.val = {
 				dashboard.button("f", " " .. " Find file", ":Telescope find_files<CR>"),
 				dashboard.button("e", " " .. " New file", ":ene <BAR> startinsert <CR>"),
-				dashboard.button("o", "󰠮 " .. " Obsidian", ":lua require('obsidian_launcher').select_workspace()<CR>"),
+				dashboard.button(
+					"o",
+					"󰠮 " .. " Obsidian",
+					":lua require('obsidian_launcher').select_workspace()<CR>"
+				),
 				dashboard.button("r", "󰄉 " .. " Recent files", ":Telescope oldfiles<CR>"),
 				dashboard.button("t", " " .. " Find text", ":Telescope live_grep <CR>"),
 				dashboard.button("c", " " .. " Config", ":e ~/.config/nvim/init.lua <CR>"),
@@ -323,8 +327,7 @@ return {
 
 			-- Footer section with dynamic content
 			local function footer()
-				local plugins_count =
-					vim.fn.len(vim.fn.globpath("~/.local/share/nvim/site/pack/packer/start", "*", 0, 1))
+				local plugins_count = require("lazy").stats().count
 				local v = vim.version()
 				local datetime = os.date(" %d-%m-%Y   %H:%M:%S")
 				local platform = " Linux"
