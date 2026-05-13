@@ -232,7 +232,7 @@
     sticky_history = yes
 
     # Maximum amount of notifications kept in history
-    history_length = 20
+    history_length = 100
 
     ### Misc/Advanced ###
 
@@ -335,12 +335,12 @@
     timeout = 0
 
 [system_notifications]
-    cateogry=system
+    category=system
     history_ignore=true
     override_pause_level=90
 
 [battery_notifications]
-    cateogry=battery
+    category=battery
     history_ignore=true
     override_pause_level=10
 

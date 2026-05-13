@@ -1,0 +1,42 @@
+@import "~/.config/rofi/rofi-config.rasi"
+
+window {
+    width:                       800px;
+    height:                      800px;
+}
+
+mainbox {
+    children:                    [ "inputbar", "message", "listview" ];
+}
+
+message {
+    padding:                     6px 15px;
+    border:                      0px;
+    background-color:            @background-alt;
+    text-color:                  @foreground;
+}
+
+textbox {
+    background-color:            inherit;
+    text-color:                  inherit;
+}
+
+listview {
+    lines:                       8;
+    dynamic:                     false;
+    fixed-height:                true;
+}
+
+element {
+    padding:                     12px;
+    spacing:                     15px;
+}
+
+element-icon {
+    size:                        72px;
+    squared:                     false;
+}
+
+element-text {
+    vertical-align:              0.5;
+}
