@@ -1,3 +1,6 @@
+-- Treat .mdx as markdown so all markdown ftplugin/plugin features apply
+vim.filetype.add({ extension = { mdx = "markdown" } })
+
 -- Backup and File Management
 vim.opt.backup = false -- No backup file
 vim.opt.swapfile = false -- No swap file
