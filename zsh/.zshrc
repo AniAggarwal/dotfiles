@@ -26,7 +26,19 @@ export PATH="$HOME/bin:$PATH"
 export PATH="$HOME/.local/bin:$PATH"
 export PATH="$HOME/.cargo/bin:$PATH"
 export MAMBA_ROOT_PREFIX="/home/ani/micromamba"
-export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
+# export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
+# Kitty's ssh kitten copies shell config to the remote, so the above line
+# clobbers the forwarded agent socket. Only set it locally; on remote hosts,
+# recover the forwarded socket from /tmp/ssh-* if it was overwritten.
+if [[ -n "$SSH_CONNECTION" ]]; then
+    if [[ -z "$SSH_AUTH_SOCK" || ! -S "$SSH_AUTH_SOCK" ]]; then
+        _sock="$(command find /tmp/ssh-* -name 'agent.*' -uid "$(id -u)" 2>/dev/null | head -1)"
+        [[ -n "$_sock" ]] && export SSH_AUTH_SOCK="$_sock"
+        unset _sock
+    fi
+else
+    export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
+fi
 
 # for UMOBJ store
 # OBJ_ACCESS_KEY_ID, OBJ_SECRET_ACCESS_KEY set in .secrets
@@ -79,6 +91,9 @@ ZSH_AUTOSUGGEST_ACCEPT_WIDGETS[$ZSH_AUTOSUGGEST_ACCEPT_WIDGETS[(i)vi-forward-cha
 # Source secret keys, etc.
 [ -f ~/.secrets ] && source ~/.secrets
 
+# Aliases
+[ -f ~/.aliases ] && source ~/.aliases
+
 ####################
 # Custom Functions #
 ####################
@@ -102,6 +117,14 @@ function fzf_config {
 
     export FZF_ALT_C_COMMAND="$FZF_FIND --type d"
     export FZF_ALT_C_OPTS="--preview 'tree -C {}'"
+}
+
+function y() {
+    local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
+    command yazi "$@" --cwd-file="$tmp"
+    IFS= read -r -d '' cwd < "$tmp"
+    [ "$cwd" != "$PWD" ] && [ -d "$cwd" ] && builtin cd -- "$cwd"
+    rm -f -- "$tmp"
 }
 
 function fzf_open_file {
@@ -151,11 +174,6 @@ function zvm_after_init() {
     # Ctrl+o to open file using fzf
     zvm_define_widget fzf_open_file
     bindkey '^o' fzf_open_file
-
-    # Aliases
-    if [ -f ~/.aliases ]; then
-        . ~/.aliases
-    fi
 }
 
 
@@ -176,12 +194,8 @@ fi
 unset __mamba_setup
 # <<< mamba initialize <<<
 
-
-### opam configuration ###
-# Auto generated is below, but we are prefering our own eval
-# [[ ! -r /home/ani/.opam/opam-init/init.zsh ]] || source /home/ani/.opam/opam-init/init.zsh  > /dev/null 2> /dev/null
-# opam recomends: eval $(opam env) but cliff recommends below
-eval `opam config env`
+# direnv
+eval "$(direnv hook zsh)"
 
 ###########
 # Plugins #

@@ -1,7 +1,10 @@
 # Set of aliases to use for both bash and zsh
+alias Hypr="start-hyprland"
 alias ls='eza --group-directories-first --icons=never'
 alias ll='eza -alhF --icons=always'
 alias l='eza -alhF --icons=always'
+alias tree='eza --tree --icons=auto'
+alias b2="bbb2"
 
 alias up="sudo pacman -Syu"
 alias sys="systemctl"
@@ -33,7 +36,6 @@ alias kconf='nvim ~/.config/kitty/kitty.conf'
 alias wlog='nvim ~/data/work-log.txt'
 
 alias conda="micromamba"
-alias mamba="micromamba"
 alias ma="micromamba"
 
 alias gpu-run="NVD_BACKEND=direct LIBVA_DRIVER_NAME=nvidia prime-run"
