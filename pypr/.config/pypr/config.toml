@@ -24,6 +24,9 @@ submenu_end = ""
 "Turn Bluetooth On" = "bluetooth_toggle on"
 "Turn Bluetooth Off" = "bluetooth_toggle off"
 
+[shortcuts_menu.entries."Wallpaper"]
+"Choose Wallpaper" = "~/.config/hypr/scripts/wallpaper-picker.sh"
+
 [shortcuts_menu.entries."Power"]
 "Suspend" = "systemctl suspend"
 "Hibernate" = "systemctl hibernate"

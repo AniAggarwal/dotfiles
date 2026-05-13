@@ -1,0 +1,22 @@
+@import "~/.config/rofi/rofi-config.rasi"
+
+window {
+    width:                       800px;
+}
+
+listview {
+    lines:                       6;
+    fixed-height:                false;
+    dynamic:                     true;
+    spacing:                     0px;
+    padding:                     2px;
+}
+
+element {
+    padding:                     2px;
+    spacing:                     10px;
+}
+
+element-icon {
+    size:                        90px;
+}
