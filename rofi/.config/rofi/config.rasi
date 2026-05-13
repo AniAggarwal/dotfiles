@@ -1,0 +1,21 @@
+@theme "/home/ani/.config/rofi/rofi-config.rasi"
+
+window {
+    width:                       1000px;
+}
+
+mainbox {
+    children:                    [ "inputbar", "message", "listview" ];
+}
+
+message {
+    padding:                     6px 15px;
+    border:                      0px;
+    background-color:            @background-alt;
+    text-color:                  @foreground;
+}
+
+textbox {
+    background-color:            inherit;
+    text-color:                  inherit;
+}
