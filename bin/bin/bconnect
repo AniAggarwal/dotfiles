@@ -130,7 +130,10 @@ main() {
     fi
 
     local MAC_ADDRESS
-    MAC_ADDRESS=$(bluetoothctl devices | grep -i -- "$DEVICE_NAME" | awk '{print $2}' | head -n1)
+    # Workaround for BlueZ >=5.86 regression (bluez/bluez#1896):
+    # non-interactive bluetoothctl commands produce no output.
+    # Here-string forces interactive mode without timing dependencies.
+    MAC_ADDRESS=$(bluetoothctl <<< "devices Paired" 2>/dev/null | grep "^Device" | grep -i -- "$DEVICE_NAME" | awk '{print $2}' | head -n1)
 
     if [[ -z "$MAC_ADDRESS" ]]; then
         [[ "$PRINT" == true ]] && printf "Failed: device not found.\n"
