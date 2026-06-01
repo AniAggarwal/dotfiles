@@ -101,6 +101,8 @@
     "tooltip-format": "<tt><big>{calendar}</big></tt>",
   },
   "battery": {
+    "bat": "BAT0",
+    "adapter": "AC",
     "states": {
       "warning": 25,
       "critical": 10,
