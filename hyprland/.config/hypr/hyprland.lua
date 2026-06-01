@@ -466,7 +466,19 @@ local function group_mode_action(dispatcher)
     return dispatch_many(dispatcher, hl.dsp.submap("reset"))
 end
 
-bind(main_mod .. " + G", hl.dsp.submap("group"))
+local function enter_group_mode()
+    hl.dispatch(hl.dsp.submap("group-entry"))
+    hl.timer(function()
+        hl.dispatch(hl.dsp.submap("group"))
+    end, { timeout = 10, type = "oneshot" })
+end
+
+bind(main_mod .. " + G", enter_group_mode)
+
+hl.define_submap("group-entry", "reset", function()
+    bind("escape", hl.dsp.submap("reset"))
+end)
+
 hl.define_submap("group", "reset", function()
     bind("G", group_mode_action(hl.dsp.group.toggle()))
     bind(main_mod .. " + G", group_mode_action(hl.dsp.group.toggle()))
