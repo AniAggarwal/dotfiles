@@ -30,7 +30,7 @@ op() {
     xdg-open "$1" &> /dev/null &; disown
 }
 
-alias hconf='nvim ~/.config/hypr/hyprland.conf'
+alias hconf='nvim ~/.config/hypr/hyprland.lua'
 alias nconf='cd ~/.config/nvim/;nvim ~/.config/nvim/init.lua'
 alias kconf='nvim ~/.config/kitty/kitty.conf'
 alias wlog='nvim ~/data/work-log.txt'
