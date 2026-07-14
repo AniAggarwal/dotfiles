@@ -5,27 +5,12 @@ local rofi_path = "~/.config/rofi/rofi-config.rasi"
 local file_manager = "kitty -e yazi"
 local main_mod = "SUPER"
 
-local function bind(keys, dispatcher, opts)
-    hl.bind(keys, dispatcher, opts)
-end
-
-local function bind_exec(keys, cmd, opts)
-    bind(keys, hl.dsp.exec_cmd(cmd), opts)
-end
-
-local function dispatch_many(...)
-    local dispatchers = { ... }
-
-    return function()
-        for _, dispatcher in ipairs(dispatchers) do
-            hl.dispatch(dispatcher)
-        end
-    end
-end
-
-local function grad(colors, angle)
-    return { colors = colors, angle = angle }
-end
+-- Helpers and self-contained features live in ./lib/ (required below).
+local helpers = require("lib.helpers")
+local bind, bind_exec, dispatch_many, grad =
+    helpers.bind, helpers.bind_exec, helpers.dispatch_many, helpers.grad
+local move_window = require("lib.window-move")
+local group_mode = require("lib.group-mode")
 
 -----------------
 -- Autostart
@@ -105,7 +90,7 @@ hl.monitor({
 
 hl.monitor({
     output = "desc: Samsung Electric Company SAMSUNG 0x01000E00",
-    mode = "3840x2160@30.00Hz",
+    mode = "2560x1440@60.00Hz",
     scale = "1",
     position = "auto-center-up",
 })
@@ -225,6 +210,7 @@ hl.config({
     binds = {
         focus_preferred_method = 0,
         movefocus_cycles_fullscreen = 0,
+        window_direction_monitor_fallback = true,
     },
 })
 
@@ -444,10 +430,10 @@ bind(main_mod .. " + J", dispatch_many(
     hl.dsp.window.alter_zorder({ mode = "top" })
 ))
 
-bind(main_mod .. " + SHIFT + H", hl.dsp.window.move({ direction = "l" }))
-bind(main_mod .. " + SHIFT + L", hl.dsp.window.move({ direction = "r" }))
-bind(main_mod .. " + SHIFT + K", hl.dsp.window.move({ monitor = "u" }))
-bind(main_mod .. " + SHIFT + J", hl.dsp.window.move({ monitor = "d" }))
+bind(main_mod .. " + SHIFT + H", move_window("l"))
+bind(main_mod .. " + SHIFT + L", move_window("r"))
+bind(main_mod .. " + SHIFT + K", move_window("u"))
+bind(main_mod .. " + SHIFT + J", move_window("d"))
 
 bind(main_mod .. " + ALT + H", hl.dsp.window.resize({ x = -10, y = 0, relative = true }), { repeating = true })
 bind(main_mod .. " + ALT + L", hl.dsp.window.resize({ x = 10, y = 0, relative = true }), { repeating = true })
@@ -462,47 +448,7 @@ bind(main_mod .. " + CTRL + SHIFT + grave", hl.dsp.window.cycle_next({ next = fa
 bind(main_mod .. " + Tab", hl.dsp.group.next())
 bind(main_mod .. " + SHIFT + Tab", hl.dsp.group.prev())
 
-local function group_mode_action(dispatcher)
-    return dispatch_many(dispatcher, hl.dsp.submap("reset"))
-end
-
-local function enter_group_mode()
-    hl.dispatch(hl.dsp.submap("group-entry"))
-    hl.timer(function()
-        hl.dispatch(hl.dsp.submap("group"))
-    end, { timeout = 10, type = "oneshot" })
-end
-
-bind(main_mod .. " + G", enter_group_mode)
-
-hl.define_submap("group-entry", "reset", function()
-    bind("escape", hl.dsp.submap("reset"))
-end)
-
-hl.define_submap("group", "reset", function()
-    bind("G", group_mode_action(hl.dsp.group.toggle()))
-    bind(main_mod .. " + G", group_mode_action(hl.dsp.group.toggle()))
-
-    bind("O", group_mode_action(hl.dsp.window.move({ out_of_group = true })))
-    bind(main_mod .. " + O", group_mode_action(hl.dsp.window.move({ out_of_group = true })))
-
-    bind("B", group_mode_action(hl.dsp.group.lock_active({ action = "toggle" })))
-    bind(main_mod .. " + B", group_mode_action(hl.dsp.group.lock_active({ action = "toggle" })))
-
-    bind("H", group_mode_action(hl.dsp.window.move({ into_group = "l" })))
-    bind(main_mod .. " + H", group_mode_action(hl.dsp.window.move({ into_group = "l" })))
-
-    bind("J", group_mode_action(hl.dsp.window.move({ into_group = "d" })))
-    bind(main_mod .. " + J", group_mode_action(hl.dsp.window.move({ into_group = "d" })))
-
-    bind("K", group_mode_action(hl.dsp.window.move({ into_group = "u" })))
-    bind(main_mod .. " + K", group_mode_action(hl.dsp.window.move({ into_group = "u" })))
-
-    bind("L", group_mode_action(hl.dsp.window.move({ into_group = "r" })))
-    bind(main_mod .. " + L", group_mode_action(hl.dsp.window.move({ into_group = "r" })))
-
-    bind("escape", hl.dsp.submap("reset"))
-end)
+group_mode.setup(main_mod)
 
 for i = 1, 10 do
     local key = tostring(i % 10)
