@@ -1,0 +1,132 @@
+{
+    "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+    // Dune palette:
+    //   Night Desert  #241A12
+    //   Deep Brown    #3D2F24
+    //   Sand          #DCD7C8
+    //   Spice Orange  #C89F6B
+    //   Spice Brown   #8B6F58
+    //   Rust          #B65C4D
+    //   Fremen Blue   #5C7A8A
+    "logo": {
+        "source": "/home/ani/.config/fastfetch/dune-logo.txt",
+        "type": "file",
+        "padding": {
+            "top": 1,
+            "right": 3
+        },
+        "color": {
+            "1": "38;2;220;215;200", // Sand — stars
+            "2": "38;2;200;159;107", // Spice Orange — far dune ridge
+            "3": "38;2;139;111;88",  // Spice Brown — mid dune body
+            "4": "38;2;61;47;36"     // Deep Brown — near dune shading
+        }
+    },
+    "display": {
+        "separator": " ",
+        "color": {
+            "keys": "38;2;200;159;107",
+            "output": "38;2;220;215;200",
+            "separator": "38;2;139;111;88",
+            "title": "38;2;182;92;77"
+        }
+    },
+    "modules": [
+        {
+            "type": "title",
+            "color": {
+                "user": "38;2;182;92;77",
+                "at": "38;2;139;111;88",
+                "host": "38;2;220;215;200"
+            }
+        },
+        {
+            "type": "custom",
+            "format": "──────────────────────────",
+            "outputColor": "38;2;139;111;88"
+        },
+        {
+            "type": "os",
+            "key": "  OS"
+        },
+        {
+            "type": "host",
+            "key": "  Host"
+        },
+        {
+            "type": "kernel",
+            "key": "  Kernel"
+        },
+        {
+            "type": "uptime",
+            "key": "  Uptime"
+        },
+        {
+            "type": "packages",
+            "key": "  Packages"
+        },
+        {
+            "type": "shell",
+            "key": "  Shell"
+        },
+        {
+            "type": "wm",
+            "key": "  WM"
+        },
+        {
+            "type": "de",
+            "key": "  DE"
+        },
+        {
+            "type": "wmtheme",
+            "key": "  Theme"
+        },
+        {
+            "type": "terminal",
+            "key": "  Terminal"
+        },
+        {
+            "type": "terminalfont",
+            "key": "  Term Font"
+        },
+        {
+            "type": "custom",
+            "format": "──────────────────────────",
+            "outputColor": "38;2;139;111;88"
+        },
+        {
+            "type": "cpu",
+            "key": "  CPU"
+        },
+        {
+            "type": "gpu",
+            "key": "  GPU"
+        },
+        {
+            "type": "memory",
+            "key": "  Memory"
+        },
+        {
+            "type": "swap",
+            "key": "  Swap"
+        },
+        {
+            "type": "disk",
+            "key": "  Disk"
+        },
+        {
+            "type": "localip",
+            "key": "  Local IP"
+        },
+        {
+            "type": "battery",
+            "key": "  Battery"
+        },
+        "break",
+        {
+            "type": "colors",
+            "paddingLeft": 2,
+            "symbol": "circle"
+        }
+    ]
+}

@@ -32,6 +32,8 @@ selected=$(echo -en "$entries" | rofi \
 wallpaper="${paths[$selected]}"
 [ -f "$wallpaper" ] || exit 1
 
-# Set wallpaper via hyprpaper
-hyprctl hyprpaper preload "$wallpaper"
+# Set wallpaper via hyprpaper (v0.8.4+: 'wallpaper' loads the image itself, no preload)
 hyprctl hyprpaper wallpaper ",$wallpaper"
+
+# Regenerate/restore the theme for this wallpaper (backgrounded)
+"$HOME/.config/hypr/scripts/theme-apply.sh" "$wallpaper" &
