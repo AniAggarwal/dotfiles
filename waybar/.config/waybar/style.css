@@ -1,15 +1,5 @@
-/* ===== Waybar GTK CSS: color “variables” ===== */
-@define-color bar_fg                 #ffffff;
-@define-color bar_bg                 transparent;
-@define-color bar_border             #8C7E73;
-
-@define-color accent_workspace_active #a8773b;
-@define-color accent_charging         #7dcfff;
-@define-color accent_warning          #d7a866;
-@define-color accent_critical         #ec7189;
-@define-color accent_temp_critical    #eb4d4b;
-
-@define-color panel_bg                #1a1b26;  /* use with opacity below */
+/* ===== Waybar GTK CSS: color “variables” (dune theme, generated) ===== */
+@import url("/home/ani/.config/themes/current/colors-waybar.css");
 
 /* ===== Base ===== */
 * {

@@ -1,0 +1,4 @@
+/* Managed by dotfiles (themes stow package). The Graphite-Dark GTK3 widget
+ * theme is loaded via gsettings gtk-theme; this file only layers the dune
+ * dynamic named-colors on top. */
+@import url("file:///home/ani/.config/themes/current/colors-gtk.css");

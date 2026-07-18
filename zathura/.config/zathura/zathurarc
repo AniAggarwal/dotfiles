@@ -2,3 +2,5 @@
 set selection-clipboard clipboard
 
 set database sqlite
+
+include /home/ani/.config/themes/current/colors-zathura

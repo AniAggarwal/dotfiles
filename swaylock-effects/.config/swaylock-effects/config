@@ -9,9 +9,5 @@ effect-blur=25x5
 indicator
 timestr=%-I:%M %p
 
-ring-color=696969
-ring-clear-color=AEAEAE
-
-inside-clear-color=C3BAAC
-inside-caps-lock-color=DFD6E9
-key-hl-color=F8F8F8
+# Colors are injected by lock-screen.sh from
+# ~/.config/themes/current/colors-swaylock (matugen-generated dune theme).

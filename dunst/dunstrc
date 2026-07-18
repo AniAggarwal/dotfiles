@@ -101,7 +101,7 @@
     frame_width = 2
 
     # Defines color of the frame around the notification window.
-    frame_color = "#f0e0cc"
+    # frame_color is set by the dune theme drop-in (dunstrc.d/99-colors.conf)
 
     # Size of gap to display between notifications - requires a compositor.
     # If value is greater than 0, separator_height will be ignored and a border
@@ -115,7 +115,7 @@
     #  * foreground: use the same color as the foreground;
     #  * frame: use the same color as the frame;
     #  * anything else will be interpreted as a X color.
-    separator_color = frame
+    # separator_color is set by the dune theme drop-in (dunstrc.d/99-colors.conf)
 
     # Sort messages by urgency.
     sort = yes
@@ -129,7 +129,7 @@
 
     ### Text ###
 
-    font = Fira Code 8
+    font = FiraCode Nerd Font Mono 10
 
     # The spacing between lines.  If the height is smaller than the
     # font height, it will get raised to the font height.
@@ -317,21 +317,16 @@
 
 
 [urgency_low]
-    # IMPORTANT: colors have to be defined in quotation marks.
-    # Otherwise the "#" and following would be interpreted as a comment.
-    background = "#0000008f"
-    foreground = "#ffffff"
+    # colors (background/foreground/frame_color/highlight) come from the
+    # dune theme drop-in: dunstrc.d/99-colors.conf
     timeout = 3
 
 [urgency_normal]
-    background = "#0000008f"
-    foreground = "#ffffff"
+    # colors come from the dune theme drop-in: dunstrc.d/99-colors.conf
     timeout = 3
 
 [urgency_critical]
-    background = "#900000"
-    foreground = "#ffffff"
-    frame_color = "#ffffff"
+    # colors come from the dune theme drop-in: dunstrc.d/99-colors.conf
     timeout = 0
 
 [system_notifications]

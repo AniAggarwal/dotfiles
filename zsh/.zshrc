@@ -51,6 +51,9 @@ export PATH="$PATH:$GEM_HOME/bin"
 # QT theme
 export QT_QPA_PLATFORMTHEME=qt5ct
 
+# eza colors — reference the terminal's 16 ANSI colors so eza follows the theme
+export EZA_COLORS="di=38;5;3:ex=38;5;1:ln=38;5;6:bd=38;5;5:cd=38;5;5:pi=38;5;4:so=38;5;4:da=38;5;8:ur=38;5;3:uw=38;5;1:ux=38;5;2:ue=38;5;2:gr=38;5;3:gw=38;5;1:gx=38;5;2:tr=38;5;3:tw=38;5;1:tx=38;5;2:uu=38;5;8:gu=38;5;8:sn=38;5;2:sb=38;5;2:nb=38;5;8:nk=38;5;7:nm=38;5;3:ng=38;5;3:nt=38;5;1"
+
 # For TF to work properly
 # export XLA_FLAGS=--xla_gpu_cuda_data_dir=/opt/cuda/nvvm/libdevice/libdevice.10.bc
 export XLA_FLAGS=--xla_gpu_cuda_data_dir=/opt/cuda/
@@ -104,7 +107,7 @@ function fzf_config {
     FZF_PREVIEW="bat --color always {} || exa --all --sort=type --tree --level 3 --color-scale {}"
     FZF_FIND="fd --hidden --strip-cwd-prefix --exclude micromamba --exclude .git --color always"
     export FZF_DEFAULT_COMMAND="$FZF_FIND"
-    export FZF_DEFAULT_OPTS="--ansi"
+    export FZF_DEFAULT_OPTS="--ansi --color=16,bg+:-1,fg+:11,hl:3,hl+:9,pointer:9,prompt:3,spinner:3,info:8,border:8"
 
     export FZF_CTRL_T_COMMAND="$FZF_FIND"
     export FZF_CTRL_T_OPTS="--preview '($FZF_PREVIEW) 2> /dev/null' --bind 'ctrl-/:change-preview-window(down|hidden|)'"
