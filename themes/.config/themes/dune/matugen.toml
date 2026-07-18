@@ -1,0 +1,45 @@
+[config]
+
+[templates.kitty]
+input_path = "~/.config/themes/dune/templates/colors-kitty.conf"
+output_path = "~/.cache/dune-theme/build/colors-kitty.conf"
+
+[templates.waybar]
+input_path = "~/.config/themes/dune/templates/colors-waybar.css"
+output_path = "~/.cache/dune-theme/build/colors-waybar.css"
+
+[templates.rofi]
+input_path = "~/.config/themes/dune/templates/colors-rofi.rasi"
+output_path = "~/.cache/dune-theme/build/colors-rofi.rasi"
+
+[templates.hyprland]
+input_path = "~/.config/themes/dune/templates/colors-hyprland.conf"
+output_path = "~/.cache/dune-theme/build/colors-hyprland.conf"
+
+[templates.hyprlock]
+input_path = "~/.config/themes/dune/templates/colors-hyprlock.conf"
+output_path = "~/.cache/dune-theme/build/colors-hyprlock.conf"
+
+[templates.dunst]
+input_path = "~/.config/themes/dune/templates/colors-dunst.conf"
+output_path = "~/.cache/dune-theme/build/colors-dunst.conf"
+
+[templates.btop]
+input_path = "~/.config/themes/dune/templates/colors-btop.theme"
+output_path = "~/.cache/dune-theme/build/colors-btop.theme"
+
+[templates.zathura]
+input_path = "~/.config/themes/dune/templates/colors-zathura"
+output_path = "~/.cache/dune-theme/build/colors-zathura"
+
+[templates.swaylock]
+input_path = "~/.config/themes/dune/templates/colors-swaylock"
+output_path = "~/.cache/dune-theme/build/colors-swaylock"
+
+[templates.gtk]
+input_path = "~/.config/themes/dune/templates/colors-gtk.css"
+output_path = "~/.cache/dune-theme/build/colors-gtk.css"
+
+[templates.qt5ct]
+input_path = "~/.config/themes/dune/templates/colors-qt5ct.conf"
+output_path = "~/.cache/dune-theme/build/colors-qt5ct.conf"
