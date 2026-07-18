@@ -267,7 +267,16 @@ One commit.
 - Wire `~/.config/hypr/quotes.json` into hyprlock (a `label` running a jq random-quote command) and/or a waybar tooltip module.
 - Animation curves: retune `overshot`/`swipe` beziers in `hyprland.lua` for slower sand-drift motion.
 
-### Task 19 (optional, evaluate later): hyprsunset ambient warmth; swww for wallpaper crossfades (drop-in replacement for hyprpaper in picker + boot-restore script).
+### Task 19 (optional, evaluate later): swww for wallpaper crossfades (drop-in replacement for hyprpaper in picker + boot-restore script).
+
+---
+
+## Deferred / Future (user decisions, 2026-07-17)
+- **VS Code warm theme**: skipped — user doesn't need it. Currently "Default Dark Modern".
+- **Brave accent/grayscale**: deferred — Brave in constant use, can't edit Preferences while running. Future: close Brave, set `browser.theme.is_grayscale=false` + amber `user_color`, or via brave://settings/appearance.
+- **hyprsunset ambient warmth**: declined.
+- **kitty theming**: opted OUT via `~/.config/themes/kitty.conf` toggle symlink (points at onedark); flip to `~/.config/themes/current/colors-kitty.conf` to opt in. Terminal TUIs (bat/fzf/lazygit/vifm/starship) follow the terminal ANSI palette by design, so they stay One Dark while opted out.
+- **nvim, GRUB**: permanently out of scope.
 
 ---
 
