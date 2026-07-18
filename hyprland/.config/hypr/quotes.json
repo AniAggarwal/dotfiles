@@ -1,4 +1,17 @@
-{
-  "quote": "We suffer more often in imagination than in reality.",
-  "author": "Seneca"
-}
+[
+  { "quote": "Fear is the mind-killer.", "author": "Litany Against Fear" },
+  { "quote": "He who controls the spice controls the universe.", "author": "Baron Harkonnen" },
+  { "quote": "The mystery of life isn't a problem to solve, but a reality to experience.", "author": "Frank Herbert" },
+  { "quote": "A beginning is the time for taking the most delicate care that the balances are correct.", "author": "Princess Irulan" },
+  { "quote": "The spice must flow.", "author": "Dune" },
+  { "quote": "I must not fear. Fear is the little-death that brings total obliteration.", "author": "Litany Against Fear" },
+  { "quote": "Without change something sleeps inside us, and seldom awakens.", "author": "Duke Leto Atreides" },
+  { "quote": "Dreams are messages from the deep.", "author": "Paul Atreides" },
+  { "quote": "It is by will alone I set my mind in motion.", "author": "Mentat Mantra" },
+  { "quote": "The sleeper must awaken.", "author": "Duke Leto Atreides" },
+  { "quote": "A world is supported by four things: the learning of the wise, the justice of the great, the prayers of the righteous, and the valor of the brave.", "author": "Emperor Padishah" },
+  { "quote": "When religion and politics ride in the same cart, the whirlwind follows.", "author": "Muad'Dib" },
+  { "quote": "Deep in the human unconscious is a pervasive need for a logical universe that makes sense.", "author": "Princess Irulan" },
+  { "quote": "Bless the Maker and His water. Bless the coming and going of Him.", "author": "Fremen Blessing" },
+  { "quote": "The desert takes the weak. It is the wilderness that tests us.", "author": "Stilgar" }
+]
