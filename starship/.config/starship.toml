@@ -1,6 +1,19 @@
 # Snappier prompt with lower timeout
 command_timeout = 250
 
+# Dune palette — role names map to the terminal's 16 ANSI colors, so the
+# prompt follows whatever palette kitty is themed with (zero hex colors).
+palette = "dune"
+
+[palettes.dune]
+spice = "yellow"          # primary accent
+sand = "bright-white"     # bright foreground
+rust = "red"              # danger / dirty state
+fremen = "blue"           # branches / context
+worm = "bright-yellow"    # emphasis
+water = "green"           # environments
+shadow = "bright-black"   # muted / secondary
+
 [aws]
 symbol = "  "
 format = '\[[$symbol($profile)(\($region\))(\[$duration\])]($style)\]'
@@ -17,6 +30,7 @@ format = '\[[$symbol($version(-$name))]($style)\]'
 format = '\[[$symbol($version)]($style)\]'
 
 [cmd_duration]
+style = "bold worm"
 format = '\[[󱎫$duration]($style)\]'
 
 [cobol]
@@ -24,6 +38,7 @@ format = '\[[$symbol($version)]($style)\]'
 
 [conda]
 symbol = " "
+style = "bold water"
 format = '\[[$symbol$environment]($style)\]'
 
 [crystal]
@@ -41,6 +56,8 @@ format = '\[[$symbol($version)]($style)\]'
 
 [directory]
 read_only = " 󰥔"
+style = "bold sand"
+format = "[🏜 ]($style)[$path]($style)[$read_only]($read_only_style)"
 
 [docker_context]
 symbol = " "
@@ -65,9 +82,11 @@ format = '\[[$symbol$account(@$domain)(\($region\))]($style)\]'
 
 [git_branch]
 symbol = " "
+style = "bold fremen"
 format = '\[[$symbol$branch]($style)\]'
 
 [git_status]
+style = "bold rust"
 format = '([\[$all_status$ahead_behind\]]($style))'
 
 [golang]
@@ -145,6 +164,7 @@ format = '\[[$symbol($version)]($style)\]'
 
 [python]
 symbol = " "
+style = "bold spice"
 format = '\[[${symbol}${pyenv_prefix}(${version})(\($virtualenv\))]($style)\]'
 
 [raku]

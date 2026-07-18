@@ -1,11 +1,11 @@
- /* offwhite: dcd7c8 */
-
-* {
-    background:     #2D2D2D;
-    background-alt: #3C3C3C;
-    foreground:     #FFFFFFFF;
-    selected:       #8B6F58;
-    active:         #C89F6B;
-    urgent:         #B65C4D;
-}
-
+/* Dune theme — thin wrapper.
+ * Colors are generated per-wallpaper by matugen and live under
+ * ~/.config/themes/current (a symlink flipped when the theme changes).
+ * This import pulls in: background, background-alt, foreground,
+ * selected, active, urgent.
+ *
+ * Previous hardcoded palette (kept for rollback reference):
+ *   background: #2D2D2D; background-alt: #3C3C3C; foreground: #FFFFFFFF;
+ *   selected: #8B6F58;  active: #C89F6B;        urgent: #B65C4D;
+ */
+@import "~/.config/themes/current/colors-rofi.rasi"

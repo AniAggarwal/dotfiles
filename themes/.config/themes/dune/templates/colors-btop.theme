@@ -12,7 +12,7 @@ theme[selected_bg]="{{colors.primary_container.default.hex}}"
 theme[selected_fg]="{{colors.on_primary_container.default.hex}}"
 
 # Inactive / misc
-theme[inact_fg]="{{colors.outline.default.hex}}"
+theme[inactive_fg]="{{colors.outline.default.hex}}"
 theme[graph_text]="{{colors.on_surface_variant.default.hex}}"
 theme[meter_bg]="{{colors.surface_container.default.hex}}"
 theme[proc_misc]="{{colors.tertiary.default.hex}}"

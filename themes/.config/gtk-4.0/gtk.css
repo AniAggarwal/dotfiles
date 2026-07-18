@@ -1,0 +1,5 @@
+/* Managed by dotfiles (themes stow package). GTK4/libadwaita has no gtk-theme
+ * mechanism, so the Graphite-Dark widget theme must be imported explicitly
+ * here; the dune dynamic named-colors are layered on top and win. */
+@import url("file:///home/ani/.local/share/themes/Graphite-Dark/gtk-4.0/gtk.css");
+@import url("file:///home/ani/.config/themes/current/colors-gtk.css");
