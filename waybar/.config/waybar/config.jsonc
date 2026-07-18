@@ -72,7 +72,7 @@
   },
   "memory": {
     "interval": 8,
-    "format": "{used}GiB  <big></big>",
+    "format": "{used}GiB  <big></big>",
     "on-click": "kitty 'btop'",
   },
   "pulseaudio": {
