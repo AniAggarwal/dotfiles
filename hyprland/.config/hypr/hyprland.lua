@@ -201,6 +201,10 @@ hl.config({
         vrr = 0,
         mouse_move_enables_dpms = true,
         key_press_enables_dpms = true,
+        -- Default (2) unfullscreens the focused window whenever another
+        -- window requests focus (e.g. a newly launched app). Keep fullscreen
+        -- focused instead of kicking back to tiled.
+        on_focus_under_fullscreen = 0,
     },
 
     decoration = {
@@ -359,9 +363,9 @@ hl.window_rule({
 hl.env("AQ_DRM_DEVICES", "/dev/dri/intel-igpu")
 hl.env("VK_DRIVER_FILES", "/usr/share/vulkan/icd.d/intel_icd.json")
 hl.env("__EGL_VENDOR_LIBRARY_FILENAMES", "/usr/share/glvnd/egl_vendor.d/50_mesa.json")
-hl.env("XCURSOR_THEME", "Bibata-Modern-Amber")
+hl.env("XCURSOR_THEME", "Bibata-Modern-Classic")
 hl.env("XCURSOR_SIZE", "24")
-hl.env("HYPRCURSOR_THEME", "Bibata-Modern-Amber")
+hl.env("HYPRCURSOR_THEME", "Bibata-Modern-Classic")
 hl.env("HYPRCURSOR_SIZE", "24")
 hl.env("GTK_THEME", "Graphite-Dark")
 hl.env("GDK_BACKEND", "wayland,x11,*")
@@ -441,12 +445,13 @@ bind(main_mod .. " + SHIFT + P", hl.dsp.window.move({ workspace = "r-1" }))
 
 bind(main_mod .. " + F", hl.dsp.window.fullscreen({ mode = "maximized" }))
 bind(main_mod .. " + SHIFT + F", hl.dsp.window.fullscreen({ mode = "fullscreen" }))
--- Toggle fake (client-only) fullscreen. The Lua API's action="toggle" is a no-op
--- in 0.55.1 (it just sets, never flips), so we read the state and dispatch the opposite.
--- Once the upstream toggle fix ships in a release, replace this with the one-liner below:
---   bind(main_mod .. " + CTRL + SHIFT + F", hl.dsp.window.fullscreen_state({ internal = -1, client = 2, action = "toggle" }))
--- Fix: https://github.com/hyprwm/Hyprland/commit/c7b72790bd63172f04ee86784d4cb2a400532927 (#7288)
-bind_exec(main_mod .. " + CTRL + SHIFT + F", [[bash -c 'if [ "$(hyprctl activewindow -j | jq -r .fullscreenClient)" = "2" ]; then hyprctl dispatch "hl.dsp.window.fullscreen_state({internal=-1, client=0})"; else hyprctl dispatch "hl.dsp.window.fullscreen_state({internal=-1, client=2})"; fi']])
+-- 0.55 workaround: action="toggle" did not toggle client-only fullscreen, so
+-- this queried fullscreenClient and dispatched the opposite state through jq.
+-- Keep it here as a rollback reference now that 0.56 fixes the native toggle.
+-- bind_exec(main_mod .. " + CTRL + SHIFT + F", [[bash -c 'if [ "$(hyprctl activewindow -j | jq -r .fullscreenClient)" = "2" ]; then hyprctl dispatch "hl.dsp.window.fullscreen_state({internal=-1, client=0})"; else hyprctl dispatch "hl.dsp.window.fullscreen_state({internal=-1, client=2})"; fi']])
+
+-- Hyprland 0.56: toggle fake (client-only) fullscreen directly.
+bind(main_mod .. " + CTRL + SHIFT + F", hl.dsp.window.fullscreen_state({ internal = -1, client = 2, action = "toggle" }))
 
 bind(main_mod .. " + H", dispatch_many(
     hl.dsp.focus({ direction = "l" }),
