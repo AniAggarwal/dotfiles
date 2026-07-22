@@ -11,23 +11,24 @@ local function group_mode_action(dispatcher)
     return dispatch_many(dispatcher, hl.dsp.submap("reset"))
 end
 
--- Enter via a throwaway "group-entry" submap, then promote to the real "group" submap a tick
--- later. The intermediate step lets the SUPER+G keypress fully release before the group binds
--- (which also use SUPER+<key>) become active, so it doesn't immediately fire one of them.
-local function enter_group_mode()
-    hl.dispatch(hl.dsp.submap("group-entry"))
-    hl.timer(function()
-        hl.dispatch(hl.dsp.submap("group"))
-    end, { timeout = 10, type = "oneshot" })
-end
-
 -- Wire up the entry keybind and the submaps. `mod` is the main modifier (e.g. "SUPER").
 function M.setup(mod)
-    bind(mod .. " + G", enter_group_mode)
+    -- 0.55 workaround: stage through a throwaway submap and delay entry so the
+    -- SUPER+G entry event is not re-used by the group submap.
+    -- local function enter_group_mode()
+    --     hl.dispatch(hl.dsp.submap("group-entry"))
+    --     hl.timer(function()
+    --         hl.dispatch(hl.dsp.submap("group"))
+    --     end, { timeout = 10, type = "oneshot" })
+    -- end
+    -- bind(mod .. " + G", enter_group_mode)
+    -- hl.define_submap("group-entry", "reset", function()
+    --     bind("escape", hl.dsp.submap("reset"))
+    -- end)
 
-    hl.define_submap("group-entry", "reset", function()
-        bind("escape", hl.dsp.submap("reset"))
-    end)
+    -- Hyprland 0.56 correctly keeps the entry key from firing its matching
+    -- bind inside the newly entered submap.
+    bind(mod .. " + G", hl.dsp.submap("group"))
 
     hl.define_submap("group", "reset", function()
         bind("G", group_mode_action(hl.dsp.group.toggle()))
