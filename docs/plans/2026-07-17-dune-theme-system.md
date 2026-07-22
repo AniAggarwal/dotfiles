@@ -250,7 +250,7 @@ One commit: `feat(themes): route TUI apps through terminal ANSI palette`.
 
 ### Task 16: One-time app cleanups
 - qBittorrent: remove `CustomUIThemePath=…dracula.qbtheme` from `~/.config/qBittorrent/qBittorrent.conf` (falls back to Qt palette from Task 15).
-- Brave: clear `is_grayscale` via brave://settings/appearance guidance (Preferences file edit only while Brave is closed).
+- Brave: **DONE (2026-07-22).** Closed Brave, edited `~/.config/BraveSoftware/Brave-Browser/Default/Preferences` → `browser.theme.is_grayscale=false` (+`is_grayscale2`) and `user_color=-3629205` (+`user_color2`) = spice amber `#C89F6B` (`0xFFC89F6B` as signed SkColor). Fixed accent, not wallpaper-dynamic (Brave rewrites Preferences on exit + is in constant use). Backup at `Preferences.bak.dune`. Verified persisted across a clean start/stop cycle.
 - VS Code `settings.json`: set an explicit warm theme (user picks; suggest "Gruvbox Material Dark").
 - KeePassXC: dark theme + accent note.
 One commit.
@@ -273,7 +273,7 @@ One commit.
 
 ## Deferred / Future (user decisions, 2026-07-17)
 - **VS Code warm theme**: skipped — user doesn't need it. Currently "Default Dark Modern".
-- **Brave accent/grayscale**: deferred — Brave in constant use, can't edit Preferences while running. Future: close Brave, set `browser.theme.is_grayscale=false` + amber `user_color`, or via brave://settings/appearance.
+- **Brave accent/grayscale**: **DONE (2026-07-22).** Grayscale cleared + spice-amber `user_color` (`#C89F6B` / signed SkColor `-3629205`) set directly in the profile `Preferences` while Brave was closed; verified it survives a clean start/stop. Fixed accent (not per-wallpaper) since Brave persists theme in its own profile, not a stowed file. To retint later: close Brave, change `browser.theme.user_color`/`user_color2` in `Preferences`, reopen (or use brave://settings/appearance).
 - **hyprsunset ambient warmth**: declined.
 - **swww**: declined — user prefers Hyprland-native tools (hyprpaper stays).
 - **Papirus icon theme**: skipped — marginal benefit without a file manager.
