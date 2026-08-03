@@ -43,7 +43,8 @@ fi
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
-candidates="$work/candidates"
+roots="$work/roots"       # walked recursively
+pkgpaths="$work/pkgpaths" # taken literally, never walked
 list="$work/list"
 
 targets=(
@@ -57,31 +58,41 @@ targets=(
     "$HOME/.local/share/applications"
 )
 
-: > "$candidates"
+: > "$roots"
 for path in "${targets[@]}"; do
-    [[ -e "$path" ]] && printf '%s\0' "$path" >> "$candidates"
+    [[ -e "$path" ]] && printf '%s\0' "$path" >> "$roots"
 done
 
-# Every path installed by a foreign (AUR/local) package.
+# Every path installed by a foreign (AUR/local) package. `pacman -Qql` also
+# lists every directory a package owns -- /usr/, /etc/, /opt/ among them -- so
+# these must never be used as find start points or the walk covers the whole
+# system. They are matched with -maxdepth 0 below instead.
+: > "$pkgpaths"
 pacman -Qmq | while IFS= read -r package; do
     pacman -Qql "$package" 2>/dev/null || true
-done | tr '\n' '\0' >> "$candidates"
+done | tr '\n' '\0' >> "$pkgpaths"
 
 # Mark the start, not the end: files touched mid-scan must be caught next run.
 new_marker="$work/marker"
 touch "$new_marker"
 
-# Expand directories to regular readable files, staying on one filesystem.
-# In incremental mode keep only what changed since the last successful scan.
-filter=(-xdev -type f -readable)
+# Reduce both sets to regular readable files. In incremental mode keep only
+# what changed since the last successful scan.
+filter=(-type f -readable)
 if [[ "$mode" == incremental && -f "$marker" ]]; then
     filter+=(-newer "$marker")
 else
     mode=full
 fi
 
-find -files0-from "$candidates" "${filter[@]}" -print 2>/dev/null |
-    grep -v '[[:cntrl:]]' | sort -u > "$list"
+{
+    # Target directories: walked, but never off this filesystem.
+    [[ -s "$roots" ]] &&
+        /usr/bin/find -files0-from "$roots" -xdev "${filter[@]}" -print
+    # Package paths: -maxdepth 0 matches each path itself and recurses nowhere.
+    [[ -s "$pkgpaths" ]] &&
+        /usr/bin/find -files0-from "$pkgpaths" -maxdepth 0 "${filter[@]}" -print
+} 2>/dev/null | grep -v '[[:cntrl:]]' | sort -u > "$list"
 
 entries=$(wc -l < "$list")
 started=$(date --iso-8601=seconds)
