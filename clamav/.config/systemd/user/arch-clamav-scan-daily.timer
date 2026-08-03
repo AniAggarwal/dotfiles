@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily incremental ClamAV scan
+
+[Timer]
+Unit=arch-clamav-scan@incremental.service
+OnCalendar=daily
+Persistent=true
+RandomizedDelaySec=30m
+
+[Install]
+WantedBy=timers.target

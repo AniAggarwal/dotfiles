@@ -1,0 +1,149 @@
+#!/usr/bin/env bash
+# Targeted ClamAV scan of high-risk paths and foreign-package files.
+# Reports only: never moves, deletes or quarantines anything.
+#
+# Usage: arch-clamav-scan [incremental|full]
+#   incremental  only files modified since the last successful scan (default)
+#   full         everything in scope
+set -uo pipefail
+
+mode="${1:-incremental}"
+case "$mode" in
+    incremental | full) ;;
+    *)
+        echo "usage: ${0##*/} [incremental|full]" >&2
+        exit 64
+        ;;
+esac
+
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/clamav"
+mkdir -p "$state_dir"
+log="$state_dir/last-scan.log"
+history="$state_dir/history.log"
+lock="$state_dir/scan.lock"
+marker="$state_dir/last-success"
+
+notify_replace=""
+notify_expire=""
+# notify <urgency> <summary> <body>  -- echoes the notification id
+notify() {
+    notify-send --app-name=ClamAV --print-id \
+        --urgency="$1" --icon=security-high \
+        ${notify_replace:+--replace-id="$notify_replace"} \
+        ${notify_expire:+--expire-time="$notify_expire"} \
+        -- "$2" "$3" 2>/dev/null || true
+}
+
+# Serialise against a manually started or overlapping run.
+exec 9>"$lock"
+if ! flock -n 9; then
+    echo "Another arch-clamav-scan is already running; exiting."
+    exit 0
+fi
+
+work="$(mktemp -d)"
+trap 'rm -rf "$work"' EXIT
+candidates="$work/candidates"
+list="$work/list"
+
+targets=(
+    "$HOME/Downloads"
+    "$HOME/.cache/paru/clone"
+    "$HOME/.cache/yay"
+    "$HOME/.local/bin"
+    "$HOME/.config/systemd/user"
+    "$HOME/.config/autostart"
+    "$HOME/.config/hypr"
+    "$HOME/.local/share/applications"
+)
+
+: > "$candidates"
+for path in "${targets[@]}"; do
+    [[ -e "$path" ]] && printf '%s\0' "$path" >> "$candidates"
+done
+
+# Every path installed by a foreign (AUR/local) package.
+pacman -Qmq | while IFS= read -r package; do
+    pacman -Qql "$package" 2>/dev/null || true
+done | tr '\n' '\0' >> "$candidates"
+
+# Mark the start, not the end: files touched mid-scan must be caught next run.
+new_marker="$work/marker"
+touch "$new_marker"
+
+# Expand directories to regular readable files, staying on one filesystem.
+# In incremental mode keep only what changed since the last successful scan.
+filter=(-xdev -type f -readable)
+if [[ "$mode" == incremental && -f "$marker" ]]; then
+    filter+=(-newer "$marker")
+else
+    mode=full
+fi
+
+find -files0-from "$candidates" "${filter[@]}" -print 2>/dev/null |
+    grep -v '[[:cntrl:]]' | sort -u > "$list"
+
+entries=$(wc -l < "$list")
+started=$(date --iso-8601=seconds)
+echo "ClamAV $mode scan started: $started ($entries files)"
+
+if (( entries == 0 )); then
+    notify_expire=8000
+    notify low "ClamAV: nothing new to scan" "No files changed since the last scan." >/dev/null
+    mv -f "$new_marker" "$marker"
+    printf '%s mode=%s status=0 scanned=0 infected=0\n' \
+        "$started" "$mode" >> "$history"
+    exit 0
+fi
+
+notify_expire=10000
+start_id=$(notify low "ClamAV $mode scan running" "Scanning $entries files at idle priority.")
+
+# clamscan's default --max-filesize=100M silently skips larger files. That is
+# deliberate here: the bulk of ~/Downloads is multi-GB media, which would add
+# hours per run for effectively no detection value.
+/usr/bin/clamscan \
+    --infected \
+    --suppress-ok-results \
+    --stdout \
+    --file-list="$list" \
+    >"$log" 2>&1
+status=$?
+
+finished=$(date --iso-8601=seconds)
+infected=$(awk -F': *' '/^Infected files:/ {print $2; exit}' "$log")
+infected=${infected:-0}
+scanned=$(awk -F': *' '/^Scanned files:/ {print $2; exit}' "$log")
+scanned=${scanned:-?}
+
+printf '%s mode=%s status=%s scanned=%s infected=%s\n' \
+    "$finished" "$mode" "$status" "$scanned" "$infected" >> "$history"
+
+# status 2 means clamscan hit errors, so the scan is not a trustworthy baseline.
+(( status < 2 )) && mv -f "$new_marker" "$marker"
+
+notify_replace="$start_id"
+
+if (( infected > 0 )); then
+    # Preserve the evidence: last-scan.log is overwritten on the next run.
+    keep="$state_dir/infected-${finished//[:+]/-}.log"
+    cp -- "$log" "$keep"
+    names=$(grep -E ' FOUND$' "$log" | head -5 | sed 's| FOUND$||')
+    notify_expire=0
+    notify critical "ClamAV: $infected infected file(s)" \
+        "$names
+
+Full report: $keep" >/dev/null
+    echo "INFECTED: $infected. Report kept at $keep"
+elif (( status == 0 )); then
+    notify_expire=8000
+    notify low "ClamAV scan clean" "$scanned files scanned, nothing found." >/dev/null
+    echo "Clean: $scanned files scanned."
+else
+    notify_expire=0
+    notify normal "ClamAV scan finished with errors" \
+        "clamscan exited $status. See $log" >/dev/null
+    echo "clamscan exited $status with no detections; see $log"
+fi
+
+exit "$status"
