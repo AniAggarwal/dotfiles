@@ -1,0 +1,20 @@
+[Unit]
+Description=ClamAV %i scan of high-risk and foreign-package files
+Documentation=man:clamscan(1)
+
+[Service]
+Type=oneshot
+ExecStart=%h/bin/arch-clamav-scan %i
+TimeoutStartSec=8h
+
+# Stay out of the way of interactive work.
+Nice=19
+CPUSchedulingPolicy=idle
+IOSchedulingClass=idle
+CPUWeight=10
+IOWeight=10
+# clamscan holds the ~1.4G signature DB resident; anything tighter swaps.
+MemoryHigh=3G
+
+# Detection makes the script exit 1; that is a result, not a unit failure.
+SuccessExitStatus=1

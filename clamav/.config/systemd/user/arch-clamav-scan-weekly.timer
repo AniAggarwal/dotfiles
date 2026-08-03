@@ -1,0 +1,11 @@
+[Unit]
+Description=Weekly full ClamAV scan
+
+[Timer]
+Unit=arch-clamav-scan@full.service
+OnCalendar=Sun 03:00
+Persistent=true
+RandomizedDelaySec=2h
+
+[Install]
+WantedBy=timers.target
