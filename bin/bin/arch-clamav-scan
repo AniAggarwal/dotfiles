@@ -43,8 +43,6 @@ fi
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
-roots="$work/roots"       # walked recursively
-pkgpaths="$work/pkgpaths" # taken literally, never walked
 list="$work/list"
 
 targets=(
@@ -58,41 +56,51 @@ targets=(
     "$HOME/.local/share/applications"
 )
 
-: > "$roots"
+present=()
 for path in "${targets[@]}"; do
-    [[ -e "$path" ]] && printf '%s\0' "$path" >> "$roots"
+    [[ -e "$path" ]] && present+=("$path")
 done
-
-# Every path installed by a foreign (AUR/local) package. `pacman -Qql` also
-# lists every directory a package owns -- /usr/, /etc/, /opt/ among them -- so
-# these must never be used as find start points or the walk covers the whole
-# system. They are matched with -maxdepth 0 below instead.
-: > "$pkgpaths"
-pacman -Qmq | while IFS= read -r package; do
-    pacman -Qql "$package" 2>/dev/null || true
-done | tr '\n' '\0' >> "$pkgpaths"
 
 # Mark the start, not the end: files touched mid-scan must be caught next run.
 new_marker="$work/marker"
 touch "$new_marker"
 
-# Reduce both sets to regular readable files. In incremental mode keep only
-# what changed since the last successful scan.
-filter=(-type f -readable)
+incremental=""
 if [[ "$mode" == incremental && -f "$marker" ]]; then
-    filter+=(-newer "$marker")
+    incremental=1
 else
     mode=full
 fi
 
+# Keep regular readable files, and in incremental mode only those modified
+# since the last successful scan. Unreadable files are dropped rather than
+# handed to clamscan, which would exit 2 and invalidate the marker. Symlinks
+# are skipped because -f follows them: package-owned links such as
+# /opt/cuda-12.8/bin/gcc -> /usr/bin/gcc would otherwise pull native system
+# files back into scope.
+select_files() {
+    local path
+    while IFS= read -r path; do
+        [[ -f "$path" && ! -L "$path" && -r "$path" ]] || continue
+        [[ -z "$incremental" || "$path" -nt "$marker" ]] || continue
+        printf '%s\n' "$path"
+    done
+}
+
 {
-    # Target directories: walked, but never off this filesystem.
-    [[ -s "$roots" ]] &&
-        /usr/bin/find -files0-from "$roots" -xdev "${filter[@]}" -print
-    # Package paths: -maxdepth 0 matches each path itself and recurses nowhere.
-    [[ -s "$pkgpaths" ]] &&
-        /usr/bin/find -files0-from "$pkgpaths" -maxdepth 0 "${filter[@]}" -print
-} 2>/dev/null | grep -v '[[:cntrl:]]' | sort -u > "$list"
+    # --hidden --no-ignore is load-bearing: fd otherwise honours .gitignore and
+    # skips dotfiles, which drops ~94% of ~/.cache/paru/clone -- precisely the
+    # build artifacts worth scanning.
+    (( ${#present[@]} )) && fd --type f --hidden --no-ignore \
+        --one-file-system --absolute-path . "${present[@]}"
+    # Every path installed by a foreign (AUR/local) package. `pacman -Qql` also
+    # lists every directory a package owns -- /usr/, /etc/ and /opt/ among them
+    # -- so these are only ever tested as literal paths, never walked.
+    pacman -Qmq | while IFS= read -r package; do
+        pacman -Qql "$package" 2>/dev/null || true
+    done
+} 2>/dev/null | select_files | rg --text --invert-match '[[:cntrl:]]' |
+    sort -u > "$list"
 
 entries=$(wc -l < "$list")
 started=$(date --iso-8601=seconds)
@@ -139,7 +147,7 @@ if (( infected > 0 )); then
     # Preserve the evidence: last-scan.log is overwritten on the next run.
     keep="$state_dir/infected-${finished//[:+]/-}.log"
     cp -- "$log" "$keep"
-    names=$(grep -E ' FOUND$' "$log" | head -5 | sed 's| FOUND$||')
+    names=$(rg --text --replace '$1' '^(.*) FOUND$' "$log" | head -5)
     notify_expire=0
     notify critical "ClamAV: $infected infected file(s)" \
         "$names
