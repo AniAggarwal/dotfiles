@@ -318,20 +318,8 @@ hl.window_rule({
 })
 
 hl.window_rule({
-    name = "claude-fullscreen",
-    match = { class = "^(brave-fmpnliohjhemenmnlpbfagaolkdacoja-Profile_4)$" },
-    fullscreen_state = "-1 2",
-})
-
-hl.window_rule({
     name = "gemini-fullscreen-default",
     match = { class = "^(brave-gdfaincndogidkdcdkhapmbffkckdkhn-Default)$" },
-    fullscreen_state = "-1 2",
-})
-
-hl.window_rule({
-    name = "gemini-fullscreen-work",
-    match = { class = "^(brave-gdfaincndogidkdcdkhapmbffkckdkhn-Profile_4)$" },
     fullscreen_state = "-1 2",
 })
 

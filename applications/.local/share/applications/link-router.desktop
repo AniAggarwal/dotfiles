@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Link Router
+GenericName=Web Browser
+Comment=Dispatch links to the matching app, falling back to Brave
+Exec=/home/ani/bin/link-router %U
+Icon=brave-browser
+Terminal=false
+NoDisplay=true
+StartupNotify=false
+Categories=Network;WebBrowser;
+MimeType=text/html;text/xml;application/xhtml+xml;x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/about;x-scheme-handler/unknown;

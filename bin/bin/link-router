@@ -1,0 +1,158 @@
+#!/usr/bin/env bash
+# link-router — dispatch http(s) links to the right app instead of a generic
+# browser tab. Registered as the system default browser; the desktop entry
+# lives in the "applications" stow package.
+#
+# Usage:  link-router <url> [url...]
+#         link-router --dry-run <url>     # print what would run, launch nothing
+#
+# Env:
+#   LINK_ROUTER_MODE=app      (default) matched links open in their own
+#                             Brave app-mode window via --app=<url>.
+#   LINK_ROUTER_MODE=capture  matched links open as a plain tab in the correct
+#                             profile, relying on Brave to pull them into the
+#                             running PWA window. DOES NOT WORK as of Brave
+#                             151.1.93.129 — see the note in brave-flags.conf.
+#                             Kept only in case Brave ships the missing UI.
+
+set -uo pipefail
+
+# The /usr/bin/brave wrapper prepends ~/.config/brave-flags.conf before exec'ing
+# the real binary. Go through it, not /opt/brave-bin/brave, so that a cold start
+# triggered by a link click still picks up our flags. (Brave's own generated PWA
+# .desktop entries call the binary directly and bypass this.)
+BRAVE=/usr/bin/brave
+
+# Brave profile directories, by what they're for.
+WORK="Profile 4"   # "Vamana"
+PERSONAL="Default" # "General"
+
+MODE="${LINK_ROUTER_MODE:-app}"
+LOG="${XDG_STATE_HOME:-$HOME/.local/state}/link-router.log"
+DRY=0
+
+# --- dispatch primitives ----------------------------------------------------
+
+# Installed PWA app-ids. Read them off Brave's generated desktop entries:
+#   rg -o -- '--app-id=\S+' ~/.local/share/applications/brave-*.desktop
+LINEAR=bgdbmehlmdmddlgneophbcddadgknlpm
+NOTION=cnmnfnkedfekfidgojcdmndbcipagogc
+MEET=kjgfgldnnfoeklkmfkjfagphfepbbdan
+DEVIN=jeanpambhekpchfnadhifbfdfhfjonag
+CHATGPT=cadlkienfkclaiaibeoongdcgmdikeeg
+GEMINI=gdfaincndogidkdcdkhapmbffkckdkhn
+CALENDAR=kjbdgfilnfhdoflbpgamdcdgpehopbep
+DISCORD=magkoliahgffibhgfkmoealggombgknl
+MESSAGES=hpfldicfbfomlpcikngkocigghgafkph
+
+# app <profile> <app-id> <url> — open the *installed* PWA at a deep link.
+#
+# This is the good path. Two switches that look useless alone combine into
+# exactly what we want:
+#   --app-id=<id>                              opens the real PWA (correct
+#                                              app_id window class, so the
+#                                              per-app Hyprland rules match)
+#                                              but on its own DISCARDS the URL
+#   --app-launch-url-for-shortcuts-menu-item=  supplies the URL to launch at
+# Together they navigate the app's EXISTING window when the site declares
+# launch_handler in its manifest (Linear does), and open one window at that URL
+# when it is not running. Reuse is the site's choice: apps with no
+# launch_handler (Notion) still get a new window per link.
+app() {
+  run "$BRAVE" --profile-directory="$1" --app-id="$2" \
+      --app-launch-url-for-shortcuts-menu-item="$3"
+}
+
+# pwa <profile> <url> — anonymous app window for a URL, via --app=.
+# Always a NEW window, with a URL-derived window class that matches no Hyprland
+# rule. Kept for hosts with no installed PWA, and for Meet: navigating an
+# existing window would yank you out of a live call to join another meeting.
+pwa() {
+  local profile=$1 url=$2
+  if [[ $MODE == capture ]]; then
+    run "$BRAVE" --profile-directory="$profile" "$url"
+  else
+    run "$BRAVE" --profile-directory="$profile" --app="$url"
+  fi
+}
+
+# tab <profile> <url> — plain browser tab in a specific profile.
+tab() { run "$BRAVE" --profile-directory="$1" "$2"; }
+
+# native <program> <args...> — hand off to a non-browser desktop app.
+native() { run "$@"; }
+
+# fallback <url> — last resort: whatever profile Brave used last.
+fallback() { run "$BRAVE" "$1"; }
+
+run() {
+  log "-> $*"
+  if (( DRY )); then
+    printf '%q ' "$@"; printf '\n'
+    return 0
+  fi
+  setsid "$@" >/dev/null 2>&1 &
+}
+
+log() {
+  mkdir -p "$(dirname "$LOG")"
+  printf '%s %s\n' "$(date -Is)" "$*" >>"$LOG"
+  # keep the log from growing without bound
+  if [[ $(stat -c%s "$LOG" 2>/dev/null || echo 0) -gt 262144 ]]; then
+    tail -n 500 "$LOG" >"$LOG.tmp" && mv "$LOG.tmp" "$LOG"
+  fi
+}
+
+# --- routing table ----------------------------------------------------------
+# Matched on the URL's hostname (leading "www." stripped). Add a line per app.
+
+route() {
+  local url=$1 host
+  host=$(printf '%s' "$url" | sed -E 's#^[a-zA-Z0-9+.-]+://##; s#/.*##; s#.*@##; s#:.*##; s#^www\.##')
+  log "url=$url host=$host mode=$MODE"
+
+  case $host in
+    # --- work tools ---
+    linear.app)                     app "$WORK" "$LINEAR" "$url" ;;
+    notion.so|*.notion.so|*.notion.site)
+                                    app "$WORK" "$NOTION" "$url" ;;
+    *.slack.com|slack.com)          native /usr/bin/slack -s "$url" ;;
+
+    # --- google ---
+    meet.google.com)                pwa "$WORK" "$url" ;;       # new window on purpose: live calls
+    calendar.google.com)            app "$PERSONAL" "$CALENDAR" "$url" ;;
+    gemini.google.com)              app "$PERSONAL" "$GEMINI" "$url" ;;
+
+    # --- ai ---
+    claude.ai)                      native /usr/bin/claude-desktop "$url" ;;
+    chatgpt.com|chat.openai.com)    app "$PERSONAL" "$CHATGPT" "$url" ;;
+    devin.ai|app.devin.ai)          app "$WORK" "$DEVIN" "$url" ;;
+
+    # --- chat & social ---
+    discord.com|discordapp.com)     app "$PERSONAL" "$DISCORD" "$url" ;;
+    messages.google.com)            app "$PERSONAL" "$MESSAGES" "$url" ;;
+
+    # --- everything else ---
+    *)                              fallback "$url" ;;
+  esac
+}
+
+# --- entrypoint -------------------------------------------------------------
+
+urls=()
+for arg in "$@"; do
+  case $arg in
+    --dry-run) DRY=1 ;;
+    *)         urls+=("$arg") ;;
+  esac
+done
+
+if (( ${#urls[@]} == 0 )); then
+  # Launched with no URL (e.g. from a launcher) — just open the browser.
+  exec "$BRAVE"
+fi
+
+for url in "${urls[@]}"; do
+  # Never let a routing bug swallow the click: fall back to plain Brave.
+  route "$url" || fallback "$url"
+done

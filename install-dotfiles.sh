@@ -12,7 +12,7 @@ usage() {
 }
 
 install_all_no_sudo() {
-    stow -d "$dir" -t ~/ zsh kitty nvim bat conky easyeffects ignores bin hyprland swaylock-effects spotify-launcher rofi brave wireplumber pypr clamav
+    stow -d "$dir" -t ~/ zsh kitty nvim bat conky easyeffects ignores bin hyprland swaylock-effects spotify-launcher rofi brave wireplumber pypr clamav applications
 }
 
 install_all_sudo() {
