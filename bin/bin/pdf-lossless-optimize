@@ -1,0 +1,338 @@
+#!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#   "pikepdf>=10,<11",
+# ]
+# ///
+"""Losslessly optimize PDF structure and embedded JPEG entropy coding."""
+
+from __future__ import annotations
+
+import argparse
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+try:
+    import pikepdf
+except ModuleNotFoundError:
+    print(
+        "pdf-lossless-optimize: pikepdf is not installed; run this file with "
+        "'uv run --script pdf-lossless-optimize ...'",
+        file=sys.stderr,
+    )
+    raise SystemExit(2)
+
+
+TOOL_NAME = "pdf-lossless-optimize"
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog=TOOL_NAME,
+        description=(
+            "Losslessly optimize a PDF. JPEG DCT coefficients, image dimensions, "
+            "and decoded pixels are preserved; only JPEG entropy coding and PDF "
+            "stream/object compression are changed."
+        ),
+        epilog=(
+            "Requires jpegtran (usually supplied by libjpeg-turbo). Rewriting a "
+            "PDF invalidates any digital signatures."
+        ),
+    )
+    parser.add_argument("input", type=Path, help="input PDF")
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        help="output PDF (default: INPUT.lossless-optimized.pdf)",
+    )
+    parser.add_argument(
+        "--in-place",
+        action="store_true",
+        help="atomically replace the input after successful verification",
+    )
+    parser.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        help="overwrite an existing output file",
+    )
+    parser.add_argument(
+        "--strip-metadata",
+        action="store_true",
+        help="remove the document Info dictionary and XMP metadata",
+    )
+    parser.add_argument(
+        "--pages-only",
+        action="store_true",
+        help=(
+            "rebuild from pages only; useful for damaged PDFs, but drops "
+            "document-level metadata, outlines, attachments, and forms"
+        ),
+    )
+    parser.add_argument(
+        "--allow-signed",
+        action="store_true",
+        help="allow rewriting a digitally signed PDF (signatures become invalid)",
+    )
+    return parser
+
+
+def default_output_path(input_path: Path) -> Path:
+    suffix = input_path.suffix or ".pdf"
+    return input_path.with_name(f"{input_path.stem}.lossless-optimized{suffix}")
+
+
+def is_simple_jpeg_stream(obj: pikepdf.Object) -> bool:
+    if not isinstance(obj, pikepdf.Stream):
+        return False
+    if obj.get("/Subtype") != pikepdf.Name.Image:
+        return False
+
+    image_filter = obj.get("/Filter")
+    if image_filter == pikepdf.Name.DCTDecode:
+        return True
+    return (
+        isinstance(image_filter, pikepdf.Array)
+        and len(image_filter) == 1
+        and image_filter[0] == pikepdf.Name.DCTDecode
+    )
+
+
+def optimize_jpeg(data: bytes) -> bytes:
+    result = subprocess.run(
+        ["jpegtran", "-copy", "all", "-optimize"],
+        input=data,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    if result.returncode != 0:
+        message = result.stderr.decode("utf-8", errors="replace").strip()
+        raise RuntimeError(f"jpegtran failed: {message or 'unknown error'}")
+    return result.stdout
+
+
+def has_digital_signatures(pdf: pikepdf.Pdf) -> bool:
+    if pdf.Root.get("/Perms") is not None:
+        return True
+
+    acroform = pdf.Root.get("/AcroForm")
+    if acroform is None:
+        return False
+
+    pending = list(acroform.get("/Fields", []))
+    while pending:
+        field = pending.pop()
+        if field.get("/FT") == pikepdf.Name.Sig or field.get("/V") is not None:
+            if field.get("/FT") == pikepdf.Name.Sig:
+                return True
+        pending.extend(field.get("/Kids", []))
+    return False
+
+
+def strip_metadata(pdf: pikepdf.Pdf) -> None:
+    if pdf.trailer.get("/Info") is not None:
+        del pdf.trailer["/Info"]
+    if pdf.Root.get("/Metadata") is not None:
+        del pdf.Root["/Metadata"]
+
+
+def optimize_pdf_images(pdf: pikepdf.Pdf) -> tuple[int, int, int]:
+    found = 0
+    optimized_count = 0
+    bytes_saved = 0
+
+    for obj in list(pdf.objects):
+        if not is_simple_jpeg_stream(obj):
+            continue
+
+        found += 1
+        original = obj.read_raw_bytes()
+        optimized = optimize_jpeg(original)
+        if len(optimized) >= len(original):
+            continue
+
+        decode_parms = obj.get("/DecodeParms")
+        if decode_parms is None:
+            obj.write(optimized, filter=pikepdf.Name.DCTDecode)
+        else:
+            obj.write(
+                optimized,
+                filter=pikepdf.Name.DCTDecode,
+                decode_parms=decode_parms,
+            )
+
+        optimized_count += 1
+        bytes_saved += len(original) - len(optimized)
+
+    return found, optimized_count, bytes_saved
+
+
+def open_working_pdf(
+    input_path: Path, pages_only: bool
+) -> tuple[pikepdf.Pdf, pikepdf.Pdf | None]:
+    source = pikepdf.open(
+        input_path,
+        suppress_warnings=True,
+        attempt_recovery=True,
+    )
+    if not pages_only:
+        return source, None
+
+    rebuilt = pikepdf.new()
+    rebuilt.pages.extend(source.pages)
+    return rebuilt, source
+
+
+def verify_pdf(path: Path, expected_pages: int) -> list[str]:
+    with pikepdf.open(
+        path,
+        suppress_warnings=True,
+        attempt_recovery=False,
+    ) as pdf:
+        if len(pdf.pages) != expected_pages:
+            raise RuntimeError(
+                f"verification failed: expected {expected_pages} pages, "
+                f"found {len(pdf.pages)}"
+            )
+        return pdf.check_pdf_syntax()
+
+
+def human_size(size: int) -> str:
+    value = float(size)
+    for unit in ("B", "KiB", "MiB", "GiB"):
+        if value < 1024 or unit == "GiB":
+            return f"{value:.2f} {unit}" if unit != "B" else f"{size} B"
+        value /= 1024
+    raise AssertionError("unreachable")
+
+
+def main() -> int:
+    args = build_parser().parse_args()
+    input_path = args.input.expanduser().resolve()
+
+    if not input_path.is_file():
+        print(f"{TOOL_NAME}: input not found: {input_path}", file=sys.stderr)
+        return 2
+    if shutil.which("jpegtran") is None:
+        print(
+            f"{TOOL_NAME}: jpegtran is required (install libjpeg-turbo)",
+            file=sys.stderr,
+        )
+        return 2
+    if args.in_place and args.output is not None:
+        print(
+            f"{TOOL_NAME}: --in-place and --output cannot be used together",
+            file=sys.stderr,
+        )
+        return 2
+
+    output_path = (
+        input_path
+        if args.in_place
+        else (args.output.expanduser().resolve() if args.output else default_output_path(input_path))
+    )
+    if output_path == input_path and not args.in_place:
+        print(
+            f"{TOOL_NAME}: refusing to overwrite input without --in-place",
+            file=sys.stderr,
+        )
+        return 2
+    if output_path.exists() and not (args.force or args.in_place):
+        print(
+            f"{TOOL_NAME}: output exists; use --force: {output_path}",
+            file=sys.stderr,
+        )
+        return 2
+    if not output_path.parent.is_dir():
+        print(
+            f"{TOOL_NAME}: output directory does not exist: {output_path.parent}",
+            file=sys.stderr,
+        )
+        return 2
+
+    temp_handle = tempfile.NamedTemporaryFile(
+        prefix=f".{output_path.name}.",
+        suffix=".tmp.pdf",
+        dir=output_path.parent,
+        delete=False,
+    )
+    temp_path = Path(temp_handle.name)
+    temp_handle.close()
+
+    pdf: pikepdf.Pdf | None = None
+    source: pikepdf.Pdf | None = None
+    try:
+        pdf, source = open_working_pdf(input_path, args.pages_only)
+        source_pdf = source if source is not None else pdf
+        if source_pdf.is_encrypted:
+            raise RuntimeError("encrypted PDFs are not supported; decrypt it first")
+        if has_digital_signatures(source_pdf) and not args.allow_signed:
+            raise RuntimeError(
+                "PDF contains digital signatures; use --allow-signed to invalidate them"
+            )
+
+        page_count = len(pdf.pages)
+        if args.strip_metadata:
+            strip_metadata(pdf)
+        found, optimized_count, jpeg_bytes_saved = optimize_pdf_images(pdf)
+
+        pdf.save(
+            temp_path,
+            compress_streams=True,
+            recompress_flate=True,
+            object_stream_mode=pikepdf.ObjectStreamMode.generate,
+        )
+        pdf.close()
+        pdf = None
+        if source is not None:
+            source.close()
+            source = None
+
+        syntax_warnings = verify_pdf(temp_path, page_count)
+        original_size = input_path.stat().st_size
+        output_size = temp_path.stat().st_size
+        os.replace(temp_path, output_path)
+
+        difference = original_size - output_size
+        print(f"Output: {output_path}")
+        print(f"Pages: {page_count}")
+        print(f"JPEG streams found: {found}")
+        print(f"JPEG streams optimized: {optimized_count}")
+        print(f"JPEG bytes saved: {human_size(jpeg_bytes_saved)}")
+        if difference >= 0:
+            print(
+                f"PDF size: {human_size(original_size)} -> {human_size(output_size)} "
+                f"(saved {human_size(difference)})"
+            )
+        else:
+            print(
+                f"PDF size: {human_size(original_size)} -> {human_size(output_size)} "
+                f"(grew {human_size(-difference)})"
+            )
+        if syntax_warnings:
+            print("Verification warnings:", file=sys.stderr)
+            for warning in syntax_warnings:
+                print(f"  - {warning}", file=sys.stderr)
+        else:
+            print("Verification: passed")
+        return 0
+    except (OSError, pikepdf.PdfError, RuntimeError) as exc:
+        print(f"{TOOL_NAME}: {exc}", file=sys.stderr)
+        return 1
+    finally:
+        if pdf is not None:
+            pdf.close()
+        if source is not None:
+            source.close()
+        temp_path.unlink(missing_ok=True)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
