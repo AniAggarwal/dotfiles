@@ -1,5 +1,5 @@
 # Set of aliases to use for both bash and zsh
-alias Hypr="start-hyprland"
+alias Hypr="start-hyprland </dev/null &> ~/.cache/hyprland/session.log"
 alias ls='eza --group-directories-first --icons=never'
 alias ll='eza -alhF --icons=always'
 alias l='eza -alhF --icons=always'
@@ -29,6 +29,11 @@ alias mnt="sudo mount -o uid=$UID"
 op() {
     xdg-open "$1" &> /dev/null &; disown
 }
+
+tigris-mnt() {
+    rclone mount "tigris:$1" "/media/tigris/$1" --vfs-cache-mode writes --daemon
+}
+
 
 alias hconf='nvim ~/.config/hypr/hyprland.lua'
 alias nconf='cd ~/.config/nvim/;nvim ~/.config/nvim/init.lua'
