@@ -9,17 +9,12 @@
     //   Rust          #B65C4D
     //   Fremen Blue   #5C7A8A
     "logo": {
-        "source": "/home/ani/.config/fastfetch/dune-logo.txt",
-        "type": "file",
+        // Truecolor half-block render generated from the reference artwork.
+        "source": "/home/ani/.config/fastfetch/dune-logo.ansi",
+        "type": "file-raw",
         "padding": {
             "top": 1,
             "right": 3
-        },
-        "color": {
-            "1": "38;2;220;215;200", // Sand — stars
-            "2": "38;2;200;159;107", // Spice Orange — far dune ridge
-            "3": "38;2;139;111;88",  // Spice Brown — mid dune body
-            "4": "38;2;61;47;36"     // Deep Brown — near dune shading
         }
     },
     "display": {
