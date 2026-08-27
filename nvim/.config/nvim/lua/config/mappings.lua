@@ -23,6 +23,9 @@ keymap("i", "<C-h>", "<C-o>dw", opts)
 -- Toggle spell checking
 keymap("n", "z-", "<cmd>set spell!<CR>", opts)
 
+-- Close the current tab (overrides gQ, which enters Ex mode)
+keymap("n", "gQ", "<cmd>tabclose<CR>", opts)
+
 -- Visual mode keymaps --
 -- Stay in indent mode after indenting
 keymap("v", "<", "<gv", opts)

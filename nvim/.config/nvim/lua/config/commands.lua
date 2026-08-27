@@ -31,3 +31,11 @@ function DisableCopilot()
 end
 
 vim.api.nvim_create_user_command("DisableCopilot", DisableCopilot, {})
+
+vim.api.nvim_create_user_command("DiffMain", "DiffviewOpen origin/main...HEAD", {
+	desc = "Diff current branch against origin/main",
+})
+
+vim.api.nvim_create_user_command("DiffUncommitted", "DiffviewOpen HEAD", {
+	desc = "Diff uncommitted changes against HEAD",
+})
