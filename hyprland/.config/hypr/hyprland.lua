@@ -154,6 +154,7 @@ hl.config({
         float_switch_override_focus = 0,
         touchpad = {
             natural_scroll = true,
+            -- scroll_factor = 0.2
         },
     },
 
@@ -200,7 +201,7 @@ hl.config({
         swallow_regex = "^(kitty)$",
         vrr = 0,
         mouse_move_enables_dpms = true,
-        key_press_enables_dpms = true,
+        -- key_press_enables_dpms = true,
         -- Default (2) unfullscreens the focused window whenever another
         -- window requests focus (e.g. a newly launched app). Keep fullscreen
         -- focused instead of kicking back to tiled.
@@ -228,6 +229,7 @@ hl.config({
     },
 
     dwindle = {
+        force_split = 2,
         preserve_split = true,
         smart_split = false,
         smart_resizing = true,
@@ -394,7 +396,21 @@ bind_exec(main_mod .. " + SHIFT + Print", "hyprshot -z -m region --clipboard-onl
 bind_exec(main_mod .. " + CTRL + Print", "hyprshot -z -m output -o ~/Downloads/")
 bind_exec(main_mod .. " + CTRL + SHIFT + Print", "hyprshot -z -m output --clipboard-only")
 
-bind_exec("switch:off:Lid Switch", "systemctl hibernate", { locked = true })
+-- Lid: lock + blank the laptop panel only. No suspend, no hibernate -- external
+-- monitors keep running. Lock first, then DPMS off, so the lock surface is up
+-- before the panel blanks. Opening the lid just powers eDP-1 back on.
+-- (systemd's own lid handling is set to `ignore` in /etc/systemd/logind.conf.d/
+-- 99-lid-no-suspend.conf so it doesn't suspend out from under this.)
+bind_exec(
+    "switch:off:Lid Switch",
+    "loginctl lock-session; hyprctl dispatch 'hl.dsp.dpms({ action = \"off\", monitor = \"eDP-1\" })'",
+    { locked = true }
+)
+bind_exec(
+    "switch:on:Lid Switch",
+    "hyprctl dispatch 'hl.dsp.dpms({ action = \"on\", monitor = \"eDP-1\" })'",
+    { locked = true }
+)
 
 bind_exec("XF86AudioPlay", "playerctl play-pause", { locked = true })
 bind_exec("XF86AudioNext", "playerctl next", { locked = true })

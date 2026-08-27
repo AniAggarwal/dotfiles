@@ -355,6 +355,11 @@ override_pause_level = 10
     appname=Spotify
     skip_display=true
 
+[keepassxc_notifications]
+    appname = "[Kk]ee[Pp]ass[Xx][Cc]*"
+    override_pause_level=15
+    urgency = low
+
 [signal]
     appname = "Signal"
     format = "<b>%s</b>\n%b"
@@ -493,4 +498,3 @@ override_pause_level = 10
 #    set_stack_tag = "volume"
 #
 # vim: ft=cfg
-
