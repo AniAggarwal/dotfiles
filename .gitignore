@@ -3,3 +3,4 @@
 __pycache__/
 themes/.config/themes/current
 themes/.config/themes/kitty.conf
+nvim/.config/github-copilot/
