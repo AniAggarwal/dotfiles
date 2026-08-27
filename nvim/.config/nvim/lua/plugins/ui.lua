@@ -10,6 +10,9 @@ return {
 			-- TODO: figure out color highlighting and whatnot later
 			require("onedark").setup({
 				style = "dark",
+				code_style = {
+					comments = "none", -- Disable italic comments
+				},
 				-- colors = {
 				--   bg = palette.bg0,
 				--   bg2 = palette.bg1,
@@ -44,7 +47,9 @@ return {
 	{
 		"akinsho/bufferline.nvim",
 		dependencies = { "nvim-tree/nvim-web-devicons" },
-		event = "BufRead", -- Lazy load when a buffer is opened
+		-- Not BufRead: plugins that open in a tab without reading a file (Neogit,
+		-- Diffview) would otherwise fall back to the built-in tabline.
+		event = "VeryLazy",
 		opts = {
 			options = {
 				close_command = "Bdelete! %d",
@@ -286,6 +291,7 @@ return {
 		opts = {
 			stages = "fade",
 			timeout = 500,
+			background_colour = "#282C34", -- NotifyBackground is unset in this theme
 		},
 		config = function(_, opts)
 			require("notify").setup(opts)
