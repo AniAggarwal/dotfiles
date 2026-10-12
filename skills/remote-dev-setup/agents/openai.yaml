@@ -1,0 +1,4 @@
+interface:
+  display_name: "Remote Development Setup"
+  short_description: "Set up SSH machines with public dotfiles and Python"
+  default_prompt: "Use $remote-dev-setup to prepare my SSH host for Python development with my public dotfiles."
