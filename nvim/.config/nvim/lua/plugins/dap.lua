@@ -191,7 +191,11 @@ return {
 		"mfussenegger/nvim-dap-python",
 		dependencies = { "mfussenegger/nvim-dap" },
 		config = function()
-			require("dap-python").setup("/home/ani/micromamba/envs/utils/bin/python")
+			local python = vim.fn.stdpath("data") .. "/python/bin/python"
+			if vim.fn.executable(python) ~= 1 then
+				python = vim.fn.expand("~/micromamba/envs/utils/bin/python")
+			end
+			require("dap-python").setup(python)
 			table.insert(require("dap").configurations.python, {
 				-- more options, see https://github.com/microsoft/debugpy/wiki/Debug-configuration-settings
 				type = "python",
