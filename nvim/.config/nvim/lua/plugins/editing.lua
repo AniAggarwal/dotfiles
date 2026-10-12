@@ -12,6 +12,12 @@ local dir_key = { left = "h", down = "j", up = "k", right = "l" }
 ---Hand a chord to the kitty layer. Runs detached; `on_fail` fires when kitty
 ---has no window that way, which is the caller's cue to stay put or wrap.
 local function kitty_escape(action, direction, on_fail)
+	if vim.fn.executable(chain .. "/kitty-escape.sh") ~= 1 then
+		if on_fail then
+			on_fail()
+		end
+		return
+	end
 	vim.system({ chain .. "/kitty-escape.sh", action, direction }, {}, function(result)
 		if result.code ~= 0 and on_fail then
 			vim.schedule(on_fail)

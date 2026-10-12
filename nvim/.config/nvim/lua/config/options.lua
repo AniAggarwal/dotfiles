@@ -10,6 +10,9 @@ vim.opt.fileencoding = "utf-8" -- Use UTF-8 encoding for files
 
 -- Clipboard and Mouse
 vim.opt.clipboard = "unnamedplus" -- Access system clipboard
+if vim.env.SSH_CONNECTION then
+	vim.g.clipboard = "osc52"
+end
 vim.opt.mouse = "a" -- Enable mouse support
 
 -- Interface Options
@@ -71,7 +74,15 @@ vim.opt.whichwrap:append("<,>,[,],h,l") -- Allow movement across wrapped lines
 vim.opt.spelloptions:append({ "camel" }) -- Handle camel case in spell check
 
 -- Set python interpreter for Neovim
-vim.g.python3_host_prog = os.getenv("HOME") .. "/micromamba/envs/nvim/bin/python"
+for _, python in ipairs({
+	vim.fn.stdpath("data") .. "/python/bin/python",
+	vim.fn.expand("~/micromamba/envs/nvim/bin/python"),
+}) do
+	if vim.fn.executable(python) == 1 then
+		vim.g.python3_host_prog = python
+		break
+	end
+end
 
 -- Set copilot model
 vim.g.copilot_settings = { selectedCompletionModel = "claude-4" }
