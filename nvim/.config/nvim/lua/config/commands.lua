@@ -39,3 +39,7 @@ vim.api.nvim_create_user_command("DiffMain", "DiffviewOpen origin/main...HEAD", 
 vim.api.nvim_create_user_command("DiffUncommitted", "DiffviewOpen HEAD", {
 	desc = "Diff uncommitted changes against HEAD",
 })
+
+vim.api.nvim_create_user_command("ObsidianSync", function()
+	require("obsidian_sync").sync()
+end, { desc = "Save enrolled vault notes, pull and push main" })
