@@ -9,6 +9,7 @@ local function obsidian_picker()
 
 	-- Commands marked with workspace = true will prompt for workspace selection first
 	local obsidian_commands = {
+		{ name = "Sync vault", cmd = "ObsidianSync", desc = "Save enrolled notes and sync Git" },
 		{ name = "Quick Switch", cmd = "ObsidianQuickSwitch", desc = "Jump to another note", workspace = true },
 		{ name = "Search", cmd = "ObsidianSearch", desc = "Search text in vault", workspace = true },
 		{ name = "New Note", cmd = "ObsidianNew", desc = "Create a new note", workspace = true },
@@ -90,6 +91,7 @@ return {
 			{ "<leader>fs", "<cmd>Telescope lsp_document_symbols<CR>", desc = "Document symbols" },
 			{ "<leader>fT", "<cmd>Trouble<CR>", desc = "Trouble" },
 			{ "<leader>fo", obsidian_picker, desc = "Obsidian commands" },
+			{ "<leader>fO", "<cmd>ObsidianSync<CR>", desc = "Sync Obsidian vault" },
 		},
 		config = function()
 			local telescope = require("telescope")
