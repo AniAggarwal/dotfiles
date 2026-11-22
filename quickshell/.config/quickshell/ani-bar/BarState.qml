@@ -88,6 +88,7 @@ Scope {
     property real previousCpuIdle: 0
 
     property var dunst: ({})
+    readonly property string dunstLevel: dunst.alt || "all"
     property var bluetoothRadios: []
     property bool bluetoothServiceActive: false
     readonly property bool bluetoothAvailable: bluetoothRadios.some(radio => radio.hard === "unblocked")

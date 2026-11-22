@@ -43,7 +43,6 @@ ShellRoot {
         "一", "二", "三", "四", "五", "六", "七", "八", "九", "十",
         "十一", "十二", "十三", "十四", "十五", "十六", "十七", "十八", "十九", "二十"
     ]
-    readonly property var dunstIcons: ({ all: "󰂞", reduced: "󰂚", quiet: "󰂠", critical: "󰵙", none: "󰂛" })
     readonly property var wired: Networking.devices.values.find(device => device.type === DeviceType.Wired && device.connected)
     readonly property var wifiAdapter: Networking.devices.values.find(device => device.type === DeviceType.Wifi) || null
     readonly property var wifi: Networking.devices.values.find(device => device.type === DeviceType.Wifi && device.connected)
@@ -471,7 +470,7 @@ ShellRoot {
                             icon: BarStyle.icons.music
                             imageSource: player?.trackArtUrl || ""
                             label: player?.trackTitle || player?.identity || "Media"
-                            labelWidth: 144
+                            labelWidth: 100
                             foreground: player?.isPlaying ? status.foreground : status.secondary
                             hint: "Now playing"
                             onActivated: {
@@ -563,14 +562,15 @@ ShellRoot {
                             popup: systemMenu
                             icon: BarStyle.icons.settings
                             iconSize: BarStyle.barIconSize + 1
+                            horizontalPadding: 4
                             hint: "Quick settings"
                         }
                         Chip {
                             id: bellChip
                             popup: notificationMenu
-                            icon: status.unseenNotifications > 0 ? BarStyle.icons.bellRing : BarStyle.icons.bell
-                            iconColor: status.unseenNotifications > 0 ? status.accent : status.secondary
-                            label: status.unseenNotifications > 0 ? String(status.unseenNotifications) : ""
+                            icon: BarStyle.dunstIcon(status.dunstLevel)
+                            iconColor: status.unseenNotifications > 0 ? status.accent : status.muted
+                            horizontalPadding: 4
                             hint: "Notifications"
                         }
                         Chip {
@@ -580,7 +580,7 @@ ShellRoot {
                             icon: root.networkIcon
                             iconColor: root.wired || root.wifiNetwork ? status.accent : status.secondary
                             hint: root.networkName + (vpn ? ", through " + status.vpnProvider : "")
-                            implicitWidth: BarStyle.chipHeight + 4
+                            horizontalPadding: 4
 
                             // On Ethernet the VPN shows as a small key against the icon (Wi-Fi uses lock glyphs).
                             Rectangle {
@@ -615,6 +615,7 @@ ShellRoot {
                             label: audioNode ? Math.round(audioNode.volume * 100) + "%" : "–"
                             labelTemplate: "100%"
                             hint: root.sink?.description || "Volume"
+                            horizontalPadding: 4
                             onSecondaryActivated: if (audioNode) audioNode.muted = !audioNode.muted
                             function adjustVolume(delta) {
                                 if (audioNode && delta)
@@ -643,6 +644,7 @@ ShellRoot {
                                 : BarStyle.batteryIcon(root.charge)
                             label: root.charge + "%"
                             labelTemplate: "100%"
+                            horizontalPadding: 4
                             hint: "Battery"
                             iconColor: root.plugged ? status.charging : root.charge <= 10 ? status.critical
                                 : root.charge <= 25 ? status.warning : status.accent
@@ -657,7 +659,7 @@ ShellRoot {
                             id: clockChip
                             popup: calendar
                             hint: "Calendar"
-                            implicitWidth: clockRow.implicitWidth + 2 * horizontalPadding
+                            implicitWidth: dateWidth + clockRow.spacing + Math.ceil(timeMetrics.advanceWidth) + 2 * horizontalPadding
                             horizontalPadding: 8
                             // Widest date of any weekday and month, so the clock never changes width.
                             property real dateWidth: 0
@@ -675,14 +677,14 @@ ShellRoot {
 
                             Row {
                                 id: clockRow
-                                anchors.centerIn: parent
+                                anchors.verticalCenter: parent.verticalCenter
+                                anchors.left: parent.left
+                                anchors.leftMargin: clockChip.horizontalPadding
                                 spacing: 7
 
                                 PanelText {
                                     id: dateText
                                     anchors.verticalCenter: parent.verticalCenter
-                                    width: Math.max(implicitWidth, clockChip.dateWidth)
-                                    horizontalAlignment: Text.AlignRight
                                     text: Qt.formatDateTime(clock.date, "ddd MMM d")
                                     color: status.secondary
                                     font.pixelSize: BarStyle.barFontSize
@@ -691,8 +693,6 @@ ShellRoot {
                                 PanelText {
                                     id: timeText
                                     anchors.verticalCenter: parent.verticalCenter
-                                    width: Math.max(implicitWidth, Math.ceil(timeMetrics.advanceWidth))
-                                    horizontalAlignment: Text.AlignRight
                                     text: Qt.formatDateTime(clock.date, "h:mm AP")
                                     color: status.foreground
                                     font.pixelSize: BarStyle.barFontSize
@@ -873,7 +873,7 @@ ShellRoot {
                     powerDialog.request(action);
                 }
                 inhibitIdle: root.inhibitIdle
-                dunstIcon: root.dunstIcons[status.dunst.alt] || "󰂞"
+                dunstIcon: BarStyle.dunstIcon(status.dunstLevel)
                 onIdleToggled: root.inhibitIdle = !root.inhibitIdle
                 onTerminalRequested: command => root.openTerminal(command)
                 bar: panel

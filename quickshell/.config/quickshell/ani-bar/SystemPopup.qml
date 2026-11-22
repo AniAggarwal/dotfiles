@@ -183,8 +183,8 @@ BarPopup {
             ToggleTile {
                 icon: system.dunstIcon
                 name: "Alerts"
-                hint: "Notifications: " + (system.theme.dunst.alt || "all")
-                selected: !system.theme.dunst.alt || system.theme.dunst.alt === "all"
+                hint: "Notifications: " + BarStyle.dunstName(system.theme.dunstLevel)
+                selected: system.theme.dunstLevel === "all"
                 onActivated: system.theme.cycleDunst()
             }
             ToggleTile {

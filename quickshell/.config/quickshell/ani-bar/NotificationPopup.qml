@@ -19,7 +19,7 @@ BarPopup {
     // Newest 30, markup stripped.
     Process {
         id: reader
-        command: ["sh", "-c", "dunstctl history | jq -c '[.data[0][:30][] | {id: .id.data, app: .appname.data, summary: .summary.data, body: (.body.data | gsub(\"<[^>]*>\"; \"\")), urgency: .urgency.data}]'"]
+        command: ["sh", "-c", "dunstctl history | jq -c '[.data[0][:30][] | {id: .id.data, app: .appname.data, summary: .summary.data, body: (.body.data | gsub(\"<[^>]*>\"; \"\") | gsub(\"&lt;\"; \"<\") | gsub(\"&gt;\"; \">\") | gsub(\"&quot;\"; \"\\\"\") | gsub(\"&#39;|&apos;\"; \"\\u0027\") | gsub(\"&amp;\"; \"&\")), urgency: .urgency.data}]'"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const list = notes.theme.readObject(text, null);
@@ -49,11 +49,24 @@ BarPopup {
             width: parent.width
             spacing: 2
 
-            PopupHeader {
+            // Level cycles like the Alerts tile in quick settings; the title is implied by the bell.
+            RowLayout {
+                Layout.fillWidth: true
                 Layout.bottomMargin: 6
-                theme: notes.theme
-                title: "Notifications"
+                spacing: 4
 
+                BarButton {
+                    foreground: notes.theme.foreground
+                    accent: notes.theme.accent
+                    icon: BarStyle.dunstIcon(notes.theme.dunstLevel)
+                    iconSize: BarStyle.popupFontSize + 3
+                    label: BarStyle.dunstName(notes.theme.dunstLevel)
+                    hint: "Cycle notification level"
+                    selected: notes.theme.dunstLevel !== "all"
+                    boldWhenSelected: false
+                    onActivated: notes.theme.cycleDunst()
+                }
+                Item { Layout.fillWidth: true }
                 BarButton {
                     visible: notes.entries.length > 0
                     foreground: notes.theme.foreground

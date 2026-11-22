@@ -60,7 +60,6 @@ Item {
             id: valueText
             anchors.verticalCenter: parent.verticalCenter
             width: Math.max(implicitWidth, Math.ceil(metrics.advanceWidth))
-            horizontalAlignment: Text.AlignRight
             text: stat.value
             color: stat.severity > 0 ? stat.tone : stat.dimmed ? stat.theme.muted : stat.theme.foreground
             font.family: BarStyle.textFont

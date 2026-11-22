@@ -57,7 +57,11 @@ Rectangle {
 
     Row {
         id: content
-        anchors.centerIn: parent
+        // With a reserved label width the content hugs the left edge, so spare room falls after the label.
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.horizontalCenter: chip.labelTemplate || chip.labelWidth ? undefined : parent.horizontalCenter
+        anchors.left: chip.labelTemplate || chip.labelWidth ? parent.left : undefined
+        anchors.leftMargin: chip.horizontalPadding
         spacing: chip.iconSpacing
 
         ClippingRectangle {
@@ -96,7 +100,6 @@ Rectangle {
             width: chip.labelWidth > 0 ? chip.labelWidth
                 : chip.maximumLabelWidth > 0 ? Math.min(implicitWidth, chip.maximumLabelWidth)
                 : Math.max(implicitWidth, Math.ceil(template.advanceWidth))
-            horizontalAlignment: chip.labelTemplate ? Text.AlignRight : Text.AlignLeft
             elide: Text.ElideRight
             text: chip.label
             color: chip.foreground

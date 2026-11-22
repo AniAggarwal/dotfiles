@@ -125,6 +125,23 @@ function wifiIcon(strength, secured) {
     return (secured ? icons.wifiSecured : icons.wifi)[Math.max(0, Math.min(4, Math.ceil(strength * 4)))];
 }
 
+// dunst pause levels, in cycle order.
+var dunstLevels = {
+    all: { name: "All", icon: "󰂞" },
+    reduced: { name: "Reduced", icon: "󰂚" },
+    quiet: { name: "Quiet", icon: "󰂠" },
+    critical: { name: "Critical only", icon: "󰵙" },
+    none: { name: "None", icon: "󰂛" }
+};
+
+function dunstIcon(level) {
+    return (dunstLevels[level] || dunstLevels.all).icon;
+}
+
+function dunstName(level) {
+    return (dunstLevels[level] || dunstLevels.all).name;
+}
+
 // "3 h", "2 d 4 h", "12 min"
 function age(hours) {
     if (hours >= 48)
