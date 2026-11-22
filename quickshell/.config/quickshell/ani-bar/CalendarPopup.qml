@@ -11,8 +11,8 @@ BarPopup {
     readonly property bool thisMonth: displayed.getFullYear() === now.getFullYear() && displayed.getMonth() === now.getMonth()
     property real wheelDelta: 0
 
-    implicitWidth: 300
-    implicitHeight: calendarContent.implicitHeight + 28
+    panelWidth: 300
+    panelHeight: calendarContent.implicitHeight + 28
     onVisibleChanged: if (visible) displayed = new Date(now.getFullYear(), now.getMonth(), 1)
 
     function stepMonth(step) {

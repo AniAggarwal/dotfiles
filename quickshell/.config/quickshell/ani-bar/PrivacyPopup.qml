@@ -9,8 +9,8 @@ BarPopup {
     required property var video
     required property bool screenShare
 
-    implicitWidth: 300
-    implicitHeight: privacyContent.implicitHeight + 28
+    panelWidth: 300
+    panelHeight: privacyContent.implicitHeight + 28
 
     function appName(node) {
         return node.properties?.["application.name"] || node.description || node.name || "Unknown app";

@@ -11,8 +11,8 @@ BarPopup {
     readonly property bool discharging: battery?.state === UPowerDeviceState.Discharging
     readonly property real remaining: charging ? battery.timeToFull : discharging ? battery.timeToEmpty : 0
 
-    implicitWidth: 248
-    implicitHeight: batteryContent.implicitHeight + 28
+    panelWidth: 248
+    panelHeight: batteryContent.implicitHeight + 28
 
     function duration(seconds) {
         const minutes = Math.round(seconds / 60);

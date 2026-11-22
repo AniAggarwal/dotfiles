@@ -86,6 +86,15 @@ Scope {
 
     property real previousCpuTotal: 0
     property real previousCpuIdle: 0
+    // Swap in GiB, average core clock in GHz, network throughput in bytes per second.
+    property real swapUsed: -1
+    property real swapTotal: 0
+    property real cpuFrequency: -1
+    property real netDown: -1
+    property real netUp: -1
+    property var netDownHistory: []
+    property var netUpHistory: []
+    property var previousNet: null
 
     property var dunst: ({})
     readonly property string dunstLevel: dunst.alt || "all"
@@ -94,6 +103,10 @@ Scope {
     readonly property bool bluetoothAvailable: bluetoothRadios.some(radio => radio.hard === "unblocked")
     readonly property bool bluetoothOn: bluetoothServiceActive && bluetoothRadios.some(radio => radio.hard === "unblocked" && radio.soft === "unblocked")
     property string vpnProvider: ""
+
+    function pushRaw(history, value) {
+        return history.concat([value]).slice(-historyLength);
+    }
 
     function pushHistory(history, value) {
         return history.concat([Math.max(0, Math.min(1, value))]).slice(-historyLength);
@@ -255,6 +268,28 @@ Scope {
                 state.uptime = Number(readings.uptime?.[0] ?? -1);
                 state.threads = Math.max(1, Number(readings.threads?.[0]) || 1);
                 state.gpuState = readings.gpu?.[0] || "";
+
+                const swap = (readings.swap || []).map(Number);
+                if (swap.length === 2 && swap.every(Number.isFinite)) {
+                    state.swapTotal = swap[0] / 1048576;
+                    state.swapUsed = (swap[0] - swap[1]) / 1048576;
+                }
+                const frequency = Number(readings.cpufreq?.[0]);
+                state.cpuFrequency = Number.isFinite(frequency) ? frequency / 1e6 : -1;
+
+                const net = (readings.net || []).map(Number);
+                if (net.length === 2 && net.every(Number.isFinite)) {
+                    const now = Date.now();
+                    const last = state.previousNet;
+                    if (last && now > last.time && net[0] >= last.rx && net[1] >= last.tx) {
+                        const seconds = (now - last.time) / 1000;
+                        state.netDown = (net[0] - last.rx) / seconds;
+                        state.netUp = (net[1] - last.tx) / seconds;
+                        state.netDownHistory = state.pushRaw(state.netDownHistory, state.netDown);
+                        state.netUpHistory = state.pushRaw(state.netUpHistory, state.netUp);
+                    }
+                    state.previousNet = { rx: net[0], tx: net[1], time: now };
+                }
 
                 const level = readings.brightness?.[0] || "";
                 state.brightness = /^\d+%$/.test(level) ? parseInt(level) : -1;

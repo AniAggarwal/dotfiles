@@ -23,8 +23,8 @@ BarPopup {
         showBluetooth = false;
     }
 
-    implicitWidth: 354
-    implicitHeight: systemContent.implicitHeight + 28
+    panelWidth: 354
+    panelHeight: systemContent.implicitHeight + 28
 
     Timer {
         id: bluetoothDelay
@@ -271,7 +271,7 @@ BarPopup {
                 action: "lock"
                 hint: "Lock"
                 onActivated: {
-                    system.visible = false;
+                    system.close();
                     Quickshell.execDetached(["hyprlock"]);
                 }
             }

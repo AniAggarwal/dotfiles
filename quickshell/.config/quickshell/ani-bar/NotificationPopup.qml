@@ -9,8 +9,8 @@ BarPopup {
 
     property var entries: []
 
-    implicitWidth: 360
-    implicitHeight: Math.min(notesContent.implicitHeight + 28, 560)
+    panelWidth: 360
+    panelHeight: Math.min(notesContent.implicitHeight + 28, 560)
     onVisibleChanged: if (visible) {
         reader.running = true;
         theme.markNotificationsSeen();
@@ -96,7 +96,7 @@ BarPopup {
                     title: modelData.summary || modelData.app
                     detail: modelData.body || modelData.app
                     onActivated: {
-                        notes.visible = false;
+                        notes.close();
                         Quickshell.execDetached(["dunstctl", "history-pop", String(modelData.id)]);
                     }
 

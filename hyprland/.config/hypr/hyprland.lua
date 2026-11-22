@@ -338,6 +338,21 @@ hl.window_rule({
     center = true,
 })
 
+-- ani-bar: frosted glass behind the bar, its dropdowns and OSD. ignore_alpha keeps the
+-- transparent gaps between pills unblurred. Dropdowns animate themselves, so skip the layer fade.
+hl.layer_rule({
+    name = "ani-bar-frost",
+    match = { namespace = "^ani-bar(-popup|-osd)?$" },
+    blur = true,
+    ignore_alpha = 0.2,
+})
+
+hl.layer_rule({
+    name = "ani-bar-popup-no-anim",
+    match = { namespace = "^ani-bar-popup$" },
+    no_anim = true,
+})
+
 -- agent-inbox reader: a bare nvim showing one agent message.
 hl.window_rule({
     name = "agent-inbox-reader",

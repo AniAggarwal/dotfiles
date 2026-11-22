@@ -10,8 +10,8 @@ BarPopup {
     property real now: Date.now()
     property bool clearArmed: false
 
-    implicitWidth: 380
-    implicitHeight: Math.min(inboxContent.implicitHeight + 28, 600)
+    panelWidth: 380
+    panelHeight: Math.min(inboxContent.implicitHeight + 28, 600)
     onVisibleChanged: {
         clearArmed = false;
         if (visible) {
@@ -25,7 +25,7 @@ BarPopup {
         target: inbox.theme
         function onInboxChanged() {
             if (inbox.visible && !inbox.theme.inbox.length)
-                inbox.visible = false;
+                inbox.close();
         }
     }
 
@@ -66,7 +66,7 @@ BarPopup {
             return;
         const address = window.lastIpcObject?.address || "0x" + window.address;
         Hyprland.dispatch('hl.dsp.focus({ window = "address:' + address + '" })');
-        inbox.visible = false;
+        inbox.close();
     }
 
     component SmallButton: BarButton {
@@ -96,7 +96,7 @@ BarPopup {
         Accessible.onPressAction: open()
 
         function open() {
-            inbox.visible = false;
+            inbox.close();
             inbox.theme.openMessage(modelData);
         }
 

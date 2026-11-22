@@ -15,8 +15,8 @@ BarPopup {
     property bool choosingInput: false
     property bool choosingOutput: false
 
-    implicitWidth: 370
-    implicitHeight: Math.min(mixerContent.implicitHeight + 28, 510)
+    panelWidth: 370
+    panelHeight: Math.min(mixerContent.implicitHeight + 28, 510)
 
     onVisibleChanged: if (!visible) {
         choosingInput = false;
@@ -99,7 +99,7 @@ BarPopup {
                     icon: "󰒓"
                     label: "Advanced"
                     onActivated: {
-                        mixer.visible = false;
+                        mixer.close();
                         Quickshell.execDetached(["pavucontrol"]);
                     }
                 }

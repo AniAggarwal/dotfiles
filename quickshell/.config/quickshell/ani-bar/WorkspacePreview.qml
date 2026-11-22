@@ -15,8 +15,8 @@ BarPopup {
     readonly property int columns: Math.max(1, Math.min(2, windows.length))
     onVisibleChanged: if (visible) Hyprland.refreshToplevels()
     pinnable: false
-    implicitWidth: Math.max(178, 28 + columns * 178 + (columns - 1) * 8)
-    implicitHeight: 70 + Math.ceil(windows.length / columns) * 125
+    panelWidth: Math.max(178, 28 + columns * 178 + (columns - 1) * 8)
+    panelHeight: 70 + Math.ceil(windows.length / columns) * 125
 
     ColumnLayout {
         anchors.fill: parent

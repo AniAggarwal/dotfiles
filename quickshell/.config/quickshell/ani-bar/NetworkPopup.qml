@@ -19,8 +19,8 @@ BarPopup {
             .slice(0, 8)
         : []
 
-    implicitWidth: 340
-    implicitHeight: Math.min(netContent.implicitHeight + 28, 560)
+    panelWidth: 340
+    panelHeight: Math.min(netContent.implicitHeight + 28, 560)
 
     // Scan only while the list is on screen.
     Binding {
@@ -234,7 +234,7 @@ BarPopup {
                 NetButton {
                     label: "Connections"
                     onActivated: {
-                        net.visible = false;
+                        net.close();
                         Quickshell.execDetached(["nm-connection-editor"]);
                     }
                 }

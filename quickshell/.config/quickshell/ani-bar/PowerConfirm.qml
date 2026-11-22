@@ -46,12 +46,6 @@ PanelWindow {
 
     onVisibleChanged: if (visible) cancelButton.forceActiveFocus()
 
-    Shortcut {
-        sequence: "Escape"
-        enabled: dialog.visible
-        onActivated: dialog.cancel()
-    }
-
     MouseArea {
         anchors.fill: parent
         onClicked: dialog.cancel()
@@ -65,6 +59,8 @@ PanelWindow {
         radius: BarStyle.radius.popup + 4
         color: dialog.theme.background
         border.color: Qt.alpha(dialog.theme.outline, 0.48)
+
+        Keys.onEscapePressed: dialog.cancel()
 
         // Swallow clicks so only the dimmed area cancels.
         MouseArea { anchors.fill: parent }

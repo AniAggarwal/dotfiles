@@ -13,8 +13,8 @@ BarPopup {
     readonly property var current: stack.length ? stack[stack.length - 1] : item?.menu ?? null
 
     padding: 6
-    implicitWidth: 264
-    implicitHeight: Math.min(entries.implicitHeight + 2 * padding, 520)
+    panelWidth: 264
+    panelHeight: Math.min(entries.implicitHeight + 2 * padding, 520)
     onItemChanged: stack = []
     onVisibleChanged: if (!visible) stack = []
 
@@ -110,7 +110,7 @@ BarPopup {
                                 menu.stack = menu.stack.concat([slot.modelData]);
                             } else {
                                 slot.modelData.triggered();
-                                menu.visible = false;
+                                menu.close();
                             }
                         }
 

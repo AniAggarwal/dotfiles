@@ -153,10 +153,10 @@ ShellRoot {
                 pendingPopup = null;
                 pendingAnchor = null;
                 if (openPopup && openPopup !== target)
-                    openPopup.visible = false;
+                    openPopup.close();
                 openPopup = target;
                 popupAnchor = anchor;
-                target.visible = true;
+                target.open(anchor);
                 if (pin && target.pinnable)
                     target.pinned = true;
             }
@@ -170,7 +170,7 @@ ShellRoot {
                 openPopup = null;
                 popupAnchor = null;
                 if (target)
-                    target.visible = false;
+                    target.close();
             }
 
             // Click: pin the popup, or close it if it is already pinned to this anchor.
@@ -794,16 +794,16 @@ ShellRoot {
                 bar: panel
                 workspaceId: panel.openPopup === workspacePreview ? panel.popupAnchor?.modelData?.id ?? 0 : 0
                 label: panel.openPopup === workspacePreview ? panel.popupAnchor?.label ?? "" : ""
-                offsetX: panel.popupX(width, true)
+                offsetX: panel.popupX(panelWidth, true)
             }
 
             StatsPopup {
                 id: statsMenu
                 theme: status
                 bar: panel
-                offsetX: panel.popupX(implicitWidth, false)
+                offsetX: panel.popupX(panelWidth, false)
                 onTerminalRequested: command => {
-                    visible = false;
+                    close();
                     root.openTerminal(command);
                 }
             }
@@ -814,9 +814,9 @@ ShellRoot {
                 player: root.activePlayer
                 players: root.players
                 onPlayerSelected: player => root.chosenPlayer = player
-                onPlayerChanged: if (!player) visible = false
+                onPlayerChanged: if (!player) close()
                 bar: panel
-                offsetX: panel.popupX(width, false)
+                offsetX: panel.popupX(panelWidth, false)
             }
 
             PrivacyPopup {
@@ -826,21 +826,21 @@ ShellRoot {
                 video: root.videoUsers
                 screenShare: root.screenShare
                 bar: panel
-                offsetX: panel.popupX(implicitWidth, false)
+                offsetX: panel.popupX(panelWidth, false)
             }
 
             InboxPopup {
                 id: inboxMenu
                 theme: status
                 bar: panel
-                offsetX: panel.popupX(implicitWidth, false)
+                offsetX: panel.popupX(panelWidth, false)
             }
 
             NotificationPopup {
                 id: notificationMenu
                 theme: status
                 bar: panel
-                offsetX: panel.popupX(implicitWidth, false)
+                offsetX: panel.popupX(panelWidth, false)
             }
 
             NetworkPopup {
@@ -849,11 +849,11 @@ ShellRoot {
                 wired: root.wired
                 wifiAdapter: root.wifiAdapter
                 onTerminalRequested: command => {
-                    visible = false;
+                    close();
                     root.openTerminal(command);
                 }
                 bar: panel
-                offsetX: panel.popupX(implicitWidth, false)
+                offsetX: panel.popupX(panelWidth, false)
             }
 
             TrayMenu {
@@ -861,14 +861,14 @@ ShellRoot {
                 theme: status
                 item: panel.openPopup === trayMenu ? panel.popupAnchor?.modelData ?? null : null
                 bar: panel
-                offsetX: panel.popupX(implicitWidth, true)
+                offsetX: panel.popupX(panelWidth, true)
             }
 
             SystemPopup {
                 id: systemMenu
                 theme: status
                 onPowerRequested: action => {
-                    visible = false;
+                    close();
                     powerDialog.request(action);
                 }
                 inhibitIdle: root.inhibitIdle
@@ -876,14 +876,14 @@ ShellRoot {
                 onIdleToggled: root.inhibitIdle = !root.inhibitIdle
                 onTerminalRequested: command => root.openTerminal(command)
                 bar: panel
-                offsetX: panel.popupX(implicitWidth, false)
+                offsetX: panel.popupX(panelWidth, false)
             }
 
             AudioPopup {
                 id: audio
                 theme: status
                 bar: panel
-                offsetX: panel.popupX(implicitWidth, false)
+                offsetX: panel.popupX(panelWidth, false)
             }
 
             BatteryPopup {
@@ -892,7 +892,7 @@ ShellRoot {
                 battery: root.battery
                 healthBattery: root.healthBattery
                 bar: panel
-                offsetX: panel.popupX(width, false)
+                offsetX: panel.popupX(panelWidth, false)
             }
 
             CalendarPopup {
@@ -900,7 +900,7 @@ ShellRoot {
                 theme: status
                 now: clock.date
                 bar: panel
-                offsetX: panel.popupX(width, false)
+                offsetX: panel.popupX(panelWidth, false)
             }
         }
     }

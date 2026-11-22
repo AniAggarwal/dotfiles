@@ -14,9 +14,9 @@ Rectangle {
     implicitWidth: row.implicitWidth + 2 * BarStyle.pillPadding
     implicitHeight: BarStyle.barHeight
     radius: BarStyle.radius.pill
-    color: Qt.alpha(theme.background, 0.9)
+    color: Qt.alpha(theme.background, BarStyle.glass.pill)
     border.width: 1
-    border.color: Qt.alpha(theme.outline, 0.3)
+    border.color: Qt.alpha(theme.foreground, 0.1)
 
     HoverHandler { id: hover }
 

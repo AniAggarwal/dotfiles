@@ -21,7 +21,10 @@ var popupGap = 6;
 
 // Nested corners stay concentric: inner radius = outer radius - inset.
 var radius = { pill: barHeight / 2, chip: chipHeight / 2, control: 8, card: 10, popup: 16 };
-var motion = { fast: 120, normal: 180, meter: 450 };
+var motion = { fast: 120, normal: 180, meter: 450, drop: 170, morph: 330, shrink: 220 };
+
+// Frosted glass: background alpha over Hyprland's blur (layer rule "ani-bar-frost").
+var glass = { pill: 0.5, popup: 0.78 };
 
 // Severity thresholds for the stats readouts. 0 = normal, 1 = warning, 2 = critical.
 var limits = {
@@ -50,8 +53,11 @@ var icons = {
     play: glyph(0xF040A),
     pause: glyph(0xF03E4),
     previous: glyph(0xF04AE),
-    next: glyph(0xF04AD),
-    previous: glyph(0xF04AE),
+    shuffle: glyph(0xF049D),
+    download: glyph(0xF01DA),
+    upload: glyph(0xF0552),
+    repeat: glyph(0xF0456),
+    repeatOne: glyph(0xF0458),
     next: glyph(0xF04AD),
     calendar: glyph(0xF00ED),
     volumeMute: glyph(0xF0581),
