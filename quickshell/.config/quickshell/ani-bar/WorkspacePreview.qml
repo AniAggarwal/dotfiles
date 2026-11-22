@@ -14,7 +14,7 @@ BarPopup {
         .filter(window => window.lastIpcObject.workspace?.id === workspaceId).slice(0, 4) : []
     readonly property int columns: Math.max(1, Math.min(2, windows.length))
     onVisibleChanged: if (visible) Hyprland.refreshToplevels()
-    dismissOnOutside: false
+    pinnable: false
     implicitWidth: Math.max(178, 28 + columns * 178 + (columns - 1) * 8)
     implicitHeight: 70 + Math.ceil(windows.length / columns) * 125
 
@@ -47,7 +47,7 @@ BarPopup {
                     id: card
                     required property HyprlandToplevel modelData
                     color: preview.theme.card
-                    radius: 9
+                    radius: BarStyle.radius.card
                     Layout.preferredWidth: 178
                     Layout.preferredHeight: 117
                     readonly property string appId: modelData.wayland?.appId || ""

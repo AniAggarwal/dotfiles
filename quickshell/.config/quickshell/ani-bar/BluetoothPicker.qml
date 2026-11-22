@@ -1,4 +1,5 @@
 import QtQuick
+import "BarStyle.js" as BarStyle
 import QtQuick.Layouts
 import Quickshell.Bluetooth
 
@@ -14,7 +15,7 @@ Rectangle {
 
     implicitHeight: details.implicitHeight + 20
     color: theme.card
-    radius: 11
+    radius: BarStyle.radius.card
 
     HoverHandler { id: hover }
 

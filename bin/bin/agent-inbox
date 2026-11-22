@@ -1,0 +1,177 @@
+#!/usr/bin/env bash
+# Messages from agents to Ani, shown in the ani-bar inbox and read in a bare nvim window.
+#
+#   agent-inbox send [--urgent] [--from NAME] [-f FILE] TITLE [BODY...]
+#       Body is markdown (LaTeX math allowed) from FILE, the remaining args, or stdin.
+#   agent-inbox list           JSON array of messages, newest first (used by the bar)
+#   agent-inbox open FILE      mark read and show it in the reader
+#   agent-inbox read FILE|all  mark read
+#   agent-inbox rm FILE|all    delete
+#
+# Storage is a maildir: tmp/ while writing, new/ until opened, cur/ after.
+set -euo pipefail
+
+inbox="${AGENT_INBOX:-${XDG_DATA_HOME:-$HOME/.local/share}/agent-inbox}"
+viewer="$HOME/.config/quickshell/ani-bar/inbox-viewer.lua"
+mkdir -p "$inbox/tmp" "$inbox/new" "$inbox/cur"
+
+die() { echo "agent-inbox: $*" >&2; exit 2; }
+
+# Walks up from the caller to the first known agent process. Prints "pid comm".
+find_agent() {
+    local pid=$PPID comm
+    while [[ $pid -gt 1 ]]; do
+        comm=$(cat "/proc/$pid/comm" 2>/dev/null) || break
+        case $comm in
+            claude|codex|aider|opencode|gemini|goose|amp) echo "$pid $comm"; return ;;
+        esac
+        pid=$(awk '{ print $4 }' "/proc/$pid/stat" 2>/dev/null) || break
+    done
+}
+
+cmd_send() {
+    local urgent=false from="" file=""
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --urgent|-u) urgent=true; shift ;;
+            --from) from=${2:?--from needs a name}; shift 2 ;;
+            -f|--file) file=${2:?-f needs a path}; shift 2 ;;
+            --) shift; break ;;
+            -*) die "unknown option $1" ;;
+            *) break ;;
+        esac
+    done
+    [[ $# -gt 0 && -n $1 ]] || die "send needs a title"
+    local title=$1; shift
+
+    local body
+    if [[ -n $file ]]; then body=$(cat -- "$file")
+    elif [[ $# -gt 0 ]]; then body="$*"
+    elif [[ ! -t 0 ]]; then body=$(cat)
+    else body=""
+    fi
+
+    local agent="" pid="" session="" name=""
+    if [[ -n ${CLAUDE_PID:-} ]]; then
+        agent=claude pid=$CLAUDE_PID session=${CLAUDE_CODE_SESSION_ID:-}
+        name=$(jq -r '.name // ""' "$HOME/.claude/sessions/$pid.json" 2>/dev/null || true)
+    else
+        read -r pid agent < <(find_agent) || true
+    fi
+    [[ -n $from ]] || from=${name:-${agent:-$(cat "/proc/$PPID/comm" 2>/dev/null || echo unknown)}}
+
+    local root project branch
+    root=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+    project=${root##*/}
+    branch=$(git branch --show-current 2>/dev/null || true)
+
+    local id
+    id="$(date +%s%3N)-$$"
+    {
+        echo "---"
+        jq -nr --arg title "$title" --arg from "$from" --arg agent "${agent:-other}" \
+            --arg project "$project" --arg branch "$branch" --arg cwd "$PWD" \
+            --arg pid "$pid" --arg session "$session" --arg sent "$(date -Iseconds)" \
+            --argjson urgent "$urgent" \
+            '$ARGS.named | to_entries[] | select(.value != "") | "\(.key): \(.value | tojson)"'
+        echo "---"
+        printf '%s\n' "$body"
+    } > "$inbox/tmp/$id.md"
+    mv "$inbox/tmp/$id.md" "$inbox/new/$id.md"
+    echo "$inbox/new/$id.md"
+}
+
+cmd_list() {
+    shopt -s nullglob
+    local files=("$inbox"/new/*.md "$inbox"/cur/*.md)
+    [[ ${#files[@]} -gt 0 ]] || { echo "[]"; return; }
+
+    # Ancestry of each live sender lets the bar find the terminal window that hosts it.
+    local pids pid walk chain ancestry="{}"
+    pids=$(sed -n 's/^pid: "\{0,1\}\([0-9]*\)"\{0,1\}$/\1/p' "${files[@]}" | sort -u)
+    for pid in $pids; do
+        [[ -d /proc/$pid ]] || continue
+        chain="" walk=$pid
+        while [[ $walk -gt 1 ]]; do
+            chain+="$walk,"
+            walk=$(awk '{ print $4 }' "/proc/$walk/stat" 2>/dev/null) || break
+        done
+        ancestry=$(jq -c --arg pid "$pid" --arg chain "${chain%,}" '. + {($pid): ($chain | split(",") | map(tonumber))}' <<<"$ancestry")
+    done
+
+    # Frontmatter values are JSON scalars; the preview is the first prose line of the body.
+    jq -nRc --argjson ancestry "$ancestry" '
+        [inputs as $line | {file: input_filename, line: $line}]
+        | group_by(.file)
+        | map(.[0].file as $file | map(.line) as $lines
+            | (if $lines[0] == "---" then ($lines[1:] | index(["---"])) else null end) as $end
+            | (if $end then $lines[1:$end + 1] else [] end
+                | map(capture("^(?<k>[a-z_]+): (?<v>.*)$")? | (.v as $v | {(.k): (try ($v | fromjson) catch $v)})) | add // {}) as $meta
+            | (if $end then $lines[$end + 2:] else $lines end) as $body
+            | ($meta.pid // "" | tostring) as $pid
+            | $meta + {
+                file: $file,
+                id: ($file | split("/") | last | rtrimstr(".md")),
+                unread: ($file | test("/new/[^/]*$")),
+                ancestors: ($ancestry[$pid] // []),
+                preview: ([$body[] | select(test("^\\s*(```|---|#|\\||\\$\\$|$)") | not)
+                    | gsub("^\\s*([>*+-]+|[0-9]+\\.)\\s*"; "") | gsub("[*_`]"; "")][0] // "" | .[0:160])
+            })
+        | sort_by(.id) | reverse' "${files[@]}"
+}
+
+resolve() {
+    local target=${1:?missing message file}
+    [[ -e $target ]] && { echo "$target"; return; }
+    local base=${target##*/}
+    base=${base%.md}
+    for dir in new cur; do
+        [[ -e $inbox/$dir/$base.md ]] && { echo "$inbox/$dir/$base.md"; return; }
+    done
+    die "no such message: $target"
+}
+
+mark_read() {
+    local file=$1
+    if [[ $file == "$inbox/new/"* ]]; then
+        mv "$file" "$inbox/cur/${file##*/}"
+        file="$inbox/cur/${file##*/}"
+    fi
+    echo "$file"
+}
+
+cmd_open() {
+    local file
+    file=$(mark_read "$(resolve "${1:-}")")
+    local title
+    title=$(sed -n 's/^title: //p' "$file" | head -1 | jq -r '.' 2>/dev/null || echo Message)
+    setsid -f kitty --class agent-inbox --title "$title" \
+        -o window_padding_width=18 -o confirm_os_window_close=0 -o enable_audio_bell=no \
+        nvim -u "$viewer" -i NONE -n -R -- "$file" >/dev/null 2>&1
+}
+
+cmd_read() {
+    if [[ ${1:-} == all ]]; then
+        shopt -s nullglob
+        for file in "$inbox"/new/*.md; do mark_read "$file" >/dev/null; done
+    else
+        mark_read "$(resolve "${1:-}")" >/dev/null
+    fi
+}
+
+cmd_rm() {
+    if [[ ${1:-} == all ]]; then
+        rm -f -- "$inbox"/new/*.md "$inbox"/cur/*.md
+    else
+        rm -f -- "$(resolve "${1:-}")"
+    fi
+}
+
+case ${1:-} in
+    send) shift; cmd_send "$@" ;;
+    list) cmd_list ;;
+    open) shift; cmd_open "$@" ;;
+    read) shift; cmd_read "$@" ;;
+    rm) shift; cmd_rm "$@" ;;
+    *) sed -n '2,10s/^# \{0,1\}//p' "$0"; exit 2 ;;
+esac

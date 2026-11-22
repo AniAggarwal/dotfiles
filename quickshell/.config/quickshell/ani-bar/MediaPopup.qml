@@ -42,7 +42,7 @@ BarPopup {
             Rectangle {
                 Layout.preferredWidth: 84
                 Layout.preferredHeight: 84
-                radius: 10
+                radius: BarStyle.radius.card
                 clip: true
                 color: popup.theme.card
 
@@ -50,7 +50,7 @@ BarPopup {
                     anchors.centerIn: parent
                     text: "󰝚"
                     color: popup.theme.accent
-                    font.family: "FiraCode Nerd Font"
+                    font.family: BarStyle.iconFont
                     font.pixelSize: BarStyle.popupFontSize + 14
                     visible: art.status !== Image.Ready
                 }

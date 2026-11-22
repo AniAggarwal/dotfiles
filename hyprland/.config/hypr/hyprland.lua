@@ -338,6 +338,16 @@ hl.window_rule({
     center = true,
 })
 
+-- agent-inbox reader: a bare nvim showing one agent message.
+hl.window_rule({
+    name = "agent-inbox-reader",
+    match = { class = "^(agent-inbox)$" },
+    float = true,
+    center = true,
+    size = "1100 1100",
+    border_size = 0,
+})
+
 hl.window_rule({
     name = "termfilechooser",
     match = { title = "^(termfilechooser)$" },

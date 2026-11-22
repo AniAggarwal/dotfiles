@@ -1,4 +1,5 @@
 import QtQuick
+import "BarStyle.js" as BarStyle
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
@@ -25,7 +26,7 @@ PanelWindow {
 
     Rectangle {
         anchors.fill: parent
-        radius: 15
+        radius: BarStyle.radius.popup
         color: osd.theme.background
         border.color: Qt.alpha(osd.theme.outline, 0.48)
 
@@ -38,7 +39,7 @@ PanelWindow {
                 Layout.fillWidth: true
 
                 PanelText {
-                    font.family: "FiraCode Nerd Font"
+                    font.family: BarStyle.iconFont
                     color: osd.theme.accent
                     text: osd.kind === "brightness" ? "󰃠" : osd.kind === "source"
                         ? (osd.muted ? "󰍭" : "󰍬") : (osd.muted ? "󰖁" : "󰕾")
