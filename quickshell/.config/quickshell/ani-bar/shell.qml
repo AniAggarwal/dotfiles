@@ -677,9 +677,8 @@ ShellRoot {
 
                             Row {
                                 id: clockRow
-                                anchors.verticalCenter: parent.verticalCenter
-                                anchors.left: parent.left
-                                anchors.leftMargin: clockChip.horizontalPadding
+                                // Centered in the reserved width, so spare room is split evenly instead of piling up on the right.
+                                anchors.centerIn: parent
                                 spacing: 7
 
                                 PanelText {
