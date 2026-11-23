@@ -1,0 +1,8 @@
+#!/bin/sh
+set -e
+# Delegate discovery to the package script so updates retain its fixes.
+entries=$(GRUB_DISABLE_BOOTNEXT=false /etc/grub.d/31_efi_bootnext)
+[ -n "$entries" ] || exit 0
+printf '%s\n' "submenu 'Firmware Boot Options' --id firmware-boot-options {"
+printf '%s\n' "$entries"
+printf '%s\n' '}'
