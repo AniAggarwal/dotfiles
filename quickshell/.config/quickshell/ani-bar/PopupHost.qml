@@ -8,7 +8,7 @@ import "BarStyle.js" as BarStyle
 // decides which one is open. It spans the bar's width and never moves or resizes, so nothing waits
 // on the compositor mid-animation; a single glass frame is drawn inside it:
 //
-//   open    the chip's glass drops below the bar and stretches into the panel, content fades in
+//   open    the chip's glass grows straight out of the bar into the panel, content fades in
 //   swap    moving to another chip morphs the same frame from one panel to the next
 //   close   the frame shrinks back into its chip and fades
 //
@@ -229,7 +229,7 @@ PanelWindow {
 
     Timer {
         id: hoverOpen
-        interval: 260
+        interval: 140
         onTriggered: if (host.pending && host.pendingAnchor?.hovered)
             host.show(host.pending, host.pendingAnchor, false)
     }
@@ -258,19 +258,19 @@ PanelWindow {
         easing.overshoot: 1.1
     }
 
+    // One motion: the chip's glass grows straight out of the bar into the panel, and the content
+    // fades in as it lands.
     SequentialAnimation {
         id: expand
-        // Drop out of the bar.
-        NumberAnimation { target: host; property: "frameY"; to: host.panelY; duration: BarStyle.motion.drop; easing.type: Easing.OutBack }
-        // Stretch into the panel; content fades in as the stretch lands.
         ParallelAnimation {
-            FrameMotion { property: "frameX"; to: host.toX }
-            FrameMotion { property: "frameW"; to: host.toW }
-            FrameMotion { property: "frameH"; to: host.toH }
-            NumberAnimation { target: host; property: "frameRadius"; to: BarStyle.radius.popup; duration: BarStyle.motion.morph; easing.type: Easing.OutCubic }
-            NumberAnimation { target: host; property: "depth"; to: 1; duration: BarStyle.motion.morph }
+            NumberAnimation { target: host; property: "frameY"; to: host.panelY; duration: BarStyle.motion.open; easing.type: Easing.OutCubic }
+            FrameMotion { property: "frameX"; to: host.toX; duration: BarStyle.motion.open; easing.overshoot: 0.6 }
+            FrameMotion { property: "frameW"; to: host.toW; duration: BarStyle.motion.open; easing.overshoot: 0.6 }
+            FrameMotion { property: "frameH"; to: host.toH; duration: BarStyle.motion.open; easing.overshoot: 0.6 }
+            NumberAnimation { target: host; property: "frameRadius"; to: BarStyle.radius.popup; duration: BarStyle.motion.open; easing.type: Easing.OutCubic }
+            NumberAnimation { target: host; property: "depth"; to: 1; duration: BarStyle.motion.open; easing.type: Easing.OutCubic }
             SequentialAnimation {
-                PauseAnimation { duration: BarStyle.motion.morph * 0.5 }
+                PauseAnimation { duration: BarStyle.motion.open * 0.35 }
                 NumberAnimation { target: host.current; property: "opacity"; to: 1; duration: BarStyle.motion.normal; easing.type: Easing.OutCubic }
             }
         }
@@ -308,17 +308,19 @@ PanelWindow {
 
     SequentialAnimation {
         id: collapse
-        NumberAnimation { target: host.showing; property: "opacity"; to: 0; duration: BarStyle.motion.fast * 0.6; easing.type: Easing.OutCubic }
+        NumberAnimation { target: host.showing; property: "opacity"; to: 0; duration: BarStyle.motion.fast * 0.5; easing.type: Easing.OutCubic }
+        // The reverse of opening, in one motion: straight back into the chip, fading as it lands.
         ParallelAnimation {
-            NumberAnimation { target: host; property: "frameX"; to: host.origin.x; duration: BarStyle.motion.shrink; easing.type: Easing.OutExpo }
-            NumberAnimation { target: host; property: "frameW"; to: host.origin.width; duration: BarStyle.motion.shrink; easing.type: Easing.OutExpo }
-            NumberAnimation { target: host; property: "frameH"; to: host.origin.height; duration: BarStyle.motion.shrink; easing.type: Easing.OutExpo }
-            NumberAnimation { target: host; property: "frameRadius"; to: Math.min(host.origin.height / 2, BarStyle.radius.pill); duration: BarStyle.motion.shrink; easing.type: Easing.OutExpo }
+            NumberAnimation { target: host; property: "frameX"; to: host.origin.x; duration: BarStyle.motion.shrink; easing.type: Easing.OutCubic }
+            NumberAnimation { target: host; property: "frameY"; to: host.origin.y; duration: BarStyle.motion.shrink; easing.type: Easing.OutCubic }
+            NumberAnimation { target: host; property: "frameW"; to: host.origin.width; duration: BarStyle.motion.shrink; easing.type: Easing.OutCubic }
+            NumberAnimation { target: host; property: "frameH"; to: host.origin.height; duration: BarStyle.motion.shrink; easing.type: Easing.OutCubic }
+            NumberAnimation { target: host; property: "frameRadius"; to: Math.min(host.origin.height / 2, BarStyle.radius.pill); duration: BarStyle.motion.shrink; easing.type: Easing.OutCubic }
             NumberAnimation { target: host; property: "depth"; to: 0; duration: BarStyle.motion.shrink }
-        }
-        ParallelAnimation {
-            NumberAnimation { target: host; property: "frameY"; to: host.origin.y; duration: BarStyle.motion.drop; easing.type: Easing.OutCubic }
-            NumberAnimation { target: frame; property: "opacity"; to: 0; duration: BarStyle.motion.drop; easing.type: Easing.InCubic }
+            SequentialAnimation {
+                PauseAnimation { duration: BarStyle.motion.shrink * 0.55 }
+                NumberAnimation { target: frame; property: "opacity"; to: 0; duration: BarStyle.motion.shrink * 0.45; easing.type: Easing.InCubic }
+            }
         }
         ScriptAction {
             script: {

@@ -31,7 +31,7 @@ var popupSlack = 18;
 var radius = { pill: barHeight / 2, chip: chipHeight / 2, control: 8, card: 10, popup: 16 };
 // Durations in ms. drop/morph/shrink are the dropdown opening and closing, swap is the move from
 // one chip's dropdown to another's, hide is the bar leaving for a fullscreen window.
-var motion = { fast: 120, normal: 180, meter: 450, drop: 170, morph: 330, shrink: 220, swap: 260, hide: 130, glass: 320 };
+var motion = { fast: 120, normal: 180, meter: 450, drop: 170, open: 280, morph: 330, shrink: 200, swap: 260, hide: 130, glass: 320 };
 
 // Frosted glass: background alpha over Hyprland's blur (layer rule "ani-bar-frost"). On battery,
 // or with glass switched off, both are 1 and the rule's blur is turned off (see BarState).
