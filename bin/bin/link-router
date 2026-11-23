@@ -124,7 +124,14 @@ route() {
     gemini.google.com)              app "$PERSONAL" "$GEMINI" "$url" ;;
 
     # --- ai ---
-    claude.ai)                      native /usr/bin/claude-desktop "$url" ;;
+    claude.ai)
+      # Artifact pages need a browser; keep chat links in Claude Desktop.
+      local path=${url#*://}
+      case /${path#*/} in
+        /artifact/*|/code/artifact/*|/public/artifacts/*)
+                                    fallback "$url" ;;
+        *)                          native /usr/bin/claude-desktop "$url" ;;
+      esac ;;
     chatgpt.com|chat.openai.com)    app "$PERSONAL" "$CHATGPT" "$url" ;;
     devin.ai|app.devin.ai)          app "$WORK" "$DEVIN" "$url" ;;
 
