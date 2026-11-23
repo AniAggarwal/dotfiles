@@ -454,10 +454,23 @@ bind_exec(main_mod .. " + CTRL + SHIFT + Print", "hyprshot -z -m output --clipbo
 -- monitor configuration above.
 -- (systemd's own lid handling is set to `ignore` in /etc/systemd/logind.conf.d/
 -- 99-lid-no-suspend.conf so it doesn't suspend out from under this.)
+-- Locks unless an external display is connected. The short wait lets an unplug settle in sysfs.
+local function lock_if_undocked()
+    hl.exec_cmd("sh -c 'sleep 1; grep -lx connected /sys/class/drm/card*-*/status | grep -qv eDP || loginctl lock-session'")
+end
+
 bind("switch:on:Lid Switch", function()
     hl.monitor({ output = "eDP-1", disabled = true })
-    hl.exec_cmd("sh -c 'grep -lx connected /sys/class/drm/card*-*/status | grep -qv eDP || loginctl lock-session'")
+    lock_if_undocked()
 end, { locked = true })
+
+-- Docked with the lid closed, then unplugged: the lid doesn't change, so lock on the display
+-- disappearing instead.
+hl.on("monitor.removed", function()
+    if lid_is_closed() then
+        lock_if_undocked()
+    end
+end)
 bind("switch:off:Lid Switch", enable_laptop_monitor, { locked = true })
 
 bind_exec("XF86AudioPlay", "playerctl play-pause", { locked = true })
