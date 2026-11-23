@@ -1,0 +1,19 @@
+#!/usr/bin/bash
+# Runs one command with secrets from the Secret Service (KeePassXC) in its environment only.
+#   sec HF_TOKEN -- hf upload ...
+#   sec AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY -- some-tool
+# Each NAME is looked up with `secret-tool lookup env NAME` (stored by secrets-import).
+set -euo pipefail
+names=()
+while (( $# )) && [[ $1 != -- ]]; do names+=("$1"); shift; done
+[[ ${1:-} == -- ]] && shift
+if (( ${#names[@]} == 0 || $# == 0 )); then
+    echo "usage: sec NAME... -- command [args...]" >&2
+    exit 64
+fi
+for name in "${names[@]}"; do
+    [[ $name =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || { echo "sec: bad name: $name" >&2; exit 64; }
+    value=$(secret-tool lookup env "$name") || { echo "sec: $name not found (is KeePassXC unlocked?)" >&2; exit 1; }
+    export "$name=$value"
+done
+exec "$@"
