@@ -55,7 +55,7 @@ hl.on("hyprland.start", function()
         scripts_path .. "/restore-wallpaper.sh",
         "systemctl --user start hypridle.service",
         "wl-paste --watch cliphist store",
-        "dunst -config ~/.config/dunst/dunstrc",
+        scripts_path .. "/start-dunst.sh",
         'gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"',
         scripts_path .. "/hpr-scratcher.py",
         "keepassxc",
