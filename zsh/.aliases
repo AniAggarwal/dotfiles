@@ -1,5 +1,7 @@
 # Set of aliases to use for both bash and zsh
-alias Hypr="HYPRLAND_NO_RT=1 start-hyprland </dev/null &> ~/.cache/hyprland/session.log"
+# exec: the login shell is replaced, so if Hyprland crashes tty1 returns to a login prompt
+# instead of an already-authenticated shell.
+alias Hypr="HYPRLAND_NO_RT=1 exec start-hyprland </dev/null &> ~/.cache/hyprland/session.log"
 alias ls='eza --group-directories-first --icons=never'
 alias ll='eza -alhF --icons=always'
 alias l='eza -alhF --icons=always'
