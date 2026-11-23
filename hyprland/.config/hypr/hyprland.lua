@@ -116,53 +116,19 @@ function _G.on_resume()
     end
 end
 
-hl.monitor({
-    output = "desc:Dell Inc. DELL U3415W <serial>",
-    mode = "3440x1440@50",
-    scale = "1",
-    position = "-576x-1440",
-})
-
-
-hl.monitor({
-    output = "desc:LG Electronics LG HDR 4K <serial>",
-    mode = "3840x2160@60",
-    scale = "1",
-    position = "-3640x-2160",
-})
-
-hl.monitor({
-    output = "desc:LG Electronics LG ULTRAWIDE <serial>",
-    mode = "3440x1440@60",
-    scale = "1",
-    position = "-3440x0",
-})
-
-hl.monitor({
-    output = "desc:Dell Inc. DELL S2722QC <serial>",
-    mode = "3840x2160@60",
-    position = "-768x-2160",
-    scale = "1",
-})
-
-hl.monitor({
-    output = "desc: Guangxi Century Innovation Display Electronics Co. Ltd 40C1U 0000000000000",
-    mode = "5120x2160@100",
-    scale = "1",
-    position = "auto-center-up",
-    bitdepth = 10,
-    cm = "srgb",
-    sdr_eotf = "srgb",
-    supports_wide_color = 0,
-    supports_hdr = -1,
-})
-
-hl.monitor({
-    output = "desc: Samsung Electric Company SAMSUNG <serial>",
-    mode = "2560x1440@60.00Hz",
-    scale = "1",
-    position = "auto-center-up",
-})
+-- Per-display rules match on descriptions that include serial numbers, so they live in the
+-- gitignored monitors.local.lua (format: monitors.local.example.lua).
+do
+    local path = os.getenv("HOME") .. "/.config/hypr/monitors.local.lua"
+    local file = io.open(path, "r")
+    if file then
+        file:close()
+        local ok, err = pcall(dofile, path)
+        if not ok then
+            print("monitors.local.lua: " .. tostring(err))
+        end
+    end
+end
 
 hl.monitor({
     output = "",

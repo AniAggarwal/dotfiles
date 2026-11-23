@@ -2,7 +2,7 @@ import subprocess
 import re
 
 name_to_config = {
-    "Dell Inc. Dell S2417DG #<serial>": "2560x1440@165, 0x0, 1",
+    "Dell Inc. Dell S2417DG <serial>": "2560x1440@165, 0x0, 1",
 }
 desc_pattern = r"description: ([^\n(]+)(?: \([^)]+\))?\n"
 monitor_pattern = r"^Monitor (.*) \(ID"
