@@ -1,7 +1,14 @@
-#!/bin/env bash
+#!/usr/bin/bash
 # Toggle dGPU On/Off
 # Usage: gpu-toggle [--waybar|--notify|--status]
+#
+# Turning the GPU on or off needs root. Run the root-owned copy through polkit, which asks for
+# your password (no passwordless sudo):
+#   pkexec /usr/local/bin/gpu-toggle --notify
+# Install or update that copy and its policy (org.ani.gpu-toggle) with the commands in
+# ~/dotfiles/gpu/.stow-local-ignore. --status and --waybar work as a normal user.
 
+PATH=/usr/bin
 APPNAME="GPU Toggle"
 CATEGORY="system"
 GPU_PCI="0000:01:00.0"
@@ -10,9 +17,11 @@ notify() {
     urgency="$1"
     title="$2"
     message="$3"
-    # Run as the original user to access dbus session
-    if [[ -n "$SUDO_USER" ]]; then
-        sudo -u "$SUDO_USER" DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u "$SUDO_USER")/bus" \
+    # Run as the calling user so the notification reaches their session bus.
+    uid="${PKEXEC_UID:-}"
+    [[ -z "$uid" && -n "${SUDO_USER:-}" ]] && uid=$(id -u "$SUDO_USER")
+    if [[ -n "$uid" && "$(id -u)" == 0 ]]; then
+        runuser -u "$(id -un "$uid")" -- env DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$uid/bus" \
             dunstify -u "$urgency" -a "$APPNAME" -c "$CATEGORY" "$title" "$message"
     else
         dunstify -u "$urgency" -a "$APPNAME" -c "$CATEGORY" "$title" "$message"

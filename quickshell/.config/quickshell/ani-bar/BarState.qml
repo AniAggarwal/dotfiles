@@ -337,10 +337,14 @@ Scope {
 
     Process {
         id: gpuAction
-        command: ["sudo", "-n", state.home + "/bin/gpu-toggle", "--notify"]
+        // Root via polkit (org.ani.gpu-toggle): asks for the password, no passwordless sudo.
+        command: ["pkexec", "/usr/local/bin/gpu-toggle", "--notify"]
         onExited: function(exitCode) {
-            if (exitCode !== 0)
-                Quickshell.execDetached(["notify-send", "GPU toggle failed", "Run sudo gpu-toggle --notify from a terminal."]);
+            // 126: the password prompt was dismissed.
+            if (exitCode === 127)
+                Quickshell.execDetached(["notify-send", "GPU toggle", "Not authorized, or /usr/local/bin/gpu-toggle is not installed."]);
+            else if (exitCode !== 0 && exitCode !== 126)
+                Quickshell.execDetached(["notify-send", "GPU toggle failed", "Exit code " + exitCode + "."]);
             systemStats.sampleGpuState();
         }
     }

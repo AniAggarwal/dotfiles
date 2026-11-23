@@ -1,0 +1,4 @@
+# Root-owned files: not stowed. Install (and re-run after editing bin/bin/gpu-toggle):
+#   sudo install -o root -g root -m755 ~/dotfiles/bin/bin/gpu-toggle /usr/local/bin/gpu-toggle
+#   sudo install -o root -g root -m644 ~/dotfiles/gpu/org.ani.gpu-toggle.policy /usr/share/polkit-1/actions/
+.*

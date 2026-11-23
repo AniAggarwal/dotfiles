@@ -155,7 +155,7 @@
     "signal": 5,
     "tooltip": true,
     "on-click": "kitty 'nvitop'",
-    "on-click-right": "sudo gpu-toggle --notify; pkill -SIGRTMIN+5 waybar"
+    "on-click-right": "pkexec /usr/local/bin/gpu-toggle --notify; pkill -SIGRTMIN+5 waybar"
   },
   "memory": {
     "interval": 8,
