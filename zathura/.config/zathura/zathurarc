@@ -4,3 +4,7 @@ set selection-clipboard clipboard
 set database sqlite
 
 include /home/ani/.config/themes/current/colors-zathura
+
+# Keep highlights translucent so they do not obscure PDF text.
+set highlight-color "rgba(255,27,27,0.4)"
+set highlight-active-color "rgba(134,27,247,0.4)"
