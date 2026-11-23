@@ -1,0 +1,241 @@
+#!/usr/bin/env bash
+# Recover the i915/Aquamarine stale-CRTC resume failure without restarting apps.
+set -euo pipefail
+
+usage() {
+    echo 'Usage: hypr-display-recover [--check | --help]'
+    echo 'Run from a text console (Ctrl+Alt+F2) while your Hyprland session is running.'
+    echo '--check validates the repair without changing displays.'
+    echo 'Requires: hyprctl, loginctl, jq, cc, pkg-config, and libdrm development headers.'
+}
+case "${1:-}" in
+    --help|-h) usage; exit 0 ;;
+    --check) action=--check ;;
+    '') action=--apply ;;
+    *) usage >&2; exit 2 ;;
+esac
+(( $# <= 1 )) || { usage >&2; exit 2; }
+die() { echo "hypr-display-recover: $*" >&2; exit 1; }
+(( EUID != 0 )) || die 'Run as your desktop user, without sudo.'
+for tool in hyprctl loginctl jq cc pkg-config timeout; do
+    command -v "$tool" >/dev/null || die "Missing dependency: $tool"
+done
+
+instances=$(timeout 5s hyprctl -j instances)
+pid=$(jq -er 'select(length == 1) | .[0].pid' <<<"$instances") || die 'Expected exactly one Hyprland instance.'
+instance=$(jq -er '.[0].instance' <<<"$instances")
+session=$(sed -n 's|.*/session-\([^/]*\)\.scope.*|\1|p' "/proc/$pid/cgroup")
+[[ -n "$session" ]] || die 'Cannot identify the compositor login session.'
+[[ $(loginctl show-session "$session" -p User --value) == "$UID" ]] || die 'Hyprland belongs to another user.'
+[[ $(loginctl show-session "$session" -p Active --value) == no ]] || die 'Switch to a text console first (Ctrl+Alt+F2).'
+target_vt=$(loginctl show-session "$session" -p VTNr --value)
+[[ "$target_vt" =~ ^[1-9][0-9]*$ ]] || die 'Hyprland has no virtual terminal.'
+read -r console_vt < /sys/class/tty/tty0/active
+[[ "$console_vt" != "tty$target_vt" ]] || die 'The graphical VT is still active.'
+
+cards=()
+for path in /sys/class/drm/card[0-9]*; do
+    [[ ${path##*/} =~ ^card[0-9]+$ ]] || continue
+    [[ $(readlink -f "$path/device/driver") == */i915 ]] && cards+=("/dev/dri/${path##*/}")
+done
+(( ${#cards[@]} == 1 )) || die 'Expected exactly one Intel i915 DRM device.'
+framebuffers=()
+for path in /sys/class/graphics/fb[0-9]*; do
+    [[ -f "$path/name" && $(<"$path/name") == i915drmfb ]] && framebuffers+=("$path")
+done
+(( ${#framebuffers[@]} == 1 )) || die 'Expected an i915 console framebuffer.'
+IFS=, read -r console_width console_height < "${framebuffers[0]}/virtual_size"
+before=$(timeout 5s hyprctl -i "$instance" -j clients | jq 'length')
+
+# Build in a private directory: no installed binary or privileged helper needed.
+work=$(mktemp -d)
+trap 'rm -rf -- "$work"' EXIT
+read -ra drm_cflags <<<"$(pkg-config --cflags libdrm)"
+read -ra drm_libs <<<"$(pkg-config --libs libdrm)"
+cc -x c -std=c11 -D_GNU_SOURCE -Wall -Wextra -Werror -O2 "${drm_cflags[@]}" -o "$work/release-console" - "${drm_libs[@]}" <<'C'
+#include <fcntl.h>
+#include <inttypes.h>
+#include <linux/kd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
+#include <xf86drm.h>
+#include <xf86drmMode.h>
+#include <drm_fourcc.h>
+
+static int fd;
+static drmModeAtomicReq *req;
+
+static void refuse(const char *why) {
+    fprintf(stderr, "Refusing display repair: %s\n", why);
+    exit(1);
+}
+static void check_console(const char *expected) {
+    char active[32], path[64];
+    FILE *f = fopen("/sys/class/tty/tty0/active", "r");
+    if (!f || !fgets(active, sizeof(active), f)) refuse("cannot read active VT");
+    fclose(f);
+    active[strcspn(active, "\n")] = 0;
+    if (strcmp(active, expected)) refuse("active VT changed");
+    snprintf(path, sizeof(path), "/dev/%s", active);
+    int tty = open(path, O_RDONLY | O_CLOEXEC), mode = -1;
+    if (tty < 0 || ioctl(tty, KDGETMODE, &mode) || mode != KD_TEXT)
+        refuse("foreground terminal is not an accessible text console");
+    close(tty);
+}
+static uint64_t property(uint32_t object, uint32_t type, const char *name, int clear) {
+    drmModeObjectProperties *props = drmModeObjectGetProperties(fd, object, type);
+    if (!props) refuse("cannot read DRM object properties");
+    for (uint32_t i = 0; i < props->count_props; ++i) {
+        drmModePropertyRes *p = drmModeGetProperty(fd, props->props[i]);
+        if (!p) refuse("cannot read DRM property");
+        if (!strcmp(p->name, name)) {
+            uint64_t old = props->prop_values[i];
+            if (clear) {
+                printf("  %u %s: %" PRIu64 " -> 0\n", object, name, old);
+                if (drmModeAtomicAddProperty(req, object, p->prop_id, 0) < 0)
+                    refuse("cannot construct atomic request");
+            }
+            drmModeFreeProperty(p);
+            drmModeFreeObjectProperties(props);
+            return old;
+        }
+        drmModeFreeProperty(p);
+    }
+    refuse("required DRM property missing");
+    return 0;
+}
+int main(int argc, char **argv) {
+    if (argc != 7) return 2;
+    int verify = !strcmp(argv[5], "--verify");
+    if (!verify) check_console(argv[2]);
+    fd = open(argv[1], O_RDWR | O_CLOEXEC);
+    if (fd < 0) { perror("open DRM device (run as the logged-in console user)"); return 1; }
+    drmVersion *v = drmGetVersion(fd);
+    if (!v || strcmp(v->name, "i915")) refuse("device is not i915");
+    drmFreeVersion(v);
+    if (verify) {
+        uint32_t old_fb;
+        FILE *saved = fopen(argv[6], "r");
+        if (!saved || fscanf(saved, "%u", &old_fb) != 1) refuse("cannot read saved console framebuffer");
+        fclose(saved);
+        drmModeRes *current = drmModeGetResources(fd);
+        if (!current) refuse("cannot read restored controllers");
+        int active = 0;
+        for (int i = 0; i < current->count_crtcs; ++i) {
+            drmModeCrtc *crtc = drmModeGetCrtc(fd, current->crtcs[i]);
+            if (!crtc) refuse("cannot read restored controller");
+            if (crtc->mode_valid && crtc->buffer_id) {
+                if (crtc->buffer_id == old_fb) refuse("console framebuffer is still scanning out");
+                printf("Kernel CRTC %u: %ux%u, framebuffer %u\n", crtc->crtc_id,
+                       crtc->mode.hdisplay, crtc->mode.vdisplay, crtc->buffer_id);
+                ++active;
+            }
+            drmModeFreeCrtc(crtc);
+        }
+        if (!active) refuse("no desktop framebuffer is scanning out");
+        drmModeFreeResources(current);
+        close(fd);
+        return 0;
+    }
+    if (!drmIsMaster(fd)) refuse("another process owns the display device");
+    if (drmSetClientCap(fd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1) ||
+        drmSetClientCap(fd, DRM_CLIENT_CAP_ATOMIC, 1)) refuse("atomic modesetting unavailable");
+    drmModeRes *res = drmModeGetResources(fd);
+    drmModePlaneRes *planes = drmModeGetPlaneResources(fd);
+    req = drmModeAtomicAlloc();
+    if (!res || !planes || !req) refuse("cannot enumerate display state");
+    uint32_t console_fb = 0;
+    int heads = 0;
+    for (int i = 0; i < res->count_crtcs; ++i) {
+        uint32_t id = res->crtcs[i];
+        if (!property(id, DRM_MODE_OBJECT_CRTC, "ACTIVE", 0)) continue;
+        drmModeCrtc *crtc = drmModeGetCrtc(fd, id);
+        if (!crtc || !crtc->mode_valid || !crtc->buffer_id) refuse("invalid active console controller");
+        if (console_fb && console_fb != crtc->buffer_id) refuse("active heads do not share a console framebuffer");
+        console_fb = crtc->buffer_id;
+        drmModeFreeCrtc(crtc);
+        property(id, DRM_MODE_OBJECT_CRTC, "ACTIVE", 1);
+        property(id, DRM_MODE_OBJECT_CRTC, "MODE_ID", 1);
+        ++heads;
+    }
+    if (!heads) refuse("no active console controllers to release");
+    drmModeFB2 *fb = drmModeGetFB2(fd, console_fb);
+    if (!fb || fb->width != strtoul(argv[3], NULL, 10) || fb->height != strtoul(argv[4], NULL, 10) ||
+        fb->pixel_format != DRM_FORMAT_XRGB8888) refuse("scanout does not match the i915 text-console framebuffer");
+    /* This helper never maps framebuffer pixels or imports graphics buffers. */
+    if (fb->handles[0]) drmCloseBufferHandle(fd, fb->handles[0]);
+    drmModeFreeFB2(fb);
+    for (uint32_t i = 0; i < planes->count_planes; ++i) {
+        uint32_t id = planes->planes[i];
+        if (!property(id, DRM_MODE_OBJECT_PLANE, "CRTC_ID", 0)) continue;
+        if (property(id, DRM_MODE_OBJECT_PLANE, "type", 0) != DRM_PLANE_TYPE_PRIMARY ||
+            property(id, DRM_MODE_OBJECT_PLANE, "FB_ID", 0) != console_fb)
+            refuse("active plane is not part of the text console");
+        property(id, DRM_MODE_OBJECT_PLANE, "FB_ID", 1);
+        property(id, DRM_MODE_OBJECT_PLANE, "CRTC_ID", 1);
+    }
+    for (int i = 0; i < res->count_connectors; ++i) {
+        uint32_t id = res->connectors[i];
+        if (property(id, DRM_MODE_OBJECT_CONNECTOR, "CRTC_ID", 0))
+            property(id, DRM_MODE_OBJECT_CONNECTOR, "CRTC_ID", 1);
+    }
+    fflush(stdout);
+    check_console(argv[2]);
+    if (drmModeAtomicCommit(fd, req, DRM_MODE_ATOMIC_ALLOW_MODESET | DRM_MODE_ATOMIC_TEST_ONLY, NULL)) {
+        perror("kernel TEST_ONLY validation"); return 1;
+    }
+    puts("Kernel validation passed.");
+    if (!strcmp(argv[5], "--apply")) {
+        FILE *saved = fopen(argv[6], "w");
+        if (!saved) refuse("cannot save console framebuffer ID");
+        if (fprintf(saved, "%u\n", console_fb) < 0 || fclose(saved)) refuse("cannot save console framebuffer ID");
+        check_console(argv[2]);
+        if (drmModeAtomicCommit(fd, req, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL)) {
+            perror("release console bindings"); return 1;
+        }
+        puts("Released console display bindings; no processes stopped.");
+    }
+    drmModeAtomicFree(req);
+    drmModeFreePlaneResources(planes);
+    drmModeFreeResources(res);
+    close(fd);
+    return 0;
+}
+C
+
+[[ $(loginctl show-session "$session" -p Active --value) == no ]] || die 'Hyprland became active; switch back to a text console.'
+kill -0 "$pid" || die 'The original compositor is no longer running.'
+"$work/release-console" "${cards[0]}" "$console_vt" "$console_width" "$console_height" "$action" "$work/console-fb"
+if [[ "$action" == --check ]]; then
+    echo 'Check complete; no display changes applied.'
+    exit 0
+fi
+timeout 8s loginctl activate "$session" || die "Could not activate Hyprland; try Ctrl+Alt+F$target_vt."
+
+for (( attempt=0; attempt<10; attempt++ )); do
+    if monitors=$(timeout 5s hyprctl -i "$instance" -j monitors) &&
+        jq -e 'length > 0 and all(.[]; .width > 0 and .height > 0)' <<<"$monitors" >/dev/null &&
+        "$work/release-console" "${cards[0]}" "$console_vt" "$console_width" "$console_height" --verify "$work/console-fb" >"$work/scanout" 2>"$work/scanout-error"; then
+        break
+    fi
+    sleep 0.5
+done
+kill -0 "$pid" || die 'The compositor exited; this script did not restart it.'
+after=$(timeout 5s hyprctl -i "$instance" -j clients | jq 'length')
+echo "Original Hyprland PID $pid; windows before/after: $before/$after."
+jq -e 'length > 0 and all(.[]; .width > 0 and .height > 0)' <<<"${monitors:-[]}" >/dev/null ||
+    die 'Outputs still lack valid modes; the session was left running.'
+if [[ ! -s "$work/scanout" || -s "$work/scanout-error" ]]; then
+    cat "$work/scanout-error" >&2
+    die 'Desktop scanout could not be verified; the session was left running.'
+fi
+cat "$work/scanout"
+jq -r '.[] | "\(.name): \(.width)x\(.height)@\(.refreshRate)"' <<<"$monitors"
+if [[ $(systemctl --user is-failed waybar.service 2>/dev/null || true) == failed ]]; then
+    systemctl --user reset-failed waybar.service
+    systemctl --user start waybar.service || echo 'Display recovered, but Waybar did not start.' >&2
+fi
+echo 'Display modes restored. Unlock normally; no apps were restarted.'

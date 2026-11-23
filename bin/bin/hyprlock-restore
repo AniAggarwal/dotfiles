@@ -1,0 +1,7 @@
+#!/bin/sh
+set -e
+
+pkill -u "$(id -u)" -x hyprlock || true
+hyprctl --instance 0 eval 'hl.config({ misc = { allow_session_lock_restore = true } })'
+sleep 1
+hyprctl --instance 0 dispatch 'hl.dsp.exec_cmd("hyprlock")'
