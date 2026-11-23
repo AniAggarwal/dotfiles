@@ -1,0 +1,19 @@
+# Applies /etc/ani-power.conf for the current power source, then exits; nothing stays running.
+# Started at boot, after every resume (the sleep targets below), and by 85-ani-power.rules
+# whenever AC is plugged in or out. Log: journalctl -u ani-power
+[Unit]
+Description=Apply CPU power settings for the current power source
+After=suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/power-apply event
+# Writes only sysfs and /run/ani-power.
+ProtectSystem=full
+ProtectHome=yes
+PrivateTmp=yes
+PrivateNetwork=yes
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=multi-user.target suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target

@@ -4,32 +4,31 @@ import Quickshell
 import Quickshell.Io
 import "BarStyle.js" as BarStyle
 
-// auto-cpufreq settings: the live overrides and the charger/battery profiles in its config.
-// Edits stay local until Apply, which saves the config (a user-owned file behind the /etc symlink)
-// and runs the root helper once: one authentication restarts the daemon and sets both overrides.
+// CPU power settings: the overrides and the charger/battery profiles that power-apply applies
+// on boot, resume and every AC change (battery-optimizations/ in the dotfiles). Edits stay
+// local until Apply, which hands the whole state to the root helper once: one authentication
+// saves both and applies them now.
 BarPopup {
     id: cpu
 
-    readonly property string configLink: "/etc/auto-cpufreq.conf"
-    readonly property string helper: "/usr/local/bin/auto-cpufreq-override"
-    readonly property var keys: ["governor", "energy_performance_preference", "platform_profile", "turbo"]
-
-    // What auto-cpufreq has now, and the edited copy shown in the panel.
-    property var saved: ({ charger: {}, battery: {} })
+    // The edited copy shown in the panel; power holds what the system has.
     property var draft: ({ charger: {}, battery: {} })
     property string draftGovernor: "auto"
     property string draftTurbo: "auto"
-    property string configPath: ""
-    property string configText: ""
     property string profile: theme.onBattery ? "battery" : "charger"
-    property var energyChoices: []
-    property var profileChoices: []
     property string message: ""
     property bool applying: false
+    // The next read replaces the edits: on open and after an apply.
+    property bool resetOnRead: false
 
-    readonly property bool configDirty: JSON.stringify(draft) !== JSON.stringify(saved)
-    readonly property bool overridesDirty: draftGovernor !== overrides.governor || draftTurbo !== overrides.turbo
+    readonly property var saved: power.profiles
+    readonly property bool configDirty: JSON.stringify(normalized(draft)) !== JSON.stringify(normalized(saved))
+    readonly property bool overridesDirty: draftGovernor !== power.governor || draftTurbo !== power.turbo
     readonly property bool dirty: configDirty || overridesDirty
+    // Known missing, so the panel never dims for the moment a read takes.
+    readonly property bool missing: power.loaded && !power.helperInstalled
+    readonly property bool ready: power.loaded && power.helperInstalled
+    readonly property string notice: missing ? "Helper not installed" : message
 
     panelWidth: 480
     panelHeight: cpuContent.implicitHeight + 2 * padding
@@ -39,136 +38,69 @@ BarPopup {
     function load() {
         message = "";
         profile = theme.onBattery ? "battery" : "charger";
-        overrides.refresh();
-        if (!reader.running)
-            reader.running = true;
+        resetOnRead = true;
+        power.refresh();
     }
 
-    // Minimal INI handling that keeps comments and unknown keys intact.
-    function parse(text) {
-        const result = { charger: {}, battery: {} };
-        let section = "";
-        for (const line of text.split("\n")) {
-            const header = line.match(/^\s*\[(\w+)\]/);
-            if (header) {
-                section = header[1];
-                continue;
-            }
-            const pair = line.match(/^\s*([\w]+)\s*=\s*([^#\s]+)/);
-            if (pair && result[section] && keys.includes(pair[1]))
-                result[section][pair[1]] = pair[2];
+    // The new source's profile lands a moment after UPower reports the change.
+    Connections {
+        target: cpu.theme
+        function onOnBatteryChanged() {
+            if (cpu.visible)
+                sourceRead.restart();
+        }
+    }
+    Timer { id: sourceRead; interval: 1500; onTriggered: power.refresh() }
+
+    // Both sections, every key in a fixed order, so equal settings compare equal.
+    function normalized(values) {
+        const result = {};
+        for (const section of ["charger", "battery"]) {
+            result[section] = {};
+            for (const key of power.keys)
+                result[section][key] = values[section]?.[key] ?? "";
         }
         return result;
     }
 
-    function withValues(text, values) {
-        const lines = text.split("\n");
-        for (const section of ["charger", "battery"]) {
-            let start = lines.findIndex(line => line.trim() === "[" + section + "]");
-            if (start < 0) {
-                lines.push("", "[" + section + "]");
-                start = lines.length - 1;
-            }
-            let end = lines.findIndex((line, index) => index > start && /^\s*\[/.test(line));
-            if (end < 0)
-                end = lines.length;
-            for (const key of keys) {
-                const value = values[section][key];
-                if (!value)
-                    continue;
-                const at = lines.findIndex((line, index) => index > start && index < end
-                    && new RegExp("^\\s*" + key + "\\s*=").test(line));
-                if (at >= 0) {
-                    lines[at] = key + " = " + value;
-                } else {
-                    let last = end - 1;
-                    while (last > start && lines[last].trim() === "")
-                        last--;
-                    lines.splice(last + 1, 0, key + " = " + value);
-                    end++;
-                }
-            }
-        }
-        return lines.join("\n");
-    }
-
     function setDraft(key, value) {
-        const next = JSON.parse(JSON.stringify(draft));
+        const next = normalized(draft);
         next[profile][key] = value;
         draft = next;
     }
 
+    // The edits back to what the system has.
+    function reset() {
+        draft = normalized(saved);
+        draftGovernor = power.governor;
+        draftTurbo = power.turbo;
+    }
+
     function revert() {
-        draft = JSON.parse(JSON.stringify(saved));
-        draftGovernor = overrides.governor;
-        draftTurbo = overrides.turbo;
+        reset();
         message = "";
     }
 
     function apply() {
-        if (!dirty || applying)
+        if (!dirty || applying || !ready)
             return;
         applying = true;
         message = "Applying…";
-        // The daemon restart must see the new config, so the helper runs once the save lands.
-        if (configDirty)
-            configFile.setText(withValues(configText, draft));
-        else
-            runHelper();
-    }
-
-    function runHelper() {
-        applier.command = ["pkexec", helper, "apply", draftGovernor, draftTurbo];
+        const values = normalized(draft);
+        const pairs = [];
+        for (const section of ["charger", "battery"])
+            for (const key of power.keys)
+                if (values[section][key])
+                    pairs.push(section + "." + key + "=" + values[section][key]);
+        applier.command = ["pkexec", power.helper, "apply", draftGovernor, draftTurbo].concat(pairs);
         applier.running = true;
     }
 
-    readonly property var names: ({
-        auto: "Auto", performance: "Performance", powersave: "Powersave", always: "Always", never: "Never",
-        balance_performance: "Balance+", balance_power: "Balance−", power: "Power",
-        cool: "Cool", quiet: "Quiet", balanced: "Balanced", "low-power": "Low power"
-    })
-
-    CpuOverrides {
-        id: overrides
-        onLoadedChanged: if (loaded) { cpu.draftGovernor = governor; cpu.draftTurbo = turbo; }
-        onGovernorChanged: cpu.draftGovernor = governor
-        onTurboChanged: cpu.draftTurbo = turbo
-    }
-
-    // Resolve the symlink so saving rewrites the real file instead of trying to replace /etc's link.
-    Process {
-        id: reader
-        command: ["sh", "-c", "readlink -f \"$1\"; cat /sys/devices/system/cpu/cpu0/cpufreq/energy_performance_available_preferences "
-            + "/sys/firmware/acpi/platform_profile_choices 2>/dev/null", "sh", cpu.configLink]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const [path, energy, profiles] = text.split("\n");
-                cpu.energyChoices = (energy || "").trim().split(/\s+/).filter(choice => choice && choice !== "default");
-                cpu.profileChoices = (profiles || "").trim().split(/\s+/).filter(choice => choice);
-                cpu.configPath = path.trim();
-                configFile.reload();
-            }
-        }
-    }
-
-    FileView {
-        id: configFile
-        path: cpu.configPath
-        printErrors: false
-        onLoaded: {
-            cpu.configText = text();
-            cpu.saved = cpu.parse(cpu.configText);
-            cpu.draft = JSON.parse(JSON.stringify(cpu.saved));
-        }
-        onSaved: {
-            cpu.configText = text();
-            cpu.saved = cpu.parse(cpu.configText);
-            if (cpu.applying)
-                cpu.runHelper();
-        }
-        onSaveFailed: {
-            cpu.message = "Could not save";
-            cpu.applying = false;
+    CpuState {
+        id: power
+        onRefreshed: if (cpu.resetOnRead) {
+            cpu.resetOnRead = false;
+            cpu.reset();
         }
     }
 
@@ -176,19 +108,25 @@ BarPopup {
         id: applier
         onExited: code => {
             cpu.applying = false;
+            // 126: the password prompt was dismissed; 127: not authorized; 64: arguments this
+            // helper does not know; 65: applied, but the config has a value this machine rejects.
             cpu.message = code === 0 ? "Applied"
                 : code === 126 || code === 127 ? "Not applied"
-                : code === 64 ? "Helper out of date" : "Failed";
-            overrides.refresh();
+                : code === 64 ? "Helper out of date"
+                : code === 65 ? "Applied, config value skipped" : "Failed";
+            cpu.resetOnRead = code === 0 || code === 65;
+            power.refresh();
         }
     }
+
+    readonly property var names: ({ auto: "Auto", on: "On", off: "Off" })
 
     // A labelled row of mutually exclusive choices.
     component Choice: RowLayout {
         id: choice
         property string label
         property var values: []
-        property var names: values.map(value => cpu.names[value] || value)
+        property var names: values.map(value => cpu.names[value] || power.nameOf(value))
         property string value
         signal picked(string value)
         Layout.fillWidth: true
@@ -227,6 +165,8 @@ BarPopup {
             Layout.fillWidth: true
             Layout.preferredHeight: overrideColumn.implicitHeight + 2 * padding
             theme: cpu.theme
+            enabled: !cpu.missing
+            opacity: enabled ? 1 : 0.45
 
             ColumnLayout {
                 id: overrideColumn
@@ -242,7 +182,7 @@ BarPopup {
                 }
                 Choice {
                     label: "Turbo"
-                    values: ["auto", "always", "never"]
+                    values: ["auto", "on", "off"]
                     value: cpu.draftTurbo
                     onPicked: value => cpu.draftTurbo = value
                 }
@@ -253,6 +193,8 @@ BarPopup {
             Layout.fillWidth: true
             Layout.preferredHeight: profileColumn.implicitHeight + 2 * padding
             theme: cpu.theme
+            enabled: !cpu.missing
+            opacity: enabled ? 1 : 0.45
 
             ColumnLayout {
                 id: profileColumn
@@ -282,22 +224,22 @@ BarPopup {
                 }
                 Choice {
                     label: "Energy"
-                    visible: cpu.energyChoices.length > 0
-                    values: cpu.energyChoices
+                    visible: power.energyChoices.length > 0
+                    values: power.energyChoices
                     value: cpu.draft[cpu.profile]?.energy_performance_preference ?? ""
                     onPicked: value => cpu.setDraft("energy_performance_preference", value)
                 }
                 Choice {
                     label: "Platform"
-                    visible: cpu.profileChoices.length > 0
-                    values: cpu.profileChoices
+                    visible: power.platformChoices.length > 0
+                    values: power.platformChoices
                     value: cpu.draft[cpu.profile]?.platform_profile ?? ""
                     onPicked: value => cpu.setDraft("platform_profile", value)
                 }
                 Choice {
                     label: "Turbo"
-                    values: ["auto", "always", "never"]
-                    value: cpu.draft[cpu.profile]?.turbo ?? "auto"
+                    values: ["on", "off"]
+                    value: cpu.draft[cpu.profile]?.turbo ?? ""
                     onPicked: value => cpu.setDraft("turbo", value)
                 }
             }
@@ -309,8 +251,8 @@ BarPopup {
 
             PanelText {
                 Layout.fillWidth: true
-                text: cpu.message
-                color: cpu.message === "Applied" ? cpu.theme.accent : cpu.message && !cpu.applying ? cpu.theme.warning : cpu.theme.secondary
+                text: cpu.notice
+                color: cpu.notice === "Applied" ? cpu.theme.accent : cpu.notice && !cpu.applying ? cpu.theme.warning : cpu.theme.secondary
             }
             PanelButton {
                 theme: cpu.theme
@@ -322,7 +264,7 @@ BarPopup {
                 theme: cpu.theme
                 label: "Apply"
                 selected: cpu.dirty
-                interactive: cpu.dirty && !cpu.applying && cpu.configPath !== ""
+                interactive: cpu.ready && cpu.dirty && !cpu.applying
                 opacity: interactive ? 1 : 0.45
                 onActivated: cpu.apply()
             }

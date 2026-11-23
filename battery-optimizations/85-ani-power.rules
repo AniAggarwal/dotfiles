@@ -1,0 +1,3 @@
+# AC plugged in or out: apply the CPU power profile for the new power source (power-apply event).
+# Runs through ani-power.service so boot, resume and AC changes share one path and one log.
+SUBSYSTEM=="power_supply", ACTION=="change", ATTR{type}=="Mains", RUN+="/usr/bin/systemctl --no-block start ani-power.service"

@@ -16,7 +16,7 @@ BarPopup {
     property Item hintedControl
     property bool bluetoothPinned: false
     property bool showBluetooth: false
-    onVisibleChanged: if (visible) cpuOverrides.refresh(); else {
+    onVisibleChanged: if (visible) cpuPower.refresh(); else {
         bluetoothDelay.stop();
         bluetoothClose.stop();
         hintedControl = null;
@@ -27,7 +27,7 @@ BarPopup {
     panelWidth: 354
     panelHeight: systemContent.implicitHeight + 28
 
-    CpuOverrides { id: cpuOverrides }
+    CpuState { id: cpuPower }
 
     Timer {
         id: bluetoothDelay
@@ -174,11 +174,11 @@ BarPopup {
             Tile {
                 icon: BarStyle.icons.speed
                 name: "CPU"
-                detail: cpuOverrides.governor === "auto"
+                detail: cpuPower.governor === "auto"
                     ? (system.theme.onBattery ? "Battery profile" : "Charger profile")
-                    : cpuOverrides.governor === "performance" ? "Performance" : "Powersave"
-                hint: "auto-cpufreq"
-                selected: cpuOverrides.governor !== "auto" || cpuOverrides.turbo !== "auto"
+                    : cpuPower.governor === "performance" ? "Performance" : "Powersave"
+                hint: cpuPower.summary
+                selected: cpuPower.governor !== "auto" || cpuPower.turbo !== "auto"
                 onActivated: system.cpuRequested()
             }
             Tile {

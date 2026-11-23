@@ -51,7 +51,7 @@ bat/: configuration files for the bat command line tool.
 .config/bat/config: configuration file for bat.
 .config/bat/themes/onedark.tmTheme: color scheme for bat.
 
-battery-optimizations/: configuration file for auto-cpufreq which is used to optimize CPU performance based on battery life.
+battery-optimizations/: CPU power profiles for the charger and battery (governor, EPP, platform profile, turbo), applied by power-apply on boot, resume and AC changes; installed as root-owned copies by its install.sh.
 
 brightness-scripts/: scripts for controlling screen brightness.
 

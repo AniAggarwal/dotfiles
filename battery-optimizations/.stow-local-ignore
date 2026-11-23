@@ -1,7 +1,10 @@
-# This package is stowed into /etc. The CPU override helper and its polkit policy live
-# elsewhere and are installed by hand:
-#   sudo install -m755 auto-cpufreq-override /usr/local/bin/
-#   sudo install -m644 org.auto-cpufreq.override.policy /usr/share/polkit-1/actions/
+# Not a stow package: install.sh copies these files into place, root-owned. Stowing would put
+# symlinks into this user-owned repo under /etc, so every file is ignored here.
 \.stow-local-ignore
-auto-cpufreq-override
-org\.auto-cpufreq\.override\.policy
+install\.sh
+power-apply
+ani-power\.conf
+ani-power\.service
+85-ani-power\.rules
+org\.ani\.power-apply\.policy
+auto-cpufreq\.conf
