@@ -46,10 +46,9 @@ return {
 			local luasnip = require("luasnip")
 			local lspkind = require("lspkind")
 
-			lspkind.init({ symbol_map = { Copilot = "" } })
+			lspkind.init()
 
 			local source_names = {
-				copilot = "[ Copilot]",
 				nvim_lsp = "[󰒋LSP]",
 				nvim_lsp_signature_help = "[󰃣 SIGNATURE]",
 				nvim_lua = "[󰢱 Lua]",
@@ -127,7 +126,6 @@ return {
 
 				-- Order matters: nvim_lsp is shown before nvim_lua in this case
 				sources = cmp.config.sources({
-					{ name = "copilot", keyword_length = 0, max_item_count = 3 },
 					{ name = "luasnip" }, -- snippets
 					{ name = "nvim_lsp" }, -- native lsp
 					{ name = "nvim_lsp_signature_help" }, -- Display method signatures while typing

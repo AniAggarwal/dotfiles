@@ -83,6 +83,3 @@ for _, python in ipairs({
 		break
 	end
 end
-
--- Set copilot model
-vim.g.copilot_settings = { selectedCompletionModel = "claude-4" }
