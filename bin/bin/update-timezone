@@ -1,6 +1,26 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
+timezones=$(timedatectl list-timezones)
 echo "Updating timezone..."
-curl -s https://ipapi.co/timezone | xargs timedatectl set-timezone
-echo -n "New timezone: "
-echo $(timedatectl | grep "Time zone")
+
+for url in 'https://ipinfo.io/json' 'https://ipwho.is/?fields=success,message,timezone.id'; do
+    if ! timezone=$(curl --fail --silent --show-error --connect-timeout 5 --max-time 10 "$url" |
+        jq -er 'select(.success != false and .error != true) | (.timezone.id? // .timezone) | select(type == "string" and length > 0)'); then
+        echo "Timezone lookup failed: $url" >&2
+        continue
+    fi
+
+    if ! grep -Fx -- "$timezone" <<< "$timezones" >/dev/null; then
+        echo "Invalid timezone from $url" >&2
+        continue
+    fi
+
+    timedatectl set-timezone "$timezone"
+    printf 'New timezone: %s\n' "$timezone"
+    exit 0
+done
+
+echo "Could not determine timezone; current timezone unchanged." >&2
+exit 1
