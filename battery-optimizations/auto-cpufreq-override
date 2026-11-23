@@ -7,6 +7,10 @@
 # so one authentication covers the whole change.
 set -eu
 
+# auto-cpufreq keeps overrides in /opt/auto-cpufreq but never creates it, so setting one fails
+# with "No such file" until the folder exists.
+/usr/bin/install -d -m 755 /opt/auto-cpufreq
+
 run() {
     exec_env="/usr/bin/env -i PATH=/usr/bin:/usr/sbin HOME=/root USER=root LOGNAME=root"
     $exec_env /usr/bin/auto-cpufreq --config=/etc/auto-cpufreq.conf "$@"

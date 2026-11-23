@@ -27,8 +27,11 @@ if [ -n "$state" ]; then
     hyprctl eval "hl.config({ animations = { enabled = $animations } })" >/dev/null 2>&1 || true
 fi
 
+# The bar stops sampling while nobody can see it.
+qs -c ani-bar ipc call bar setLocked true >/dev/null 2>&1 || true
 hyprlock "$@"
 status=$?
+qs -c ani-bar ipc call bar setLocked false >/dev/null 2>&1 || true
 
 if [ -n "$state" ]; then
     focused=""

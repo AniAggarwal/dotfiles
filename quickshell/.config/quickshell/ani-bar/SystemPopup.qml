@@ -12,10 +12,11 @@ BarPopup {
     signal idleToggled()
     signal terminalRequested(string command)
     signal powerRequested(string action)
+    signal cpuRequested()
     property Item hintedControl
     property bool bluetoothPinned: false
     property bool showBluetooth: false
-    onVisibleChanged: if (!visible) {
+    onVisibleChanged: if (visible) cpuOverrides.refresh(); else {
         bluetoothDelay.stop();
         bluetoothClose.stop();
         hintedControl = null;
@@ -25,6 +26,8 @@ BarPopup {
 
     panelWidth: 354
     panelHeight: systemContent.implicitHeight + 28
+
+    CpuOverrides { id: cpuOverrides }
 
     Timer {
         id: bluetoothDelay
@@ -166,6 +169,30 @@ BarPopup {
 
         RowLayout {
             Layout.fillWidth: true
+            spacing: 6
+
+            Tile {
+                icon: BarStyle.icons.speed
+                name: "CPU"
+                detail: cpuOverrides.governor === "auto"
+                    ? (system.theme.onBattery ? "Battery profile" : "Charger profile")
+                    : cpuOverrides.governor === "performance" ? "Performance" : "Powersave"
+                hint: "auto-cpufreq"
+                selected: cpuOverrides.governor !== "auto" || cpuOverrides.turbo !== "auto"
+                onActivated: system.cpuRequested()
+            }
+            Tile {
+                icon: BarStyle.icons.glass
+                name: "Glass"
+                detail: !system.theme.glassEnabled ? "Off" : system.theme.onBattery ? "Solid on battery" : "On"
+                hint: "Frosted bar"
+                selected: system.theme.glassEnabled
+                onActivated: system.theme.setGlassEnabled(!system.theme.glassEnabled)
+            }
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
             visible: system.theme.brightness >= 0
             spacing: 8
 
@@ -216,7 +243,7 @@ BarPopup {
                 hint: "Lock"
                 onActivated: {
                     system.close();
-                    Quickshell.execDetached(["hyprlock"]);
+                    Quickshell.execDetached([system.theme.home + "/bin/lock-hidden"]);
                 }
             }
             PowerButton { icon: BarStyle.icons.suspend; action: "suspend"; hint: "Suspend"; onActivated: system.powerRequested(action) }

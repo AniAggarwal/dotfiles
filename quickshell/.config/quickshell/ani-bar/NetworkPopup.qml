@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import Quickshell.Networking
 import "BarStyle.js" as BarStyle
 
@@ -41,6 +42,7 @@ BarPopup {
         required property string title
         property string detail
         property bool active: true
+        default property alias trailing: trailingRow.data
         Layout.fillWidth: true
         spacing: 10
 
@@ -70,6 +72,43 @@ BarPopup {
                 font.pixelSize: BarStyle.popupFontSize - 2
                 elide: Text.ElideRight
             }
+        }
+        RowLayout {
+            id: trailingRow
+            spacing: 4
+        }
+    }
+
+    // Proton VPN through its CLI. The CLI's status does not say whether the server is a P2P one,
+    // so the mode we last connected with is remembered here.
+    readonly property bool protonConnected: theme.vpnProvider === "Proton VPN"
+    property string protonMode: "standard"
+    property string protonAction: ""
+    property string protonError: ""
+
+    function proton(mode) {
+        if (protonRunner.running)
+            return;
+        protonError = "";
+        if (protonConnected && protonMode === mode) {
+            protonAction = "disconnect";
+            protonRunner.command = ["protonvpn", "disconnect"];
+        } else {
+            protonAction = mode;
+            protonRunner.command = mode === "p2p" ? ["protonvpn", "connect", "--p2p"] : ["protonvpn", "connect"];
+        }
+        protonRunner.running = true;
+    }
+
+    Process {
+        id: protonRunner
+        onExited: code => {
+            if (code === 0 && net.protonAction !== "disconnect")
+                net.protonMode = net.protonAction;
+            if (code !== 0)
+                net.protonError = net.protonAction === "disconnect" ? "Disconnect failed" : "Connection failed";
+            net.protonAction = "";
+            net.theme.refreshVpn();
         }
     }
 
@@ -134,7 +173,26 @@ BarPopup {
                     StatusLine {
                         active: net.theme.vpnProvider.length > 0
                         icon: BarStyle.icons.key
-                        title: active ? net.theme.vpnProvider : "VPN off"
+                        title: active ? net.theme.vpnProvider + (net.protonConnected && net.protonMode === "p2p" ? ", P2P" : "") : "VPN off"
+                        detail: protonRunner.running ? (net.protonAction === "disconnect" ? "Disconnecting…" : "Connecting…")
+                            : net.protonError
+
+                        NetButton {
+                            label: "VPN"
+                            hint: net.protonConnected && net.protonMode === "standard" ? "Disconnect" : "Connect"
+                            selected: net.protonConnected && net.protonMode === "standard"
+                            interactive: !protonRunner.running
+                            opacity: interactive ? 1 : 0.5
+                            onActivated: net.proton("standard")
+                        }
+                        NetButton {
+                            label: "P2P"
+                            hint: net.protonConnected && net.protonMode === "p2p" ? "Disconnect" : "Connect to a P2P server"
+                            selected: net.protonConnected && net.protonMode === "p2p"
+                            interactive: !protonRunner.running
+                            opacity: interactive ? 1 : 0.5
+                            onActivated: net.proton("p2p")
+                        }
                     }
                 }
             }

@@ -784,6 +784,13 @@ ShellRoot {
                     onIdleToggled: root.inhibitIdle = !root.inhibitIdle
                     onTerminalRequested: command => root.openTerminal(command)
                     onVisibleChanged: status.watch("system", visible)
+                    // The CPU tile swaps quick settings for the CPU panel on the same chip.
+                    onCpuRequested: host.show(cpuMenu, anchorItem, true)
+                }
+
+                CpuPopup {
+                    id: cpuMenu
+                    theme: status
                 }
 
                 AudioPopup {
