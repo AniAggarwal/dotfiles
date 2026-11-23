@@ -1,0 +1,20 @@
+# Experimental XPS 15 9520 Wi-Fi 6E entry. Existing saved default is retained.
+#@ @ROOT_UUID@ and @SWAP_UUID@ are filled from the running kernel command line, so the
+#@ partition UUIDs stay out of the repository. Lines starting with #@ are dropped when rendered.
+set timeout=10
+menuentry 'Arch Linux LTS - Wi-Fi 6E test' --id wifi6e-test {
+    load_video
+    set gfxpayload=keep
+    insmod gzio
+    insmod part_gpt
+    insmod ext2
+    search --no-floppy --fs-uuid --set=root @ROOT_UUID@
+    insmod acpi
+    if acpi /boot/SSDT-WIFI6E.aml; then
+        linux /boot/vmlinuz-linux-lts root=UUID=@ROOT_UUID@ rw loglevel=3 quiet nvidia_drm.modeset=1 resume=UUID=@SWAP_UUID@
+        initrd /boot/intel-ucode.img /boot/initramfs-linux-lts.img
+    else
+        echo 'ACPI override failed; choose the normal Arch Linux entry.'
+        sleep 10
+    fi
+}
