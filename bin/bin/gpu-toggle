@@ -31,6 +31,18 @@ gpu_off() {
     # Unload nvidia modules
     modprobe -r nvidia_uvm nvidia_drm nvidia_modeset nvidia 2>/dev/null
 
+    # If something still holds the GPU the driver stays loaded. Removing the device anyway
+    # leaves the writer stuck in the driver until every client lets go, and that stuck task
+    # blocks suspend and hibernate ("Freezing user space processes failed"). So stop here.
+    if [ -d /sys/module/nvidia ]; then
+        HOLDERS=$(fuser /dev/nvidia* /dev/dri/by-path/pci-"$GPU_PCI"-* 2>/dev/null | tr -s ' ' '\n' \
+            | sort -u | xargs -r ps -o comm= -p | sort -u | paste -sd ' ')
+        systemctl start nvidia-persistenced.service 2>/dev/null
+        systemctl start nvidia-powerd.service 2>/dev/null
+        GPU_OFF_ERROR="dGPU in use${HOLDERS:+ by: $HOLDERS}"
+        return 1
+    fi
+
     # Remove the device (if still present after module unload)
     if [ -d "/sys/bus/pci/devices/$GPU_PCI" ]; then
         echo 1 > "/sys/bus/pci/devices/$GPU_PCI/remove"
@@ -78,7 +90,7 @@ print_status() {
 
 toggle() {
     if is_gpu_on; then
-        gpu_off
+        gpu_off || { echo "$GPU_OFF_ERROR" >&2; exit 1; }
         echo "dGPU OFF"
     else
         gpu_on
@@ -88,7 +100,7 @@ toggle() {
 
 toggle_notify() {
     if is_gpu_on; then
-        gpu_off
+        gpu_off || { notify critical "dGPU" "$GPU_OFF_ERROR"; exit 1; }
         notify normal "dGPU" "Turned dGPU off"
     else
         gpu_on
