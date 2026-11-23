@@ -13,10 +13,18 @@ dispatch() { hyprctl dispatch "$1" >/dev/null 2>&1 || true; }
 state=$(hyprctl monitors -j 2>/dev/null | jq -r '.[] | "\(.name) \(.activeWorkspace.id) \(.focused)"' 2>/dev/null) || state=""
 
 if [ -n "$state" ]; then
+    # Switch instantly: with the workspace slide running, the old screen would still show while
+    # hyprlock fades in. Animations come back on before locking, so a killed script can't leave
+    # them off.
+    animations=$(hyprctl -j getoption animations:enabled 2>/dev/null | jq -r '.bool' 2>/dev/null)
+    [ "$animations" = false ] || animations=true
+    hyprctl eval 'hl.config({ animations = { enabled = false } })' >/dev/null 2>&1 || true
     echo "$state" | while read -r monitor _ _; do
         dispatch "hl.dsp.focus({ monitor = \"$monitor\" })"
         dispatch "hl.dsp.focus({ workspace = \"name:locked-$monitor\" })"
     done
+    sleep 0.05  # let the empty workspaces reach the screen
+    hyprctl eval "hl.config({ animations = { enabled = $animations } })" >/dev/null 2>&1 || true
 fi
 
 hyprlock "$@"
