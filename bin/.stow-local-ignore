@@ -1,0 +1,3 @@
+# Tests for the scripts in bin/bin; not something to link into ~.
+\.stow-local-ignore
+^/tests
