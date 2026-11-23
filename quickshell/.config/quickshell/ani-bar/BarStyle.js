@@ -1,6 +1,9 @@
 .pragma library
 
-var textFont = "Adwaita Sans";
+// Geist: tabular figures (tnum) for the live numbers, and every symbol the bar uses.
+var textFont = "Geist";
+// Dune Rise is capitals only: the desktop clock and widget labels, nothing that needs reading at length.
+var displayFont = "Dune Rise";
 // Propo gives each glyph its own advance width, so icon-to-text gaps stay even.
 var iconFont = "FiraCode Nerd Font Propo";
 

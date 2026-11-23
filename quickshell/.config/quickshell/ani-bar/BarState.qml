@@ -30,6 +30,19 @@ Scope {
     readonly property color hot: palette.accent_temp_critical || critical
     readonly property color charging: palette.accent_charging || accent
 
+    // Where the wallpaper has room for the desktop clock, per screen, as fractions of the screen,
+    // and whether text there should be light or dark. Written once per wallpaper by
+    // wallpaper-layout.py into the theme folder; a screen without an entry gets the default.
+    property var layout: ({})
+    readonly property var defaultClock: ({ x: 0.06, y: 0.14, w: 0.24, h: 0.2, tone: "light" })
+    function clockPlacement(screen) {
+        const entry = layout.screens?.[screen];
+        const box = entry?.clock;
+        if (!box || !(box.w > 0) || !(box.h > 0))
+            return defaultClock;
+        return { x: box.x, y: box.y, w: box.w, h: box.h, tone: entry.tone === "dark" ? "dark" : "light" };
+    }
+
     function tone(severity) {
         return severity === 2 ? critical : severity === 1 ? warning : accent;
     }
@@ -210,7 +223,7 @@ Scope {
     IpcHandler {
         target: "bar"
 
-        function reloadPalette(): void { paletteFile.reload(); }
+        function reloadPalette(): void { state.reloadTheme(); }
         function refresh(): void { state.refresh(); }
         function setGlass(enabled: bool): void { state.setGlassEnabled(enabled); }
         // For the lock script: sampling stops while the session is locked.
@@ -232,6 +245,32 @@ Scope {
             state.palette = values;
         }
     }
+
+    // themes/current is a symlink that is swapped on a wallpaper change, and the layout is
+    // written a moment after the swap: re-read both, and keep trying for the layout.
+    property int layoutTries: 0
+    function reloadTheme() {
+        paletteFile.reload();
+        layoutTries = 8;
+        layoutFile.reload();
+    }
+    FileView {
+        id: layoutFile
+        path: state.home + "/.config/themes/current/layout.json"
+        watchChanges: true
+        printErrors: false
+        onFileChanged: reload()
+        onLoaded: {
+            state.layoutTries = 0;
+            state.layout = state.readObject(text(), {});
+        }
+        onLoadFailed: {
+            state.layout = {};
+            if (state.layoutTries-- > 0)
+                layoutRetry.restart();
+        }
+    }
+    Timer { id: layoutRetry; interval: 1500; onTriggered: layoutFile.reload() }
 
     Timer { id: vpnSettle; interval: 1500; onTriggered: state.refreshVpn() }
     Process {

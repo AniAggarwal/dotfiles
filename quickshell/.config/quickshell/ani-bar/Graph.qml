@@ -1,7 +1,7 @@
 import QtQuick
 
 // A history line graph: one filled line per RingHistory, newest sample at the right edge.
-// It repaints only when a history gained a sample, and only while it is visible.
+// It repaints only when a history gained a sample, and only while it is visible and live.
 Canvas {
     id: graph
 
@@ -23,10 +23,15 @@ Canvas {
     }
     property int painted: -1
 
+    // false freezes the picture, for a graph that is on screen but cannot be seen.
+    property bool live: true
+
     function refresh() {
-        if (visible && painted !== revision)
+        if (visible && live && painted !== revision)
             requestPaint();
     }
+
+    onLiveChanged: refresh()
 
     onRevisionChanged: refresh()
     onVisibleChanged: refresh()

@@ -87,15 +87,20 @@ ShellRoot {
 
     Timer { id: mediaLinger; interval: 60000; onTriggered: root.recentPlayer = null }
 
-    // A workspace's hasFullscreen is also true for a maximized window; the window's own state tells
-    // the two apart, and it is only current after a refresh.
+    // Window geometry and fullscreen state (lastIpcObject) are only current after a refresh, and
+    // Hyprland announces what moves windows. The bar needs it to tell fullscreen from maximized
+    // (a workspace's hasFullscreen is true for both), the desktop widgets to know they are covered.
     Connections {
         target: Hyprland
         function onRawEvent(event) {
-            if (event.name === "fullscreen")
-                Hyprland.refreshToplevels();
+            if (/^(fullscreen|openwindow|closewindow|movewindow|movewindowv2|changefloatingmode|activewindowv2|workspacev2|focusedmonv2|moveworkspacev2|monitoraddedv2|configreloaded)$/.test(event.name))
+                windowsMoved.start();
         }
     }
+    Timer { id: windowsMoved; interval: 120; onTriggered: Hyprland.refreshToplevels() }
+    // Dragging a window with the pointer is not announced: look again now and then, but only
+    // while someone is there.
+    Timer { interval: 20000; repeat: true; running: !status.asleep && !status.idle; onTriggered: Hyprland.refreshToplevels() }
     Component.onCompleted: Hyprland.refreshToplevels()
 
     // qs ipc call popup toggle calendar: open or close a dropdown on the focused monitor.
@@ -169,17 +174,12 @@ ShellRoot {
             // The bar steps aside for a fullscreen window. It lives on the overlay layer, above
             // fullscreen windows, so that it can slide away itself; once gone it drops to the top
             // layer, which Hyprland does not draw over a fullscreen window at all.
-            readonly property HyprlandMonitor monitor: Hyprland.monitorFor(modelData)
             property bool pretendFullscreen: false
-            readonly property bool fullscreen: {
-                if (root.preview)
-                    return pretendFullscreen;
-                const workspace = monitor?.activeWorkspace;
-                if (!workspace?.hasFullscreen)
-                    return false;
-                return Hyprland.toplevels.values.some(window => window.lastIpcObject?.workspace?.id === workspace.id
-                    && ((window.lastIpcObject?.fullscreen ?? 0) & 2));
-            }
+            // activeWorkspace comes from WorkspaceState; the window's own state tells fullscreen
+            // (2) from maximized (1), which keeps the bar.
+            readonly property bool fullscreen: root.preview ? pretendFullscreen
+                : Hyprland.toplevels.values.some(window => window.lastIpcObject?.workspace?.id === activeWorkspace
+                    && ((window.lastIpcObject?.fullscreen ?? 0) & 2))
             // 1 = in place, 0 = slid off the top edge.
             property real presence: fullscreen ? 0 : 1
             Behavior on presence { NumberAnimation { duration: BarStyle.motion.hide; easing.type: Easing.OutCubic } }
@@ -202,8 +202,9 @@ ShellRoot {
             }
             function peekPopup(name) {
                 const target = popupTargets[name];
-                if (target && target[1].visible)
-                    host.show(target[0], target[1], false);
+                // A hidden chip (nothing playing, no messages) still gets its dropdown, under the clock.
+                if (target)
+                    host.show(target[0], target[1].visible ? target[1] : clockChip, false);
             }
             function closePopup() { host.close(); }
 
@@ -253,6 +254,21 @@ ShellRoot {
             WlrLayershell.layer: presence > 0 || root.preview ? WlrLayer.Overlay : WlrLayer.Top
 
             Region { id: clickThrough }
+
+            DesktopClock {
+                screen: panel.modelData
+                preview: root.preview
+                theme: status
+                workspace: panel.activeWorkspace
+                now: clock.date
+            }
+
+            DesktopStats {
+                screen: panel.modelData
+                preview: root.preview
+                theme: status
+                workspace: panel.activeWorkspace
+            }
 
             LevelOsd {
                 screen: panel.modelData
