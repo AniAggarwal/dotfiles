@@ -448,12 +448,15 @@ bind_exec(main_mod .. " + CTRL + Print", "hyprshot -z -m output -o ~/Downloads/"
 bind_exec(main_mod .. " + CTRL + SHIFT + Print", "hyprshot -z -m output --clipboard-only")
 
 -- Lid: remove the laptop panel from the layout entirely so its workspaces and
--- windows migrate to the remaining outputs. No lock, suspend, or hibernate.
--- Opening the lid restores the panel's full monitor configuration above.
+-- windows migrate to the remaining outputs. Never suspends, so agents keep running.
+-- With no external display connected (carrying the laptop), it also locks the session;
+-- docked with the lid closed, it doesn't. Opening the lid restores the panel's full
+-- monitor configuration above.
 -- (systemd's own lid handling is set to `ignore` in /etc/systemd/logind.conf.d/
 -- 99-lid-no-suspend.conf so it doesn't suspend out from under this.)
 bind("switch:on:Lid Switch", function()
     hl.monitor({ output = "eDP-1", disabled = true })
+    hl.exec_cmd("sh -c 'grep -lx connected /sys/class/drm/card*-*/status | grep -qv eDP || loginctl lock-session'")
 end, { locked = true })
 bind("switch:off:Lid Switch", enable_laptop_monitor, { locked = true })
 
