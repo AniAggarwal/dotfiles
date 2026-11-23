@@ -37,8 +37,8 @@ function M.setup(mod)
         bind("O", group_mode_action(hl.dsp.window.move({ out_of_group = true })))
         bind(mod .. " + O", group_mode_action(hl.dsp.window.move({ out_of_group = true })))
 
-        bind("B", group_mode_action(hl.dsp.group.lock_active({ action = "toggle" })))
-        bind(mod .. " + B", group_mode_action(hl.dsp.group.lock_active({ action = "toggle" })))
+        bind("B", group_mode_action(hl.dsp.group.lock({ action = "toggle" })))
+        bind(mod .. " + B", group_mode_action(hl.dsp.group.lock({ action = "toggle" })))
 
         bind("H", group_mode_action(hl.dsp.window.move({ into_group = "l" })))
         bind(mod .. " + H", group_mode_action(hl.dsp.window.move({ into_group = "l" })))
