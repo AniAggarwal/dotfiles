@@ -25,6 +25,8 @@ ShellRoot {
     property string osdScreen
     property int osdLevel
     property bool osdMuted
+    property var osdGlyphs: []
+    property string osdLabel
     readonly property UPowerDevice healthBattery: UPower.devices.values.find(device =>
         device.isLaptopBattery && device.isPresent && device.powerSupply) || null
     readonly property MprisPlayer playingPlayer: players.find(player => player.isPlaying) || null
@@ -150,17 +152,75 @@ ShellRoot {
 
     Timer { id: osdTimer; interval: 1400; onTriggered: root.osdScreen = "" }
 
+    function showOsd(kind) {
+        root.osdKind = kind;
+        root.osdScreen = Hyprland.focusedMonitor?.name || Quickshell.screens[0]?.name || "";
+        osdTimer.restart();
+    }
+
     IpcHandler {
         target: "osd"
         function display(kind: string, level: int, muted: bool): void {
-            root.osdKind = kind;
             root.osdLevel = level;
             root.osdMuted = muted;
-            root.osdScreen = Hyprland.focusedMonitor?.name || Quickshell.screens[0]?.name || "";
-            osdTimer.restart();
+            root.showOsd(kind);
             if (kind === "brightness")
                 status.brightness = level;
         }
+    }
+
+    // The OSD again when an app starts using the microphone, camera or screen: once for each app
+    // and device, and only once it has held on for a moment, so an app probing the devices does
+    // not flash it. Apps already capturing when the bar starts are taken as known.
+    function captureName(node) {
+        return node.properties?.["application.name"] || node.description || node.name || "Unknown app";
+    }
+    readonly property var privacyUsers: {
+        const users = [];
+        const add = (app, device) => {
+            const key = app.toLowerCase() + "\n" + device;
+            if (!users.some(user => user.key === key))
+                users.push({ key: key, app: app, device: device });
+        };
+        for (const node of micUsers)
+            add(captureName(node), "microphone");
+        for (const user of status.privacy.cameraUsers)
+            add(user.name, "camera");
+        for (const node of videoUsers)
+            add(captureName(node), screenShare ? "screen" : "camera");
+        return users;
+    }
+    readonly property string privacyKeys: privacyUsers.map(user => user.key).sort().join("\n")
+    property var announcedPrivacy: []
+    property bool privacyPrimed: false
+    onPrivacyKeysChanged: privacySettle.restart()
+    Timer { id: privacySettle; interval: 700; onTriggered: root.announcePrivacy() }
+    Timer {
+        running: !root.preview
+        interval: 2000
+        onTriggered: {
+            root.announcedPrivacy = root.privacyUsers.map(user => user.key);
+            root.privacyPrimed = true;
+        }
+    }
+
+    function announcePrivacy() {
+        if (!privacyPrimed)
+            return;
+        const fresh = privacyUsers.filter(user => !announcedPrivacy.includes(user.key));
+        announcedPrivacy = privacyUsers.map(user => user.key);
+        if (!fresh.length)
+            return;
+        const devices = [
+            { id: "microphone", name: "Microphone", glyph: BarStyle.icons.microphone },
+            { id: "camera", name: "Camera", glyph: BarStyle.icons.camera },
+            { id: "screen", name: "Screen", glyph: BarStyle.icons.screenShare }
+        ].filter(device => fresh.some(user => user.device === device.id));
+        const apps = fresh.map(user => user.app).filter((app, index, all) =>
+            all.findIndex(other => other.toLowerCase() === app.toLowerCase()) === index);
+        osdGlyphs = devices.map(device => device.glyph);
+        osdLabel = apps.join(", ") + " · " + devices.map(device => device.name).join(", ");
+        showOsd("privacy");
     }
 
     BarState {
@@ -293,14 +353,32 @@ ShellRoot {
                 workspace: panel.activeWorkspace
             }
 
+            // Under the bar, or at the top edge while the bar is away; below an open dropdown
+            // that it would cover.
             LevelOsd {
+                id: levelOsd
                 screen: panel.modelData
                 theme: status
                 kind: root.osdKind
                 deviceName: kind === "sink" ? root.sink?.description || "" : ""
                 level: root.osdLevel
                 muted: root.osdMuted
+                glyphs: root.osdGlyphs
+                label: root.osdLabel
                 visible: root.osdScreen === panel.modelData.name
+                topOffset: {
+                    if (panel.fullscreen)
+                        return BarStyle.topGap + BarStyle.popupGap;
+                    const below = panel.margins.top + panel.height + BarStyle.popupGap;
+                    const popup = host.current;
+                    if (!popup)
+                        return below;
+                    const left = (panel.modelData.width - implicitWidth) / 2;
+                    const popupLeft = host.margins.left + popup.panelX;
+                    if (popupLeft >= left + implicitWidth || popupLeft + popup.panelWidth <= left)
+                        return below;
+                    return host.margins.top + host.panelY + host.heightOf(popup) + BarStyle.popupGap;
+                }
             }
 
             Item {
