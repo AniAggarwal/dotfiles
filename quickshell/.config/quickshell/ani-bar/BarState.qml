@@ -131,7 +131,17 @@ Scope {
             id: settings
             property bool glassEnabled: true
             property string desktopStyle: "dial"
+            property bool micOff: false
+            property bool cameraOff: false
         }
+    }
+
+    // Who has the camera open, and the microphone and camera kill switches: status.privacy.
+    readonly property alias privacy: privacyState
+    PrivacyState {
+        id: privacyState
+        settings: settings
+        preview: state.preview
     }
 
     // CPU, memory, GPU and network readings: status.system.cpu and so on.

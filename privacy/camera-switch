@@ -1,0 +1,38 @@
+#!/bin/sh
+# Root-owned kill switch for the built-in webcam (polkit actions org.ani.camera-switch.off and
+# org.ani.camera-switch.on).
+#   camera-switch off   deauthorize the webcam's USB device: its /dev/video nodes go away and
+#                       nothing can open the camera until it is switched on again or the
+#                       machine reboots
+#   camera-switch on    authorize it again
+# The device is found here, by its USB identity; the caller never names it.
+# Exit codes: 64 bad arguments, 69 webcam not found.
+set -eu
+PATH=/usr/bin
+export PATH
+
+[ "$#" -eq 1 ] || exit 64
+case "$1" in
+    off) value=0 ;;
+    on) value=1 ;;
+    *) exit 64 ;;
+esac
+
+# Integrated_Webcam_HD (Microdia 0c45:6d1f): the colour and IR cameras are one USB device.
+vendor=0c45
+product=6d1f
+
+found=0
+for dev in /sys/bus/usb/devices/*; do
+    [ -r "$dev/idVendor" ] && [ -r "$dev/idProduct" ] && [ -r "$dev/removable" ] || continue
+    read -r id < "$dev/idVendor"
+    [ "$id" = "$vendor" ] || continue
+    read -r id < "$dev/idProduct"
+    [ "$id" = "$product" ] || continue
+    # Built in only: a plugged-in device that claims the same identity is left alone.
+    read -r where < "$dev/removable"
+    [ "$where" = fixed ] || continue
+    printf '%s\n' "$value" > "$dev/authorized"
+    found=$((found + 1))
+done
+[ "$found" -gt 0 ] || exit 69

@@ -193,6 +193,29 @@ BarPopup {
 
         RowLayout {
             Layout.fillWidth: true
+            spacing: 6
+
+            Tile {
+                icon: system.theme.privacy.micOff ? BarStyle.icons.microphoneOff : BarStyle.icons.microphone
+                name: "Mic"
+                detail: system.theme.privacy.micOff ? "Off" : "On"
+                hint: "Microphone"
+                selected: !system.theme.privacy.micOff
+                onActivated: system.theme.privacy.setMicOff(!system.theme.privacy.micOff)
+            }
+            Tile {
+                icon: system.theme.privacy.cameraOff ? BarStyle.icons.webcamOff : BarStyle.icons.webcam
+                name: "Camera"
+                detail: system.theme.privacy.cameraError || (system.theme.privacy.cameraOff ? "Off" : "On")
+                hint: "Camera"
+                selected: !system.theme.privacy.cameraOff
+                interactive: !system.theme.privacy.cameraSwitching
+                onActivated: system.theme.privacy.setCameraOff(!system.theme.privacy.cameraOff)
+            }
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
             visible: system.theme.brightness >= 0
             spacing: 8
 

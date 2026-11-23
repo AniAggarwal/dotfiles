@@ -125,6 +125,7 @@ var icons = {
     robot: glyph(0xF06A9),
     inbox: glyph(0xF0687),
     webcam: glyph(0xF05A0),
+    webcamOff: glyph(0xF1737),
     screenShare: glyph(0xF1483),
     bell: glyph(0xF009A),
     bellRing: glyph(0xF009E),

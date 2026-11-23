@@ -466,19 +466,30 @@ ShellRoot {
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: BarStyle.pillGap
 
+                    // In use: what is capturing, in the critical color. Otherwise, while a kill
+                    // switch is off, a dim reminder of which.
                     Pill {
                         theme: status
-                        visible: root.micUsers.length > 0 || root.videoUsers.length > 0
+                        visible: privacyChip.icon !== ""
 
                         Chip {
                             id: privacyChip
+                            readonly property bool camera: status.privacy.cameraUsers.length > 0
+                                || (root.videoUsers.length > 0 && !root.screenShare)
+                            readonly property var inUse: [
+                                root.micUsers.length > 0 ? BarStyle.icons.microphone : "",
+                                camera ? BarStyle.icons.webcam : "",
+                                root.videoUsers.length > 0 && root.screenShare ? BarStyle.icons.screenShare : ""
+                            ].filter(glyph => glyph)
+                            readonly property var off: [
+                                status.privacy.micOff ? BarStyle.icons.microphoneOff : "",
+                                status.privacy.cameraOff ? BarStyle.icons.webcamOff : ""
+                            ].filter(glyph => glyph)
                             popup: privacyMenu
                             iconBox: 0
-                            icon: (root.micUsers.length ? BarStyle.icons.microphone : "")
-                                + (root.micUsers.length && root.videoUsers.length ? " " : "")
-                                + (root.videoUsers.length ? (root.screenShare ? BarStyle.icons.screenShare : BarStyle.icons.webcam) : "")
-                            iconColor: status.critical
-                            hint: "In use"
+                            icon: (inUse.length ? inUse : off).join(" ")
+                            iconColor: inUse.length ? status.critical : status.muted
+                            hint: inUse.length ? "In use" : "Off"
                         }
                     }
 
