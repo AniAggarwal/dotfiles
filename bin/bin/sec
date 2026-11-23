@@ -9,7 +9,7 @@ Usage:
   sec NAME... -- COMMAND [ARGS...]   run COMMAND with only these secrets in its environment
   sec ls                             list secret names
   sec get NAME                       print a secret (for piping; avoid in agent sessions)
-  sec copy NAME                      copy a secret to the clipboard (marked sensitive, cleared in 30 s)
+  sec copy NAME                      copy a secret to the clipboard (kept out of cliphist, removed after 30 s)
   sec set NAME                       store or replace a secret (value read from stdin or prompted)
   sec rm NAME                        delete a secret
   sec help                           this help
@@ -65,9 +65,16 @@ case ${1:-help} in
     copy)
         (( $# == 2 )) || die "usage: sec copy NAME" 64
         check_name "$2"
-        lookup "$2" | wl-copy --sensitive
-        echo "copied $2; clearing the clipboard in 30 s"
-        ( sleep 30; wl-copy --clear ) >/dev/null 2>&1 & disown ;;
+        value=$(lookup "$2")
+        # --sensitive marks it as a password, so cliphist doesn't record it.
+        printf '%s' "$value" | wl-copy --sensitive
+        echo "copied $2; removed from the clipboard in 30 s unless you've copied something else"
+        # Only clear if the clipboard still holds this secret; compare hashes, not values.
+        hash=$(printf '%s' "$value" | sha256sum)
+        unset value
+        ( sleep 30
+          [[ "$(wl-paste --no-newline 2>/dev/null | sha256sum)" == "$hash" ]] && wl-copy --clear
+        ) >/dev/null 2>&1 & disown ;;
     set)
         (( $# == 2 )) || die "usage: sec set NAME" 64
         check_name "$2"
