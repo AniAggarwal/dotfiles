@@ -198,18 +198,19 @@ BarPopup {
             Tile {
                 icon: system.theme.privacy.micOff ? BarStyle.icons.microphoneOff : BarStyle.icons.microphone
                 name: "Mic"
-                detail: system.theme.privacy.micOff ? "Off" : "On"
+                detail: system.theme.privacy.micError || (system.theme.privacy.micOff ? "Off" : "On")
                 hint: "Microphone"
                 selected: !system.theme.privacy.micOff
+                interactive: !system.theme.privacy.switching
                 onActivated: system.theme.privacy.setMicOff(!system.theme.privacy.micOff)
             }
             Tile {
-                icon: system.theme.privacy.cameraOff ? BarStyle.icons.webcamOff : BarStyle.icons.webcam
+                icon: system.theme.privacy.cameraOff ? BarStyle.icons.cameraOff : BarStyle.icons.camera
                 name: "Camera"
                 detail: system.theme.privacy.cameraError || (system.theme.privacy.cameraOff ? "Off" : "On")
                 hint: "Camera"
                 selected: !system.theme.privacy.cameraOff
-                interactive: !system.theme.privacy.cameraSwitching
+                interactive: !system.theme.privacy.switching
                 onActivated: system.theme.privacy.setCameraOff(!system.theme.privacy.cameraOff)
             }
         }

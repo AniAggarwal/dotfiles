@@ -1,6 +1,6 @@
 # Root files, never stowed. Install by hand:
-#   sudo install -o root -g root -m755 camera-switch /usr/local/bin/
-#   sudo install -o root -g root -m644 org.ani.camera-switch.policy /usr/share/polkit-1/actions/
+#   sudo install -o root -g root -m755 privacy-switch /usr/local/bin/
+#   sudo install -o root -g root -m644 org.ani.privacy-switch.policy /usr/share/polkit-1/actions/
 \.stow-local-ignore
-camera-switch
-org\.ani\.camera-switch\.policy
+privacy-switch
+org\.ani\.privacy-switch\.policy

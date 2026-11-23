@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN" "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<!-- pkexec picks the action by program and first argument. -->
+<policyconfig>
+  <!-- Turning it off is always safe, so the active session may do it without asking. -->
+  <action id="org.ani.privacy-switch.camera-off">
+    <description>Turn the camera off</description>
+    <message>Authentication is required to turn the camera off</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/local/bin/privacy-switch</annotate>
+    <annotate key="org.freedesktop.policykit.exec.argv1">camera-off</annotate>
+  </action>
+  <!-- Turning it back on needs an administrator, so nothing running as the user can do it silently. -->
+  <action id="org.ani.privacy-switch.camera-on">
+    <description>Turn the camera on</description>
+    <message>Authentication is required to turn the camera on</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/local/bin/privacy-switch</annotate>
+    <annotate key="org.freedesktop.policykit.exec.argv1">camera-on</annotate>
+  </action>
+  <!-- Turning it off is always safe, so the active session may do it without asking. -->
+  <action id="org.ani.privacy-switch.mic-off">
+    <description>Turn the microphone off</description>
+    <message>Authentication is required to turn the microphone off</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/local/bin/privacy-switch</annotate>
+    <annotate key="org.freedesktop.policykit.exec.argv1">mic-off</annotate>
+  </action>
+  <!-- Turning it back on needs an administrator, so nothing running as the user can do it silently. -->
+  <action id="org.ani.privacy-switch.mic-on">
+    <description>Turn the microphone on</description>
+    <message>Authentication is required to turn the microphone on</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/local/bin/privacy-switch</annotate>
+    <annotate key="org.freedesktop.policykit.exec.argv1">mic-on</annotate>
+  </action>
+</policyconfig>

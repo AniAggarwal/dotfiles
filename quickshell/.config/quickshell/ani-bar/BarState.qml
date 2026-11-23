@@ -131,8 +131,6 @@ Scope {
             id: settings
             property bool glassEnabled: true
             property string desktopStyle: "dial"
-            property bool micOff: false
-            property bool cameraOff: false
         }
     }
 
@@ -140,7 +138,6 @@ Scope {
     readonly property alias privacy: privacyState
     PrivacyState {
         id: privacyState
-        settings: settings
         preview: state.preview
     }
 

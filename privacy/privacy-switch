@@ -1,0 +1,87 @@
+#!/bin/sh
+# Root-owned kill switches for the microphone and the built-in webcam (polkit actions
+# org.ani.privacy-switch.<camera|mic>-<off|on>).
+#   privacy-switch camera-off   keep the webcam's USB device deauthorized, now and from boot:
+#                               its /dev/video nodes go away and nothing can open it
+#   privacy-switch camera-on    authorize it again
+#   privacy-switch mic-off      give no user access to any capture PCM (/dev/snd/pcmC*D*c), now
+#                               and for every sound card that appears later; playback is untouched
+#   privacy-switch mic-on       give the active session its usual access again
+# The udev rules in /etc/udev/rules.d are the state: a switch is off exactly while its rule file
+# exists. Devices are found here, never named by the caller.
+# Exit codes: 64 bad arguments, 69 webcam not found (camera-on).
+set -eu
+PATH=/usr/bin
+export PATH
+umask 022
+
+rules=/etc/udev/rules.d
+camera_rule=$rules/90-privacy-camera.rules
+# After 70-uaccess.rules tags sound devices and before 73-seat-late.rules grants the ACL.
+mic_rule=$rules/71-privacy-mic.rules
+
+# Integrated_Webcam_HD (Microdia 0c45:6d1f): the colour and IR cameras are one USB device.
+vendor=0c45
+product=6d1f
+
+# install_rule <path> <line>: write a rule file atomically.
+install_rule() {
+    tmp=$(mktemp "$rules/.privacy-switch.XXXXXX")
+    printf '# Written by /usr/local/bin/privacy-switch; remove with privacy-switch %s.\n%s\n' "$3" "$2" > "$tmp"
+    chmod 644 "$tmp"
+    mv -f "$tmp" "$1"
+}
+
+# camera <0|1>: write `authorized` on the built-in webcam; prints how many matched.
+camera() {
+    found=0
+    for dev in /sys/bus/usb/devices/*; do
+        [ -r "$dev/idVendor" ] && [ -r "$dev/idProduct" ] && [ -r "$dev/removable" ] || continue
+        read -r id < "$dev/idVendor"
+        [ "$id" = "$vendor" ] || continue
+        read -r id < "$dev/idProduct"
+        [ "$id" = "$product" ] || continue
+        # Built in only: a plugged-in device that claims the same identity is left alone.
+        read -r where < "$dev/removable"
+        [ "$where" = fixed ] || continue
+        printf '%s\n' "$1" > "$dev/authorized"
+        found=$((found + 1))
+    done
+    echo "$found"
+}
+
+# Re-run the sound rules on the capture nodes, so udev's current tags (which logind consults
+# when it hands devices to a session) and the ACLs follow the mic rule.
+retag_capture() {
+    udevadm control --reload
+    udevadm trigger --settle --action=change --subsystem-match=sound --sysname-match='pcmC*D*c'
+}
+
+[ "$#" -eq 1 ] || exit 64
+case "$1" in
+    camera-off)
+        install_rule "$camera_rule" "ACTION==\"add\", SUBSYSTEM==\"usb\", ENV{DEVTYPE}==\"usb_device\", ATTR{idVendor}==\"$vendor\", ATTR{idProduct}==\"$product\", ATTR{removable}==\"fixed\", ATTR{authorized}=\"0\"" camera-on
+        udevadm control --reload
+        camera 0 > /dev/null
+        ;;
+    camera-on)
+        rm -f "$camera_rule"
+        udevadm control --reload
+        [ "$(camera 1)" -gt 0 ] || exit 69
+        ;;
+    mic-off)
+        install_rule "$mic_rule" 'SUBSYSTEM=="sound", KERNEL=="pcmC[0-9]*D[0-9]*c", TAG-="uaccess"' mic-on
+        retag_capture
+        # The change event no longer grants access but does not take back what was granted.
+        for node in /dev/snd/pcmC*D*c; do
+            if [ -c "$node" ]; then
+                setfacl -b "$node"
+            fi
+        done
+        ;;
+    mic-on)
+        rm -f "$mic_rule"
+        retag_capture
+        ;;
+    *) exit 64 ;;
+esac

@@ -478,12 +478,12 @@ ShellRoot {
                                 || (root.videoUsers.length > 0 && !root.screenShare)
                             readonly property var inUse: [
                                 root.micUsers.length > 0 ? BarStyle.icons.microphone : "",
-                                camera ? BarStyle.icons.webcam : "",
+                                camera ? BarStyle.icons.camera : "",
                                 root.videoUsers.length > 0 && root.screenShare ? BarStyle.icons.screenShare : ""
                             ].filter(glyph => glyph)
                             readonly property var off: [
                                 status.privacy.micOff ? BarStyle.icons.microphoneOff : "",
-                                status.privacy.cameraOff ? BarStyle.icons.webcamOff : ""
+                                status.privacy.cameraOff ? BarStyle.icons.cameraOff : ""
                             ].filter(glyph => glyph)
                             popup: privacyMenu
                             iconBox: 0

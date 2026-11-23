@@ -35,18 +35,19 @@ BarPopup {
             theme: privacy.theme
             icon: privacy.switches.micOff ? BarStyle.icons.microphoneOff : BarStyle.icons.microphone
             name: "Microphone"
-            detail: privacy.switches.micOff ? "Off" : "On"
+            detail: privacy.switches.micError || (privacy.switches.micOff ? "Off" : "On")
             selected: !privacy.switches.micOff
+            interactive: !privacy.switches.switching
             onActivated: privacy.switches.setMicOff(!privacy.switches.micOff)
         }
         ToggleTile {
             Layout.topMargin: 4
             theme: privacy.theme
-            icon: privacy.switches.cameraOff ? BarStyle.icons.webcamOff : BarStyle.icons.webcam
+            icon: privacy.switches.cameraOff ? BarStyle.icons.cameraOff : BarStyle.icons.camera
             name: "Camera"
             detail: privacy.switches.cameraError || (privacy.switches.cameraOff ? "Off" : "On")
             selected: !privacy.switches.cameraOff
-            interactive: !privacy.switches.cameraSwitching
+            interactive: !privacy.switches.switching
             onActivated: privacy.switches.setCameraOff(!privacy.switches.cameraOff)
         }
 
@@ -76,7 +77,7 @@ BarPopup {
                 required property var modelData
                 theme: privacy.theme
                 interactive: false
-                icon: BarStyle.icons.webcam
+                icon: BarStyle.icons.camera
                 iconColor: privacy.theme.critical
                 title: modelData.name
                 detail: "Camera"
@@ -88,7 +89,7 @@ BarPopup {
                 required property var modelData
                 theme: privacy.theme
                 interactive: false
-                icon: privacy.screenShare ? BarStyle.icons.screenShare : BarStyle.icons.webcam
+                icon: privacy.screenShare ? BarStyle.icons.screenShare : BarStyle.icons.camera
                 iconColor: privacy.theme.critical
                 title: privacy.appName(modelData)
                 detail: privacy.screenShare ? "Screen" : "Camera"

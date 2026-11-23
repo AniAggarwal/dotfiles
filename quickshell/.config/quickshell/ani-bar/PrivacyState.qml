@@ -9,70 +9,168 @@ import Quickshell.Services.Pipewire
 // nodes are watched instead: inotify reports every open and close, and a moment later fuser says
 // who still holds them. Nothing polls.
 //
-// The microphone switch mutes every audio source and keeps them muted. The camera switch
-// deauthorizes the webcam's USB device through /usr/local/bin/camera-switch (polkit: off needs
-// no password, on needs an administrator), so its nodes disappear. That lasts until reboot, so
-// the switch is applied again at startup.
+// Both switches are hard switches in /usr/local/bin/privacy-switch (polkit: off needs no password,
+// on needs an administrator), which keeps a udev rule for each: the webcam's USB device stays
+// deauthorized, and no user gets access to a capture PCM. The rules hold from boot, before the
+// bar runs, and their files are the state: a switch is off exactly while its rule exists. The
+// bar only reads them, and on top keeps every audio source muted while the mic is off, for
+// capture that was already open when access went away and for Bluetooth microphones, which have
+// no PCM node.
 Scope {
     id: privacy
 
-    // BarState's settings: micOff and cameraOff persist there.
-    required property QtObject settings
     // A preview instance only looks; it never changes the session.
     property bool preview: false
 
-    readonly property bool micOff: settings.micOff
-    readonly property bool cameraOff: settings.cameraOff
+    readonly property string helper: "/usr/local/bin/privacy-switch"
+    readonly property var stateFiles: ["/etc/udev/rules.d/71-privacy-mic.rules", "/etc/udev/rules.d/90-privacy-camera.rules",
+        helper, "/usr/share/polkit-1/actions/org.ani.privacy-switch.policy"]
+
+    // As the system has them, from the last read.
+    property bool micOff: false
+    property bool cameraOff: false
+    property bool helperInstalled: false
+    // Why the last switch of each did not take effect, or "".
+    property string micError: ""
+    property string cameraError: ""
+    // The helper action waiting for a fresh read, or running.
+    property string pending: ""
+    readonly property bool switching: pending !== "" || toggle.running
 
     // /dev/video* as of the last look, and apps holding them open: [{pid, name}].
     property var cameraNodes: []
     property var cameraUsers: []
-    readonly property bool cameraPresent: cameraNodes.length > 0
-    // Why the camera switch did not take effect, or "".
-    property string cameraError: ""
-    readonly property bool cameraSwitching: cameraSwitch.running
-    readonly property string helper: "/usr/local/bin/camera-switch"
 
     // Processes that only probe or relay the device; PipeWire's own clients show as streams.
     readonly property var probes: /^(pipewire|wireplumber|quickshell|qs|v4l_id)$/
 
-    // ---- Microphone ----
+    // ---- Switches ----
+
+    function setMicOff(off) { request(off ? "mic-off" : "mic-on"); }
+    function setCameraOff(off) { request(off ? "camera-off" : "camera-on"); }
+
+    // Every action starts from a fresh read, so a helper installed a minute ago is found.
+    function request(action) {
+        if (preview || switching)
+            return;
+        pending = action;
+        readNow();
+    }
+
+    // A read asked for while one runs follows it, so no change is missed.
+    property bool rereadWanted: false
+    function readNow() {
+        if (readState.running)
+            rereadWanted = true;
+        else
+            readState.running = true;
+    }
+
+    function setError(action, message) {
+        if (action.startsWith("mic"))
+            micError = message;
+        else
+            cameraError = message;
+    }
+
+    function runPending() {
+        const action = pending;
+        pending = "";
+        if (!helperInstalled) {
+            setError(action, "Helper not installed");
+            return;
+        }
+        // Mute first: a capture already open keeps working after its access is revoked.
+        if (action === "mic-off") {
+            keptMuted = sources.filter(node => node.audio?.muted).map(node => node.name);
+            muting = true;
+            for (const node of sources)
+                holdMuted(node);
+        }
+        toggle.action = action;
+        toggle.command = ["pkexec", helper, action];
+        toggle.running = true;
+    }
+
+    Process {
+        id: toggle
+        property string action
+        onExited: code => {
+            // 126: the password prompt was dismissed; nothing changed.
+            privacy.setError(action, code === 0 || code === 126 ? ""
+                : code === 127 ? "Not authorized" : code === 69 ? "Camera not found" : "Failed");
+            privacy.muting = false;
+            // The microphone comes back on, or did not go off: let go of the mute. The read that
+            // follows confirms micOff.
+            if (action === "mic-on" && code === 0)
+                privacy.micOff = false;
+            if ((action === "mic-on" && code === 0) || (action === "mic-off" && code !== 0))
+                privacy.releaseMute();
+            privacy.readNow();
+        }
+    }
+
+    // Prints 1 or 0 for each of stateFiles.
+    Process {
+        id: readState
+        running: true
+        command: ["sh", "-c", 'for f in "$@"; do if [ -e "$f" ]; then echo 1; else echo 0; fi; done', "sh"].concat(privacy.stateFiles)
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const found = text.trim().split("\n").map(line => line === "1");
+                privacy.micOff = found[0];
+                privacy.cameraOff = found[1];
+                privacy.helperInstalled = found[2] && found[3];
+                if (privacy.pending)
+                    privacy.runPending();
+            }
+        }
+        onExited: if (privacy.rereadWanted) {
+            privacy.rereadWanted = false;
+            Qt.callLater(() => readState.running = true);
+        }
+    }
+
+    // The rule files changing by any route, the helper or a hand edit.
+    Process {
+        running: true
+        command: ["inotifywait", "-m", "-q", "-e", "create,delete,moved_to,moved_from", "--include", "privacy-(mic|camera)\\.rules$",
+            "--format", "%f", "/etc/udev/rules.d"]
+        stdout: SplitParser { onRead: privacy.readNow() }
+    }
+
+    // ---- Microphone mute ----
 
     readonly property var sources: Pipewire.nodes.values.filter(node => !node.isStream && node.type === PwNodeType.AudioSource)
+    // Held while the switch is off or going off.
+    property bool muting: false
+    readonly property bool holdMute: (micOff || muting) && !preview
     // Sources that were already muted when the switch went off stay muted when it comes back on.
     property var keptMuted: []
 
     PwObjectTracker { objects: privacy.sources }
 
     function holdMuted(node) {
-        if (micOff && !preview && node.ready && node.audio && !node.audio.muted)
+        if (holdMute && node.ready && node.audio && !node.audio.muted)
             node.audio.muted = true;
     }
 
-    function setMicOff(off) {
-        if (preview || off === micOff)
-            return;
-        if (off) {
-            keptMuted = sources.filter(node => node.audio?.muted).map(node => node.name);
-            settings.micOff = true;
-            for (const node of sources)
-                holdMuted(node);
-        } else {
-            settings.micOff = false;
-            for (const node of sources) {
-                if (node.ready && node.audio && !keptMuted.includes(node.name))
-                    node.audio.muted = false;
-            }
-            keptMuted = [];
+    function releaseMute() {
+        for (const node of sources) {
+            if (node.ready && node.audio && !keptMuted.includes(node.name))
+                node.audio.muted = false;
         }
+        keptMuted = [];
     }
 
     // Each source re-mutes itself if anything unmutes it, and a new source is muted on arrival.
+    // Setting it muted changes nothing more once it is, so a source that fails to open cannot
+    // make this spin.
     Instantiator {
         model: privacy.sources
         delegate: QtObject {
             required property PwNode modelData
-            readonly property string state: [privacy.micOff, modelData.ready, modelData.audio?.muted].join()
+            readonly property string state: [privacy.holdMute, modelData.ready, modelData.audio?.muted].join()
             onStateChanged: privacy.holdMuted(modelData)
             Component.onCompleted: privacy.holdMuted(modelData)
         }
@@ -104,7 +202,6 @@ Scope {
             echo "user $pid $name"
         done'
 
-    property bool scanned: false
     function rescan() { scanDebounce.restart(); }
 
     // An app enumerating cameras opens and closes them at once: wait for things to settle.
@@ -129,12 +226,10 @@ Scope {
                     }
                 }
                 privacy.cameraUsers = users;
-                if (!privacy.scanned || nodes.join() !== privacy.cameraNodes.join()) {
-                    privacy.scanned = true;
+                if (nodes.join() !== privacy.cameraNodes.join()) {
                     privacy.cameraNodes = nodes;
                     openWatch.running = false;
                     Qt.callLater(() => openWatch.running = privacy.cameraNodes.length > 0);
-                    privacy.enforceCamera();
                 }
             }
         }
@@ -152,53 +247,5 @@ Scope {
         running: true
         command: ["inotifywait", "-m", "-q", "-e", "create,delete", "--include", "video[0-9]+$", "--format", "%f", "/dev"]
         stdout: SplitParser { onRead: privacy.rescan() }
-    }
-
-    // ---- Camera switch ----
-
-    // Both the helper and its polkit policy: without the policy, pkexec would ask for a
-    // password even to switch off.
-    FileView { id: helperFile; path: privacy.helper; blockLoading: true; printErrors: false }
-    FileView { id: policyFile; path: "/usr/share/polkit-1/actions/org.ani.camera-switch.policy"; blockLoading: true; printErrors: false }
-    function helperInstalled() {
-        helperFile.reload();
-        policyFile.reload();
-        return helperFile.loaded && policyFile.loaded;
-    }
-
-    function setCameraOff(off) {
-        if (preview || cameraSwitch.running)
-            return;
-        if (!helperInstalled()) {
-            cameraError = "Helper not installed";
-            return;
-        }
-        cameraSwitch.wanted = off;
-        cameraSwitch.command = ["pkexec", helper, off ? "off" : "on"];
-        cameraSwitch.running = true;
-    }
-
-    // Switched off but camera nodes are back (startup, resume, a USB reset): switch off again.
-    // Switching off never asks for a password. Called only when the set of nodes changes, so a
-    // camera the helper does not cover cannot keep it running.
-    function enforceCamera() {
-        if (cameraOff && cameraPresent && !cameraSwitch.running && !cameraError && !preview)
-            setCameraOff(true);
-    }
-
-    Process {
-        id: cameraSwitch
-        property bool wanted
-        onExited: code => {
-            if (code === 0) {
-                privacy.cameraError = "";
-                privacy.settings.cameraOff = wanted;
-            } else if (code !== 126) {
-                // 126: the password prompt was dismissed; nothing changed.
-                privacy.cameraError = code === 127 && !privacy.helperInstalled() ? "Helper not installed"
-                    : code === 127 ? "Not authorized" : code === 69 ? "Camera not found" : "Failed";
-            }
-            privacy.rescan();
-        }
     }
 }
