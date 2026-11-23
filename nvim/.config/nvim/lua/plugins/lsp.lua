@@ -318,8 +318,8 @@ return {
 
 	{
 		"lervag/vimtex",
-		ft = { "tex" },
-		config = function()
+		lazy = false, -- Inverse search needs VimtexInverseSearch in headless Neovim.
+		init = function()
 			vim.api.nvim_command("filetype plugin indent on")
 			vim.api.nvim_command("syntax enable")
 
