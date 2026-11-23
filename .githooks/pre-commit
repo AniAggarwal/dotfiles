@@ -1,0 +1,10 @@
+#!/bin/sh
+# Block commits that add secrets. This repo is public.
+# Enabled with: git config core.hooksPath .githooks   (install-dotfiles.sh does this)
+# Needs gitleaks: sudo pacman -S gitleaks
+# A real false positive can be allowed by adding its fingerprint to .gitleaksignore.
+if ! command -v gitleaks >/dev/null 2>&1; then
+    echo "pre-commit: gitleaks is not installed (sudo pacman -S gitleaks); refusing to commit to a public repo unscanned." >&2
+    exit 1
+fi
+exec gitleaks git --pre-commit --staged --redact --no-banner --verbose
