@@ -18,8 +18,8 @@ BarPopup {
     readonly property bool canSeek: !!player && player.canSeek && player.lengthSupported && player.positionSupported
     property real position: 0
 
-    panelWidth: 500
-    panelHeight: (player ? 204 : 112) + (multiple ? 40 : 0)
+    panelWidth: 460
+    panelHeight: (player ? 160 : 112) + (multiple ? 40 : 0)
 
     function timeLabel(seconds) {
         const rounded = Math.max(0, Math.floor(seconds));
@@ -69,7 +69,9 @@ BarPopup {
         color: hovered && interactive ? Qt.alpha(popup.theme.foreground, 0.1) : "transparent"
         opacity: interactive ? 1 : 0.3
         horizontalPadding: 0
+        implicitHeight: 28
         implicitWidth: implicitHeight
+        iconSize: 17
         radius: implicitHeight / 2
     }
 
@@ -120,7 +122,7 @@ BarPopup {
                 visible: !!popup.player
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                spacing: 16
+                spacing: 14
 
                 // Album art. Click to raise the player.
                 ClippingRectangle {
@@ -128,16 +130,13 @@ BarPopup {
                     Layout.preferredHeight: parent.height
                     radius: BarStyle.radius.popup - 4
                     color: popup.theme.card
-                    border.width: 1
-                    border.color: Qt.alpha(popup.theme.foreground, 0.12)
 
-                    PanelText {
+                    Icon {
                         anchors.centerIn: parent
                         visible: art.status !== Image.Ready
                         text: BarStyle.icons.music
                         color: popup.theme.accent
-                        font.family: BarStyle.iconFont
-                        font.pixelSize: 56
+                        size: 48
                     }
 
                     Image {
@@ -164,190 +163,169 @@ BarPopup {
                     Layout.fillHeight: true
                     spacing: 0
 
-                    // Title scrolls when it does not fit, only while the panel is open.
-                    Item {
-                        id: titleBox
+                    RowLayout {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: titleText.implicitHeight
-                        clip: true
+                        spacing: 12
 
-                        Row {
-                            id: marquee
-                            readonly property bool overflow: titleText.implicitWidth > titleBox.width
-                            property real offset: 0
-                            x: overflow ? -offset : 0
-                            spacing: 48
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 2
 
-                            PanelText {
-                                id: titleText
-                                text: popup.player?.trackTitle || popup.player?.identity || ""
-                                color: popup.theme.foreground
-                                font.pixelSize: BarStyle.popupFontSize + 8
-                                font.weight: Font.DemiBold
-                            }
-                            PanelText {
-                                visible: marquee.overflow
-                                text: titleText.text
-                                color: titleText.color
-                                font: titleText.font
-                            }
+                            // Title scrolls when it does not fit, only while the panel is open.
+                            Item {
+                                id: titleBox
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: titleText.implicitHeight
+                                clip: true
 
-                            SequentialAnimation {
-                                running: popup.settled && marquee.overflow
-                                loops: Animation.Infinite
-                                onRunningChanged: if (!running) marquee.offset = 0
-                                PauseAnimation { duration: 1800 }
-                                NumberAnimation {
-                                    target: marquee
-                                    property: "offset"
-                                    from: 0
-                                    to: titleText.implicitWidth + marquee.spacing
-                                    duration: (titleText.implicitWidth + marquee.spacing) * 28
+                                Row {
+                                    id: marquee
+                                    readonly property bool overflow: titleText.implicitWidth > titleBox.width
+                                    property real offset: 0
+                                    x: overflow ? -offset : 0
+                                    spacing: 48
+
+                                    PanelText {
+                                        id: titleText
+                                        text: popup.player?.trackTitle || popup.player?.identity || ""
+                                        color: popup.theme.foreground
+                                        font.pixelSize: BarStyle.popupFontSize + 4
+                                        font.weight: Font.DemiBold
+                                    }
+                                    PanelText {
+                                        visible: marquee.overflow
+                                        text: titleText.text
+                                        color: titleText.color
+                                        font: titleText.font
+                                    }
+
+                                    SequentialAnimation {
+                                        running: popup.settled && marquee.overflow && !popup.theme.onBattery
+                                        loops: Animation.Infinite
+                                        onRunningChanged: if (!running) marquee.offset = 0
+                                        PauseAnimation { duration: 1800 }
+                                        NumberAnimation {
+                                            target: marquee
+                                            property: "offset"
+                                            from: 0
+                                            to: titleText.implicitWidth + marquee.spacing
+                                            duration: (titleText.implicitWidth + marquee.spacing) * 28
+                                        }
+                                    }
                                 }
                             }
-                        }
-                    }
 
-                    PanelText {
-                        Layout.fillWidth: true
-                        Layout.topMargin: 4
-                        text: popup.player?.trackArtist || ""
-                        visible: !!text
-                        color: popup.theme.secondary
-                        elide: Text.ElideRight
+                            PanelText {
+                                Layout.fillWidth: true
+                                text: popup.player?.trackArtist || ""
+                                visible: !!text
+                                color: popup.theme.secondary
+                                font.pixelSize: BarStyle.popupFontSize - 1
+                                elide: Text.ElideRight
+                            }
+
+                            PanelText {
+                                Layout.topMargin: 4
+                                text: popup.timeLabel(seekArea.pressed ? seekArea.dragFraction * (popup.player?.length ?? 0) : popup.position)
+                                    + (popup.player?.lengthSupported && popup.player.length > 0 ? " / " + popup.timeLabel(popup.player.length) : "")
+                                color: popup.theme.secondary
+                                font.pixelSize: BarStyle.popupFontSize - 1
+                                font.features: { "tnum": 1 }
+                            }
+                        }
+
+                        // Play or pause.
+                        BarButton {
+                            Layout.alignment: Qt.AlignTop
+                            foreground: popup.theme.background
+                            accent: popup.theme.accent
+                            icon: popup.player?.isPlaying ? BarStyle.icons.pause : BarStyle.icons.play
+                            iconSize: 26
+                            iconColor: popup.theme.background
+                            implicitWidth: 52
+                            implicitHeight: 52
+                            // Round while paused, a rounded square while playing.
+                            radius: popup.player?.isPlaying ? 16 : 26
+                            Behavior on radius { NumberAnimation { duration: BarStyle.motion.normal; easing.type: Easing.OutCubic } }
+                            color: hovered ? Qt.lighter(popup.theme.accent, 1.12) : popup.theme.accent
+                            hint: popup.player?.isPlaying ? "Pause" : "Play"
+                            interactive: popup.player?.canTogglePlaying ?? false
+                            opacity: interactive ? 1 : 0.4
+                            onActivated: popup.player.togglePlaying()
+                        }
                     }
 
                     Item { Layout.fillHeight: true }
 
-                    // Seek bar: click or drag anywhere on it.
-                    Item {
-                        id: seekBar
-                        readonly property real fraction: popup.player?.length > 0
-                            ? Math.max(0, Math.min(1, (seekArea.pressed ? seekArea.dragFraction : popup.position) / (seekArea.pressed ? 1 : popup.player.length)))
-                            : 0
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 16
-                        opacity: popup.canSeek ? 1 : 0.5
-
-                        Rectangle {
-                            anchors.verticalCenter: parent.verticalCenter
-                            width: parent.width
-                            height: seekArea.containsMouse || seekArea.pressed ? 8 : 6
-                            radius: height / 2
-                            color: Qt.alpha(popup.theme.foreground, 0.14)
-                            Behavior on height { NumberAnimation { duration: BarStyle.motion.fast } }
-
-                            Rectangle {
-                                width: Math.max(parent.height, parent.width * seekBar.fraction)
-                                height: parent.height
-                                radius: parent.radius
-                                color: popup.theme.foreground
-                            }
-                        }
-
-                        MouseArea {
-                            id: seekArea
-                            property real dragFraction: 0
-                            anchors.fill: parent
-                            enabled: popup.canSeek
-                            hoverEnabled: true
-                            cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                            onPressed: mouse => dragFraction = Math.max(0, Math.min(1, mouse.x / width))
-                            onPositionChanged: mouse => { if (pressed) dragFraction = Math.max(0, Math.min(1, mouse.x / width)); }
-                            onReleased: {
-                                popup.player.position = dragFraction * popup.player.length;
-                                popup.position = popup.player.position;
-                            }
-                        }
-                    }
-
                     RowLayout {
                         Layout.fillWidth: true
-                        Layout.topMargin: 2
+                        spacing: 2
 
-                        PanelText {
-                            text: popup.timeLabel(seekArea.pressed ? seekArea.dragFraction * (popup.player?.length ?? 0) : popup.position)
-                            color: popup.theme.muted
-                            font.pixelSize: BarStyle.popupFontSize - 2
-                            font.features: { "tnum": 1 }
-                        }
                         Item { Layout.fillWidth: true }
-                        PanelText {
-                            text: popup.player?.lengthSupported && popup.player.length > 0 ? popup.timeLabel(popup.player.length) : ""
-                            color: popup.theme.muted
-                            font.pixelSize: BarStyle.popupFontSize - 2
-                            font.features: { "tnum": 1 }
+                        Transport {
+                            icon: BarStyle.icons.shuffle
+                            hint: "Shuffle"
+                            active: popup.player?.shuffle ?? false
+                            interactive: popup.player?.shuffleSupported ?? false
+                            onActivated: popup.toggleShuffle()
                         }
-                    }
-
-                    Item { Layout.preferredHeight: 6 }
-
-                    Item {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 44
-
-                        Row {
-                            anchors.centerIn: parent
-                            spacing: 6
-
-                            Transport {
-                                anchors.verticalCenter: parent.verticalCenter
-                                icon: BarStyle.icons.shuffle
-                                iconSize: 18
-                                implicitHeight: 34
-                                hint: "Shuffle"
-                                active: popup.player?.shuffle ?? false
-                                interactive: popup.player?.shuffleSupported ?? false
-                                onActivated: popup.toggleShuffle()
-                            }
-                            Transport {
-                                anchors.verticalCenter: parent.verticalCenter
-                                icon: BarStyle.icons.previous
-                                iconSize: 22
-                                implicitHeight: 38
-                                hint: "Previous track"
-                                interactive: popup.player?.canGoPrevious ?? false
-                                onActivated: popup.player.previous()
-                            }
-                            Transport {
-                                anchors.verticalCenter: parent.verticalCenter
-                                icon: popup.player?.isPlaying ? BarStyle.icons.pause : BarStyle.icons.play
-                                iconSize: 24
-                                implicitHeight: 44
-                                iconColor: popup.theme.background
-                                color: hovered ? Qt.lighter(popup.theme.foreground, 1.1) : popup.theme.foreground
-                                hint: popup.player?.isPlaying ? "Pause" : "Play"
-                                interactive: popup.player?.canTogglePlaying ?? false
-                                onActivated: popup.player.togglePlaying()
-                            }
-                            Transport {
-                                anchors.verticalCenter: parent.verticalCenter
-                                icon: BarStyle.icons.next
-                                iconSize: 22
-                                implicitHeight: 38
-                                hint: "Next track"
-                                interactive: popup.player?.canGoNext ?? false
-                                onActivated: popup.player.next()
-                            }
-                            Transport {
-                                anchors.verticalCenter: parent.verticalCenter
-                                icon: popup.player?.loopState === MprisLoopState.Track ? BarStyle.icons.repeatOne : BarStyle.icons.repeat
-                                iconSize: 18
-                                implicitHeight: 34
-                                hint: "Repeat"
-                                active: (popup.player?.loopState ?? MprisLoopState.None) !== MprisLoopState.None
-                                interactive: popup.player?.loopSupported ?? false
-                                onActivated: popup.cycleLoop()
-                            }
+                        Transport {
+                            icon: popup.player?.loopState === MprisLoopState.Track ? BarStyle.icons.repeatOne : BarStyle.icons.repeat
+                            hint: "Repeat"
+                            active: (popup.player?.loopState ?? MprisLoopState.None) !== MprisLoopState.None
+                            interactive: popup.player?.loopSupported ?? false
+                            onActivated: popup.cycleLoop()
                         }
-
                         IconImage {
-                            anchors.right: parent.right
-                            anchors.verticalCenter: parent.verticalCenter
-                            implicitSize: 20
+                            Layout.leftMargin: 4
+                            implicitSize: 18
                             source: popup.player?.desktopEntry ? Quickshell.iconPath(popup.player.desktopEntry, true) : ""
                             visible: status === Image.Ready
                             opacity: 0.85
+                        }
+                    }
+
+                    // Seek line with previous and next at its ends: click or drag anywhere on it.
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 6
+
+                        Transport {
+                            icon: BarStyle.icons.previous
+                            hint: "Previous track"
+                            interactive: popup.player?.canGoPrevious ?? false
+                            onActivated: popup.player.previous()
+                        }
+                        WaveLine {
+                            id: seekBar
+                            Layout.fillWidth: true
+                            color: popup.theme.foreground
+                            opacity: popup.canSeek ? 1 : 0.5
+                            fraction: popup.player?.length > 0
+                                ? (seekArea.pressed ? seekArea.dragFraction : popup.position / popup.player.length) : 0
+                            moving: popup.visible && (popup.player?.isPlaying ?? false)
+                            animated: !popup.theme.onBattery
+
+                            MouseArea {
+                                id: seekArea
+                                property real dragFraction: 0
+                                anchors.fill: parent
+                                anchors.margins: -4
+                                enabled: popup.canSeek
+                                cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                onPressed: mouse => dragFraction = Math.max(0, Math.min(1, (mouse.x - 4) / seekBar.width))
+                                onPositionChanged: mouse => { if (pressed) dragFraction = Math.max(0, Math.min(1, (mouse.x - 4) / seekBar.width)); }
+                                onReleased: {
+                                    popup.player.position = dragFraction * popup.player.length;
+                                    popup.position = popup.player.position;
+                                }
+                            }
+                        }
+                        Transport {
+                            icon: BarStyle.icons.next
+                            hint: "Next track"
+                            interactive: popup.player?.canGoNext ?? false
+                            onActivated: popup.player.next()
                         }
                     }
                 }

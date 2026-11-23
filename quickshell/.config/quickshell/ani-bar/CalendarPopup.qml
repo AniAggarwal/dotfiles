@@ -11,8 +11,9 @@ BarPopup {
     readonly property bool thisMonth: displayed.getFullYear() === now.getFullYear() && displayed.getMonth() === now.getMonth()
     property real wheelDelta: 0
 
-    panelWidth: 300
-    panelHeight: calendarContent.implicitHeight + 28
+    panelWidth: 332
+    padding: 16
+    panelHeight: calendarContent.implicitHeight + 2 * padding
     onVisibleChanged: if (visible) displayed = new Date(now.getFullYear(), now.getMonth(), 1)
 
     function stepMonth(step) {
@@ -43,25 +44,29 @@ BarPopup {
 
     component NavButton: PanelButton {
         theme: calendar.theme
-        fontSize: BarStyle.popupFontSize + 3
+        fontSize: BarStyle.popupFontSize + 5
         implicitWidth: 30
+        implicitHeight: 30
+        radius: 15
     }
 
     ColumnLayout {
         id: calendarContent
         anchors.left: parent.left
         anchors.right: parent.right
-        spacing: 8
+        spacing: 10
 
         RowLayout {
             Layout.fillWidth: true
+            Layout.leftMargin: 4
             spacing: 2
 
             ColumnLayout {
                 Layout.fillWidth: true
-                spacing: 2
+                spacing: 1
 
                 PanelText {
+                    Layout.fillWidth: true
                     text: Qt.formatDate(calendar.displayed, "MMMM yyyy")
                     font.pixelSize: BarStyle.popupFontSize + 5
                     font.weight: Font.DemiBold
@@ -81,23 +86,23 @@ BarPopup {
         GridLayout {
             Layout.fillWidth: true
             columns: 8
-            columnSpacing: 3
-            rowSpacing: 3
+            columnSpacing: 2
+            rowSpacing: 2
 
             Repeater {
                 model: ["", "Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
 
                 PanelText {
                     required property string modelData
-                    Layout.preferredHeight: 20
+                    Layout.preferredHeight: 24
                     Layout.preferredWidth: modelData ? -1 : 22
                     Layout.fillWidth: modelData !== ""
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     text: modelData
                     color: calendar.theme.muted
-                    font.pixelSize: BarStyle.popupFontSize - 3
-                    font.weight: Font.DemiBold
+                    font.pixelSize: BarStyle.popupFontSize - 2
+                    font.weight: Font.Medium
                 }
             }
 
@@ -117,19 +122,28 @@ BarPopup {
 
                     Layout.fillWidth: !weekColumn
                     Layout.preferredWidth: weekColumn ? 22 : -1
-                    Layout.preferredHeight: 27
-                    radius: BarStyle.radius.control
-                    color: today ? calendar.theme.accent : "transparent"
+                    Layout.preferredHeight: 34
+                    color: "transparent"
+
+                    // Today sits on a rounded square.
+                    Rectangle {
+                        anchors.centerIn: parent
+                        visible: cell.today
+                        width: 32
+                        height: 32
+                        radius: 11
+                        color: calendar.theme.accent
+                    }
 
                     PanelText {
                         anchors.centerIn: parent
                         text: cell.weekColumn ? calendar.isoWeek(cell.day) : cell.day.getDate()
-                        font.pixelSize: cell.weekColumn ? BarStyle.popupFontSize - 3 : BarStyle.popupFontSize - 1
-                        font.weight: cell.today ? Font.Bold : Font.Normal
+                        font.pixelSize: cell.weekColumn ? BarStyle.popupFontSize - 3 : BarStyle.popupFontSize
+                        font.weight: cell.today ? Font.DemiBold : Font.Normal
                         font.features: { "tnum": 1 }
                         color: cell.today ? calendar.theme.background
-                            : cell.weekColumn ? Qt.alpha(calendar.theme.muted, 0.8)
-                            : !cell.inMonth ? Qt.alpha(calendar.theme.muted, 0.7)
+                            : cell.weekColumn ? Qt.alpha(calendar.theme.muted, 0.7)
+                            : !cell.inMonth ? Qt.alpha(calendar.theme.muted, 0.55)
                             : cell.weekend ? calendar.theme.secondary
                             : calendar.theme.foreground
                     }
