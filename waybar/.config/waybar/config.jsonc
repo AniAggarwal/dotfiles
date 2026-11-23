@@ -9,6 +9,7 @@
   "modules-right": [
     // "custom/media",
     // "custom/spotify",
+    "group/perf",
     "cpu",
     "custom/gpu-usage",
     "memory",
@@ -55,6 +56,92 @@
     },
     "on-click": "activate",
   },
+  // Persistent auto-cpufreq overrides (until reset). The collapsed icon shows which override
+  // is in effect; hovering reveals six buttons that force a governor or turbo
+  // mode, or clear either back to auto. Every button ends in SIGRTMIN+6, so
+  // the whole group re-reads state the moment you click; the 120s interval is
+  // only there to catch changes made outside waybar.
+  "group/perf": {
+    "orientation": "horizontal",
+    "drawer": {
+      "transition-duration": 300,
+      "children-class": "perf-btn",
+      // Expand leftward; the default would shove the rest of the bar around.
+      "transition-left-to-right": false,
+    },
+    "modules": [
+      // First entry is the permanently visible one.
+      "custom/perf-status",
+      "custom/perf-performance",
+      "custom/perf-powersave",
+      "custom/perf-reset",
+      "custom/perf-turbo-always",
+      "custom/perf-turbo-never",
+      "custom/perf-turbo-auto",
+    ],
+  },
+  "custom/perf-status": {
+    "exec": "~/.config/hypr/scripts/perf-profile.sh status",
+    "format": "<big>{}</big>",
+    "return-type": "json",
+    "interval": 120,
+    "signal": 6,
+    "tooltip": true,
+  },
+  "custom/perf-performance": {
+    "exec": "~/.config/hypr/scripts/perf-profile.sh active gov performance",
+    "format": "<big>{}</big>",
+    "return-type": "json",
+    "interval": 120,
+    "signal": 6,
+    "tooltip": true,
+    "on-click": "~/.config/hypr/scripts/perf-profile.sh set force performance",
+  },
+  "custom/perf-powersave": {
+    "exec": "~/.config/hypr/scripts/perf-profile.sh active gov powersave",
+    "format": "<big>{}</big>",
+    "return-type": "json",
+    "interval": 120,
+    "signal": 6,
+    "tooltip": true,
+    "on-click": "~/.config/hypr/scripts/perf-profile.sh set force powersave",
+  },
+  "custom/perf-reset": {
+    "exec": "~/.config/hypr/scripts/perf-profile.sh active gov reset",
+    "format": "<big>{}</big>",
+    "return-type": "json",
+    "interval": 120,
+    "signal": 6,
+    "tooltip": true,
+    "on-click": "~/.config/hypr/scripts/perf-profile.sh set force reset",
+  },
+  "custom/perf-turbo-always": {
+    "exec": "~/.config/hypr/scripts/perf-profile.sh active turbo always",
+    "format": "<big>{}</big>",
+    "return-type": "json",
+    "interval": 120,
+    "signal": 6,
+    "tooltip": true,
+    "on-click": "~/.config/hypr/scripts/perf-profile.sh set turbo always",
+  },
+  "custom/perf-turbo-never": {
+    "exec": "~/.config/hypr/scripts/perf-profile.sh active turbo never",
+    "format": "<big>{}</big>",
+    "return-type": "json",
+    "interval": 120,
+    "signal": 6,
+    "tooltip": true,
+    "on-click": "~/.config/hypr/scripts/perf-profile.sh set turbo never",
+  },
+  "custom/perf-turbo-auto": {
+    "exec": "~/.config/hypr/scripts/perf-profile.sh active turbo auto",
+    "format": "<big>{}</big>",
+    "return-type": "json",
+    "interval": 120,
+    "signal": 6,
+    "tooltip": true,
+    "on-click": "~/.config/hypr/scripts/perf-profile.sh set turbo auto",
+  },
   "cpu": {
     "format": "{usage}%  <big></big>",
     "tooltip": false,
@@ -64,7 +151,7 @@
     "exec": "~/.config/hypr/scripts/gpu-usage.sh",
     "format": "<big>{}</big>   <big>󰢮</big>",
     "return-type": "json",
-    "interval": 10,
+    "interval": 30,
     "signal": 5,
     "tooltip": true,
     "on-click": "kitty 'nvitop'",
@@ -72,7 +159,7 @@
   },
   "memory": {
     "interval": 8,
-    "format": "{used}GiB  <big></big>",
+    "format": "{used:.2f}GiB  <big><span font_family=\"FiraCode Nerd Font\"></span></big>",
     "on-click": "kitty 'btop'",
   },
   "pulseaudio": {
@@ -159,8 +246,7 @@
     "on-triple-click": "nmcli radio wifi | grep -q 'enabled' && nmcli radio wifi off || nmcli radio wifi on; pkill -SIGRTMIN+2 waybar",
   },
   "network": {
-    "interval": "once",
-    "signal": 4,
+    "interval": 60,
     "format-wifi": "{essid}   <big></big>",
     "format-ethernet": "{ipaddr}    <big></big>",
     "format-disconnected": "<big>󱚵</big>    Disconnected",
@@ -171,6 +257,7 @@
     "on-click": "kitty 'nmtui'",
   },
   "idle_inhibitor": {
+    "start-activated": true,
     "format": "<big>{icon}</big>",
     "format-icons": {
       "activated": "󰅶 ",

@@ -36,7 +36,7 @@
   padding: 0;
 }
 
-#workspaces button.active {
+#workspaces button.visible {
   color: @accent_workspace_active;
 }
 
@@ -106,6 +106,7 @@
 #custom-dunst-level,
 #custom-radio-toggle,
 #network,
+#cpu,
 #memory,
 #custom-gpu-usage {
   background-color: @bar_bg;
@@ -123,6 +124,7 @@
 #custom-dunst-level { padding: 2px 0 0 2px; }
 #custom-radio-toggle { padding: 0 0 0 2px; }
 #network { padding: 0 8px 0 0; }
+#cpu,
 #memory,
 #custom-gpu-usage { padding: 0 8px; }
 
@@ -156,8 +158,13 @@
 
 #temperature.critical { color: @accent_temp_critical; }
 
-/* ===== CPU ===== */
-#cpu {
+/* ===== Performance drawer =====
+   Leftmost module on the right side, so it carries the rounded cap that #cpu
+   used to have.
+   Active/inactive contrast is done with pango alpha inside perf-profile.sh,
+   not with a class here, so it does not depend on which widget waybar puts
+   `children-class` on. */
+#perf {
   background-color: @bar_bg;
   border: 2px solid;
   border-color: @bar_border;
@@ -168,6 +175,24 @@
   margin: 0;
   padding: 0 8px;
   color: @bar_fg;
+}
+
+#custom-perf-status,
+#custom-perf-performance,
+#custom-perf-powersave,
+#custom-perf-reset,
+#custom-perf-turbo-always,
+#custom-perf-turbo-never,
+#custom-perf-turbo-auto {
+  font-family: "FiraCode Nerd Font";
+  min-width: 16px;
+  padding: 0 4px;
+}
+
+#custom-perf-turbo-always {
+  margin-left: 4px;
+  border-left: 1px solid @bar_border;
+  padding-left: 8px;
 }
 
 /* ===== Media card ===== */
