@@ -33,8 +33,6 @@ notify() {
 
 # Use UPower to monitor battery details in an event-driven fashion.
 upower --monitor-detail | while read -r line; do
-    # Refresh waybar battery module on any battery event
-    pkill -SIGRTMIN+3 waybar 2>/dev/null
 
     # Process state changes.
     if [[ "$line" =~ "state:" ]]; then

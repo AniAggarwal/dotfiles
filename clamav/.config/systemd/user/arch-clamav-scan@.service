@@ -1,6 +1,8 @@
 [Unit]
 Description=ClamAV %i scan of high-risk and foreign-package files
 Documentation=man:clamscan(1)
+# Don't scan on battery; the timer runs it again at its next slot.
+ConditionACPower=true
 
 [Service]
 Type=oneshot
