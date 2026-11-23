@@ -1,0 +1,37 @@
+#compdef sec
+# Completion for ~/bin/sec: subcommands, then secret names (from `sec ls`), then a command after --.
+_sec_names() {
+    local -a names
+    names=(${(f)"$(sec ls 2>/dev/null)"})
+    _describe -t secrets 'secret' names
+}
+
+_sec() {
+    local -a subcommands
+    subcommands=(
+        'ls:list secret names'
+        'get:print a secret'
+        'copy:copy a secret to the clipboard'
+        'set:store or replace a secret'
+        'rm:delete a secret'
+        'help:show help'
+    )
+    local dashdash=${words[(i)--]}
+    if (( CURRENT > dashdash )); then
+        shift $dashdash words; (( CURRENT -= dashdash ))
+        _normal
+        return
+    fi
+    if (( CURRENT == 2 )); then
+        _describe -t commands 'subcommand' subcommands
+        _sec_names
+        return
+    fi
+    case ${words[2]} in
+        get|copy|rm|set) (( CURRENT == 3 )) && _sec_names ;;
+        ls|help) ;;
+        *) _sec_names; compadd -- -- ;;
+    esac
+}
+
+_sec "$@"

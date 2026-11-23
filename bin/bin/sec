@@ -1,19 +1,99 @@
 #!/usr/bin/bash
-# Runs one command with secrets from the Secret Service (KeePassXC) in its environment only.
-#   sec HF_TOKEN -- hf upload ...
-#   sec AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY -- some-tool
-# Each NAME is looked up with `secret-tool lookup env NAME` (stored by secrets-import).
+# sec: use secrets stored in KeePassXC (Secret Service) by name, without putting them in your
+# shell or on disk. Items are tagged env=<NAME> (see secrets-import).
 set -euo pipefail
-names=()
-while (( $# )) && [[ $1 != -- ]]; do names+=("$1"); shift; done
-[[ ${1:-} == -- ]] && shift
-if (( ${#names[@]} == 0 || $# == 0 )); then
-    echo "usage: sec NAME... -- command [args...]" >&2
-    exit 64
-fi
-for name in "${names[@]}"; do
-    [[ $name =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || { echo "sec: bad name: $name" >&2; exit 64; }
-    value=$(secret-tool lookup env "$name") || { echo "sec: $name not found (is KeePassXC unlocked?)" >&2; exit 1; }
-    export "$name=$value"
-done
-exec "$@"
+
+usage() {
+    cat <<'EOF'
+Usage:
+  sec NAME... -- COMMAND [ARGS...]   run COMMAND with only these secrets in its environment
+  sec ls                             list secret names
+  sec get NAME                       print a secret (for piping; avoid in agent sessions)
+  sec copy NAME                      copy a secret to the clipboard (marked sensitive, cleared in 30 s)
+  sec set NAME                       store or replace a secret (value read from stdin or prompted)
+  sec rm NAME                        delete a secret
+  sec help                           this help
+
+Examples:
+  sec HF_TOKEN -- hf upload org/model ./out
+  sec AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY -- aws s3 ls
+  pbpaste | sec set NEW_TOKEN
+
+Per project, put `use secret NAME...` in a direnv .envrc instead.
+Secrets need KeePassXC unlocked with the Machine Secrets database open.
+EOF
+}
+
+die() { echo "sec: $*" >&2; exit "${2:-1}"; }
+
+check_name() {
+    [[ $1 =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || die "not a valid variable name: $1" 64
+}
+
+lookup() {
+    secret-tool lookup env "$1" 2>/dev/null \
+        || die "no secret named $1 (is KeePassXC unlocked? see: sec ls)"
+}
+
+# KeePassXC doesn't export the "default" alias object that secret-tool writes to by default.
+collection() {
+    local path
+    path=$(busctl --user call org.freedesktop.secrets /org/freedesktop/secrets \
+        org.freedesktop.Secret.Service ReadAlias s default 2>/dev/null | sed -nE 's/^o "(.+)"$/\1/p')
+    [[ -n $path && $path != / ]] || die "no Secret Service database exposed (is KeePassXC unlocked?)"
+    printf '%s\n' "$path"
+}
+
+list_names() {
+    local c item
+    c=$(collection)
+    for item in $(busctl --user --json=short get-property org.freedesktop.secrets "$c" \
+            org.freedesktop.Secret.Collection Items | jq -r '.data[]'); do
+        busctl --user --json=short get-property org.freedesktop.secrets "$item" \
+            org.freedesktop.Secret.Item Attributes | jq -r '.data.env // empty'
+    done | sort -u
+}
+
+case ${1:-help} in
+    help|-h|--help)
+        usage ;;
+    ls|list)
+        list_names ;;
+    get)
+        (( $# == 2 )) || die "usage: sec get NAME" 64
+        check_name "$2"; lookup "$2"; echo ;;
+    copy)
+        (( $# == 2 )) || die "usage: sec copy NAME" 64
+        check_name "$2"
+        lookup "$2" | wl-copy --sensitive
+        echo "copied $2; clearing the clipboard in 30 s"
+        ( sleep 30; wl-copy --clear ) >/dev/null 2>&1 & disown ;;
+    set)
+        (( $# == 2 )) || die "usage: sec set NAME" 64
+        check_name "$2"
+        if [[ -t 0 ]]; then
+            read -rsp "Value for $2: " value; echo
+        else
+            value=$(cat)
+        fi
+        [[ -n $value ]] || die "empty value, nothing stored" 64
+        printf '%s' "$value" | secret-tool store --collection="$(collection)" --label="env: $2" env "$2"
+        echo "stored $2" ;;
+    rm)
+        (( $# == 2 )) || die "usage: sec rm NAME" 64
+        check_name "$2"
+        secret-tool clear env "$2" && echo "removed $2" ;;
+    *)
+        names=()
+        while (( $# )) && [[ $1 != -- ]]; do names+=("$1"); shift; done
+        [[ ${1:-} == -- ]] && shift
+        if (( ${#names[@]} == 0 || $# == 0 )); then
+            usage >&2; exit 64
+        fi
+        for name in "${names[@]}"; do
+            check_name "$name"
+            value=$(lookup "$name")
+            export "$name=$value"
+        done
+        exec "$@" ;;
+esac
