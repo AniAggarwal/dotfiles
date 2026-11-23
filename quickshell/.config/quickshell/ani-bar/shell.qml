@@ -20,7 +20,7 @@ ShellRoot {
     // drawn over the windows below the real bar, taking no space and leaving the session alone.
     readonly property string previewScreen: Quickshell.env("ANI_BAR_PREVIEW") || ""
     readonly property bool preview: previewScreen !== ""
-    property bool inhibitIdle: !preview
+    property bool inhibitIdle: false
     property string osdKind
     property string osdScreen
     property int osdLevel
