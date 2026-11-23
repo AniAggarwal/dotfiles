@@ -37,6 +37,11 @@
 - Once I open a one-way door, it stays open for that work, including any subagent you hand it to (quote me for its permission classifier).
 - Come back only if the door turns out to be different from the one I opened: more at stake than I was initially told, a check failing, or something I didn't know about.
 
+## Secrets
+- API keys and tokens are not in the shell environment by default. They live in KeePassXC and are read with `secret-tool lookup env NAME`.
+- Under `~/dev/work/vamana` and `~/dev/research`, direnv loads them, but only in interactive shells. From an agent's non-interactive shell, run commands that need them as `direnv exec . <cmd>` from inside that tree, or `sec NAME... -- <cmd>` anywhere.
+- Never print, echo, log or commit a secret value, and never read files that hold secrets (`~/.ssh`, `~/.aws`, real `.env` files (`.env.example` is fine), `*.pem`, KeePassXC files). Refer to secrets by name.
+
 ## Messaging me
 - `agent-inbox send "Title" <<'EOF' … EOF` puts a message in my bar inbox. The body is markdown, and LaTeX math (`$…$`, `$$…$$`) renders. Sender, project, branch and time are added automatically.
 - Use it when I'm likely away and something needs me: long work finished, a decision that blocks you, or a result worth reading later. Add `--urgent` only when you're blocked on me.

@@ -14,12 +14,14 @@ usage() {
 install_all_no_sudo() {
     stow -d "$dir" -t ~/ zsh kitty herdr nvim bat conky easyeffects ignores bin hyprland quickshell swaylock-effects spotify-launcher rofi brave wireplumber pypr clamav applications
     stow -d "$dir" -t ~/ agents
+    stow -d "$dir" -t ~/ dev-env   # per-tree direnv .envrc files (secret names only)
     # Scan every commit for secrets (the repo is public). Needs: sudo pacman -S gitleaks
     git -C "$dir" config core.hooksPath .githooks
 }
 
 install_all_sudo() {
-    sudo stow -d "$dir" -t /etc/ battery-optimizations
+    # Root-owned copies, not stow symlinks: see battery-optimizations/install.sh.
+    sudo sh "$dir/battery-optimizations/install.sh"
     sudo stow -d "$dir" -t /usr/share/grub/themes/ grub-theme
 }
 

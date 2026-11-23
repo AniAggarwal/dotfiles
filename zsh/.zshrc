@@ -41,7 +41,7 @@ else
 fi
 
 # for UMOBJ store
-# OBJ_ACCESS_KEY_ID, OBJ_SECRET_ACCESS_KEY set in .secrets
+# OBJ_ACCESS_KEY_ID, OBJ_SECRET_ACCESS_KEY come from KeePassXC via ~/dev/research/.envrc
 export OBJ_SERVER="obj.umiacs.umd.edu"
 
 # For Ruby Gems
@@ -91,8 +91,9 @@ ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 # Based on this stack overflow answer of how to remove an element from an array https://stackoverflow.com/a/25172688/154703
 ZSH_AUTOSUGGEST_ACCEPT_WIDGETS[$ZSH_AUTOSUGGEST_ACCEPT_WIDGETS[(i)vi-forward-char]]=()
 
-# Source secret keys, etc.
-[ -f ~/.secrets ] && source ~/.secrets
+# Secrets are not exported globally. They live in KeePassXC (Machine Secrets) and load per tree
+# through direnv (~/dev/work/vamana/.envrc, ~/dev/research/.envrc; `use secret NAME...`), or per
+# command with `sec NAME... -- cmd`.
 
 # Aliases
 [ -f ~/.aliases ] && source ~/.aliases
