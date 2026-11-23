@@ -15,7 +15,7 @@ PanelWindow {
     readonly property SystemStats system: theme.system
     // wallpaper-layout.py keeps the clock out of x >= 70 %, y >= 76 % of the screen.
     readonly property int inset: 24
-    readonly property int side: Math.round(Math.min(420, (screen.width * 0.3 - inset) / face.aspect, screen.height * 0.24 - inset))
+    readonly property int side: Math.floor(Math.min(420, (screen.width * 0.3 - inset) / face.aspect, screen.height * 0.24 - inset))
     readonly property int wide: Math.round(side * face.aspect)
     readonly property rect area: Qt.rect(screen.width - inset - wide, screen.height - inset - side, wide, side)
     readonly property bool dark: theme.clockPlacement(screen?.name ?? "").tone === "dark"

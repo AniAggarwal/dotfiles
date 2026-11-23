@@ -1,20 +1,30 @@
 import QtQuick
 import "BarStyle.js" as BarStyle
 
-// An ornithopter instrument cluster: three gauges, sizes stepping down from right to left, their
-// bottoms on one line, each tucked under the bezel of the larger one beside it.
+// Design principles: modern avionics built for Arrakis, not a brass antique.
+//   Hierarchy  The main gauge is the hero and CPU its loudest trace; the craft answers to it.
+//              The smaller gauges are scaled copies that speak more quietly, never louder.
+//   Contrast   Data outranks decoration. Readings draw at full strength; rings, rails and
+//              graduations at a quarter. Every ring has a job; a track is one floor line.
+//   Strokes    Three weights shared by the whole cluster, in main-gauge units: hairline for
+//              structure, trace for histories, bar for amounts. Type is one size of Geist,
+//              tracked wide and set straight on the face.
+//   Material   A thin satin bezel, one faint glass highlight, one soft shadow to lift each
+//              gauge off the wallpaper. Nothing else is lit, cast or worn.
+//   Space      Gauges stand apart, an even gap between them, threaded on one shared horizon.
+//              Each face keeps a clear ring between scale and data and a quiet center.
+//   Color      Foreground for everything; accent only for live values (the bugs); second only
+//              to tell the paired reading apart (OUT, SWAP); hot only at a limit.
+//   State      Angle along one shared 270 degree sweep is the amount, tick length is a past
+//              sample and fades with age, and a sleeping source shows only its empty track.
 //
-//   main  CPU   radial ticks, one per sample; the bug on the scale is the current load
-//         GPU   a band whose outer edge follows the history; only its groove while the GPU sleeps
-//         TEMP  two thin arcs, CPU package (outer) and GPU (inner); they turn hot at the red line
-//         the craft's wings sweep back with the recent CPU load
-//   mem   MEM   a heavy arc, memory in use, with a bug on the scale
-//         SWAP  a lighter arc, swap in use
-//   net   IN    ticks outward from a rail, one per sample, against the busiest moment in the history
-//         OUT   ticks inward from the same rail; a bug on the scale for each current rate
-//
-// Every track shares one 270 degree sweep, 7:30 clockwise to 4:30, with histories running oldest
-// to newest along it. Labels sit on a plate in the gap at the bottom. No numbers and no scale.
+// The gauges, right to left:
+//   main  CPU ticks per sample and a bug for the current load; GPU a band following its
+//         history; TEMP two thin arcs, CPU package (outer) and GPU (inner), past a red line at
+//         the critical limit. The craft's wings sweep back with the recent CPU load.
+//   mem   MEM and SWAP in use as bars, with a bug for memory.
+//   net   IN ticks outward and OUT ticks inward from one rail, against the busiest moment in
+//         the history, with a bug for each current rate.
 //
 // Two canvases: `faces` holds everything that only changes with the size or the palette, and
 // `readings` is painted once per sample, and only while `live`.
@@ -33,22 +43,28 @@ Item {
     // Whether a new sample should be painted.
     property bool live: true
 
-    // Gauge radii against the main one's, and how far each tucks under the next, in main radii.
-    readonly property real memSize: 0.64
-    readonly property real netSize: 0.5
-    readonly property real gap: -0.05
+    // Gauge radii against the main one's, and the space between bezels, in main radii.
+    readonly property real memSize: 0.62
+    readonly property real netSize: 0.48
+    readonly property real gap: 0.09
     // Room around the cluster for its shadow, in main radii.
     readonly property real margin: 0.05
     // Width over height of the whole cluster, for whoever sizes it.
     readonly property real aspect: (2 + 2 * memSize + 2 * netSize + 2 * gap + 2 * margin) / (2 + 2 * margin)
 
-    readonly property color metalLight: Qt.tint(background, Qt.alpha(foreground, darkTone ? 0.56 : 0.42))
+    readonly property color metalLight: Qt.tint(background, Qt.alpha(foreground, darkTone ? 0.46 : 0.32))
     readonly property color metalDark: Qt.tint(background, Qt.alpha(foreground, darkTone ? 0.16 : 0.08))
-    readonly property color faceColor: Qt.darker(background, 1.3)
+    readonly property color faceColor: Qt.darker(background, 1.35)
     readonly property color mark: foreground
 
-    readonly property real craftScale: 1.08
-    readonly property real disk: 33
+    // Stroke weights and type, in main-gauge units (a hundredth of its radius).
+    readonly property var weight: ({ hair: 0.3, trace: 0.9, bar: 3.4, type: 4.6 })
+    // How strongly structure draws, and data on the smaller gauges, against the main's data.
+    readonly property real structure: 0.24
+    readonly property real quiet: 0.75
+
+    readonly property real craftScale: 1.06
+    readonly property real disk: 32
     readonly property real sweepStart: 0.75 * Math.PI
     readonly property real sweep: 1.5 * Math.PI
     // Temperatures in °C at the ends of the sweep; the red line starts at the critical limit.
@@ -58,20 +74,30 @@ Item {
     // Anything besides a sample that changes the picture.
     readonly property string look: [width, height, darkTone, foreground, background, accent, second, hot].join()
 
-    // The three gauges in canvas pixels; u is a hundredth of a gauge's bezel radius.
+    // The three gauges in canvas pixels, centers on one line; u is a hundredth of a gauge's
+    // bezel radius and U the main gauge's.
     function gauges(canvas) {
         const R = canvas.height / (2 + 2 * margin);
-        const bottom = canvas.height - margin * R;
-        const place = (cx, size) => ({ cx: cx, cy: bottom - size * R, R: size * R, u: size * R / 100 });
+        const cy = canvas.height / 2;
+        const place = (cx, size) => ({ cx: cx, cy: cy, R: size * R, u: size * R / 100 });
         const main = place(canvas.width - margin * R - R, 1);
         const mem = place(main.cx - R - gap * R - memSize * R, memSize);
         const net = place(mem.cx - mem.R - gap * R - netSize * R, netSize);
-        return { main: main, mem: mem, net: net, unit: R / 100 };
+        return { main: main, mem: mem, net: net, U: R / 100 };
+    }
+
+    // Pixel width of a stroke weight, never under one device pixel.
+    function px(G, name) {
+        return Math.max(1, weight[name] * G.U);
     }
 
     function ringArc(ctx, g, radius, from, to) {
         ctx.beginPath();
         ctx.arc(g.cx, g.cy, radius * g.u, from, to, false);
+    }
+
+    function sweepArc(ctx, g, radius, fraction) {
+        ringArc(ctx, g, radius, sweepStart, sweepStart + sweep * Math.max(0.006, fraction));
     }
 
     // A radial line on a gauge between two radii.
@@ -82,45 +108,187 @@ Item {
         ctx.lineTo(g.cx + outer * g.u * c, g.cy + outer * g.u * s);
     }
 
-    // Text set along the bottom of a circle, upright, centered on 6 o'clock. `px` is in pixels so
-    // every label in the cluster is the same size.
-    function bottomText(ctx, g, text, radius, px, spacing) {
-        ctx.font = "bold " + Math.round(px) + "px \"" + BarStyle.textFont + "\"";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        const gapPx = spacing * px;
-        const widths = [];
-        let total = 0;
-        for (let i = 0; i < text.length; i++) {
-            widths.push(ctx.measureText(text[i]).width + gapPx);
-            total += widths[i];
-        }
-        total -= gapPx;
+    // A small triangle on a circle at `angle`, pointing in; `size` in pixels.
+    function chevron(ctx, g, angle, radius, size) {
         const r = radius * g.u;
-        let angle = Math.PI / 2 + total / 2 / r;
-        for (let i = 0; i < text.length; i++) {
-            const mid = angle - (widths[i] - (i === text.length - 1 ? 0 : gapPx)) / 2 / r;
-            ctx.save();
-            ctx.translate(g.cx + r * Math.cos(mid), g.cy + r * Math.sin(mid));
-            ctx.rotate(mid - Math.PI / 2);
-            ctx.fillText(text[i], 0, 0);
-            ctx.restore();
-            angle -= widths[i] / r;
-        }
-        return total / r;
-    }
-
-    // A small triangle on a circle at `angle`, pointing in or out.
-    function chevron(ctx, g, angle, radius, size, inward) {
-        const r = radius * g.u;
-        const s = size * g.u;
-        const tip = inward ? r - s : r + s;
-        const half = s * 0.62 / r;
+        const half = size * 0.6 / r;
         ctx.beginPath();
-        ctx.moveTo(g.cx + tip * Math.cos(angle), g.cy + tip * Math.sin(angle));
+        ctx.moveTo(g.cx + (r - size) * Math.cos(angle), g.cy + (r - size) * Math.sin(angle));
         ctx.lineTo(g.cx + r * Math.cos(angle - half), g.cy + r * Math.sin(angle - half));
         ctx.lineTo(g.cx + r * Math.cos(angle + half), g.cy + r * Math.sin(angle + half));
         ctx.closePath();
+    }
+
+    // Labels set straight across the gap at the bottom, each level with its track.
+    function labels(ctx, G, g, rows) {
+        const size = Math.max(8, weight.type * G.U);
+        ctx.font = "600 " + Math.round(size) + "px \"" + BarStyle.textFont + "\"";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = mark;
+        ctx.globalAlpha = 0.72;
+        for (const [text, radius] of rows) {
+            // Canvas has no letter spacing: set the letters one by one.
+            const letters = text.split("");
+            const track = size * 0.3;
+            const widths = letters.map(letter => ctx.measureText(letter).width);
+            let x = g.cx - (widths.reduce((a, b) => a + b, 0) + track * (letters.length - 1)) / 2;
+            for (let i = 0; i < letters.length; i++) {
+                ctx.fillText(letters[i], x + widths[i] / 2, g.cy + radius * g.u);
+                x += widths[i] + track;
+            }
+        }
+    }
+
+    // The parts every gauge shares: shadow, bezel, face, the scale band and its chevrons, the
+    // glass. `ticks` is the number of graduations round the band.
+    function gaugeBody(ctx, G, g, ticks) {
+        const u = g.u;
+        const hair = px(G, "hair");
+        ctx.globalAlpha = 1;
+
+        ctx.save();
+        ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+        ctx.shadowBlur = 6 * G.U;
+        ctx.shadowOffsetY = 1.2 * G.U;
+        ctx.fillStyle = face.metalDark.toString();
+        ctx.beginPath();
+        ctx.arc(g.cx, g.cy, 99.6 * u, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.restore();
+
+        // Bezel: a thin satin ring, lighter at the top, a lit lip outside and a dark one in.
+        const satin = ctx.createLinearGradient(g.cx, g.cy - 100 * u, g.cx, g.cy + 100 * u);
+        satin.addColorStop(0, face.metalLight.toString());
+        satin.addColorStop(0.6, face.metalDark.toString());
+        satin.addColorStop(1, face.metalDark.toString());
+        ctx.fillStyle = satin;
+        ctx.beginPath();
+        ctx.arc(g.cx, g.cy, 100 * u, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.lineWidth = hair;
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.22)";
+        ringArc(ctx, g, 100 - 0.5 * hair / u, Math.PI * 1.1, Math.PI * 1.9);
+        ctx.stroke();
+
+        // The face, flat, a touch darker under the bezel.
+        const deep = ctx.createRadialGradient(g.cx, g.cy, 80 * u, g.cx, g.cy, 94.5 * u);
+        deep.addColorStop(0, face.faceColor.toString());
+        deep.addColorStop(1, Qt.darker(face.faceColor, 1.35).toString());
+        ctx.fillStyle = deep;
+        ctx.beginPath();
+        ctx.arc(g.cx, g.cy, 94.5 * u, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.55)";
+        ctx.stroke();
+
+        // Scale: a quiet band with graduations cut through it, heavier every 30 degrees, and
+        // chevrons at 12, 3 and 9 cut deeper; the one at the top is the lubber mark.
+        const cut = face.faceColor.toString();
+        const band = [87.4, 91.2];
+        ctx.strokeStyle = mark;
+        ctx.globalAlpha = 0.34;
+        ctx.lineWidth = (band[1] - band[0]) * u;
+        ringArc(ctx, g, (band[0] + band[1]) / 2, 0, 2 * Math.PI);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = cut;
+        ctx.lineWidth = Math.max(0.8, 0.3 * G.U);
+        ctx.beginPath();
+        for (let i = 0; i < ticks; i++) {
+            const major = (i * 360 / ticks) % 30 === 0;
+            spoke(ctx, g, i * 2 * Math.PI / ticks, major ? band[0] - 0.2 : band[0] + (band[1] - band[0]) * 0.45, band[1] + 0.2);
+        }
+        ctx.stroke();
+        ctx.fillStyle = cut;
+        for (const angle of [-Math.PI / 2, 0, Math.PI]) {
+            face.chevron(ctx, g, angle, band[1] + 0.3, (angle < 0 ? 3.6 : 2.6) * G.U);
+            ctx.fill();
+        }
+    }
+
+    // One faint glass highlight to the top left.
+    function glass(ctx, g) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(g.cx, g.cy, 94.5 * g.u, 0, 2 * Math.PI);
+        ctx.clip();
+        ctx.beginPath();
+        ctx.arc(g.cx, g.cy, 92 * g.u, Math.PI * 1.0, Math.PI * 1.55, false);
+        ctx.arc(g.cx + 20 * g.u, g.cy + 22 * g.u, 98 * g.u, Math.PI * 1.48, Math.PI * 1.06, true);
+        ctx.closePath();
+        const dome = ctx.createLinearGradient(g.cx - 70 * g.u, g.cy - 70 * g.u, g.cx - 20 * g.u, g.cy - 20 * g.u);
+        dome.addColorStop(0, "rgba(255, 255, 255, 0.06)");
+        dome.addColorStop(1, "rgba(255, 255, 255, 0)");
+        ctx.fillStyle = dome;
+        ctx.globalAlpha = 1;
+        ctx.fill();
+        ctx.restore();
+    }
+
+    // Structure over the sweep: floor lines for each track and the two end lines that bound
+    // the data, from `inner` to `outer`.
+    function tracks(ctx, G, g, floors, inner, outer) {
+        ctx.strokeStyle = mark;
+        ctx.lineWidth = px(G, "hair");
+        ctx.globalAlpha = face.structure;
+        for (const radius of floors) {
+            ringArc(ctx, g, radius, sweepStart, sweepStart + sweep);
+            ctx.stroke();
+        }
+        ctx.globalAlpha = face.structure * 1.6;
+        ctx.beginPath();
+        for (const angle of [sweepStart, sweepStart + sweep])
+            spoke(ctx, g, angle, inner, outer);
+        ctx.stroke();
+    }
+
+    // An empty bar track over the whole sweep, for amounts.
+    function barTrack(ctx, G, g, radius) {
+        ctx.strokeStyle = mark;
+        ctx.globalAlpha = 0.08;
+        ctx.lineWidth = px(G, "bar");
+        ringArc(ctx, g, radius, sweepStart, sweepStart + sweep);
+        ctx.stroke();
+    }
+
+    // An attitude disk: sky over ground and a horizon line; `detail` adds bank marks.
+    function attitude(ctx, G, g, radius, detail) {
+        const u = g.u;
+        const r = radius * u;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(g.cx, g.cy, r, 0, 2 * Math.PI);
+        ctx.clip();
+        ctx.fillStyle = mark;
+        ctx.globalAlpha = 0.045;
+        ctx.fillRect(g.cx - r, g.cy - r, 2 * r, r);
+        ctx.fillStyle = "#000000";
+        ctx.globalAlpha = 0.22;
+        ctx.fillRect(g.cx - r, g.cy, 2 * r, r);
+        ctx.restore();
+        ctx.strokeStyle = mark;
+        ctx.fillStyle = mark;
+        ctx.lineWidth = px(G, "hair");
+        ctx.globalAlpha = face.structure * 1.4;
+        ctx.beginPath();
+        ctx.arc(g.cx, g.cy, r, 0, 2 * Math.PI);
+        ctx.stroke();
+        ctx.globalAlpha = face.structure * 2;
+        ctx.beginPath();
+        ctx.moveTo(g.cx - r, g.cy);
+        ctx.lineTo(g.cx + r, g.cy);
+        ctx.stroke();
+        if (!detail)
+            return;
+        ctx.globalAlpha = face.structure * 1.6;
+        ctx.beginPath();
+        for (const degrees of [-60, -30, 30, 60])
+            spoke(ctx, g, -Math.PI / 2 + degrees * Math.PI / 180, radius, radius + 2.6);
+        ctx.stroke();
+        ctx.globalAlpha = 0.7;
+        face.chevron(ctx, g, -Math.PI / 2, radius + 4.2, 2.4 * G.U);
+        ctx.fill();
     }
 
     // One wing in its own frame: the root at the origin, the span along +x.
@@ -128,48 +296,41 @@ Item {
         const L = length;
         ctx.beginPath();
         ctx.moveTo(0, -0.7);
-        ctx.bezierCurveTo(L * 0.3, -1.75, L * 0.78, -1.95, L - 0.4, -0.75);
-        ctx.quadraticCurveTo(L + 0.7, 0.3, L - 0.9, 1.35);
-        ctx.bezierCurveTo(L * 0.66, 2.75, L * 0.28, 2.6, 0, 0.9);
+        ctx.bezierCurveTo(L * 0.3, -1.7, L * 0.78, -1.9, L - 0.4, -0.7);
+        ctx.quadraticCurveTo(L + 0.6, 0.3, L - 0.9, 1.3);
+        ctx.bezierCurveTo(L * 0.66, 2.6, L * 0.28, 2.4, 0, 0.9);
         ctx.closePath();
         ctx.fillStyle = color;
-        ctx.globalAlpha = 0.2;
+        ctx.globalAlpha = 0.13;
         ctx.fill();
-        ctx.globalAlpha = 0.95;
+        ctx.globalAlpha = 0.85;
         ctx.strokeStyle = color;
-        ctx.lineWidth = 0.32;
+        ctx.lineWidth = 0.3;
         ctx.stroke();
-        // Spar and costa.
-        ctx.globalAlpha = 0.5;
+        // The spar, and a few veins toward the trailing edge.
+        ctx.globalAlpha = 0.4;
         ctx.lineWidth = 0.2;
         ctx.beginPath();
         ctx.moveTo(0, 0.1);
         ctx.bezierCurveTo(L * 0.35, -0.5, L * 0.75, -0.55, L - 0.6, 0.15);
-        ctx.moveTo(0.6, -0.55);
-        ctx.bezierCurveTo(L * 0.32, -1.3, L * 0.74, -1.45, L - 1.4, -0.95);
-        ctx.stroke();
-        // Cross veins toward the trailing edge.
-        ctx.globalAlpha = 0.3;
-        ctx.beginPath();
-        for (const s of [0.16, 0.3, 0.44, 0.58, 0.72, 0.85]) {
-            const x = L * s;
-            ctx.moveTo(x, -0.35);
-            ctx.lineTo(x - 0.5, 1.9 - 1.1 * s * s);
+        for (const s of [0.3, 0.55, 0.78]) {
+            ctx.moveTo(L * s, -0.25);
+            ctx.lineTo(L * s - 0.5, 1.8 - 1.1 * s * s);
         }
         ctx.stroke();
         // The dark cell near the tip on the leading edge.
         ctx.globalAlpha = 0.9;
         ctx.beginPath();
-        ctx.moveTo(L * 0.8, -1.5);
-        ctx.lineTo(L * 0.89, -1.28);
-        ctx.lineTo(L * 0.88, -0.62);
+        ctx.moveTo(L * 0.8, -1.45);
+        ctx.lineTo(L * 0.89, -1.24);
+        ctx.lineTo(L * 0.88, -0.64);
         ctx.lineTo(L * 0.79, -0.85);
         ctx.closePath();
         ctx.fill();
     }
 
     // The craft seen from above, nose up, in craft units: a broad glazed cab, a squared cabin
-    // with an engine pod on each flank, and a long jointed boom ending in a swept tailplane.
+    // with an engine pod on each flank, and a long boom ending in a swept tailplane.
     function hull(ctx) {
         ctx.beginPath();
         for (const side of [1, -1]) {
@@ -187,7 +348,6 @@ Item {
             ctx.lineTo(0, 27.2);
         }
     }
-    // The engine pods, one capsule per side, with their intakes forward.
     function pods(ctx) {
         ctx.beginPath();
         for (const side of [1, -1]) {
@@ -201,212 +361,6 @@ Item {
         }
     }
 
-    // The parts every gauge shares: bezel, face, scale band with its chevrons, the label plate.
-    // `ticks` is the number of graduations round the band.
-    function gaugeBody(ctx, g, ticks, plateInner, labels, labelPx) {
-        const u = g.u;
-        const mark = face.mark;
-        const hair = Math.max(0.6, 0.28 * u);
-
-        // A soft shadow on whatever is behind.
-        ctx.save();
-        ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
-        ctx.shadowBlur = 7 * u;
-        ctx.shadowOffsetY = 1.6 * u;
-        ctx.fillStyle = face.metalDark.toString();
-        ctx.beginPath();
-        ctx.arc(g.cx, g.cy, 99.6 * u, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.restore();
-
-        // Bezel: a thin satin ring, lit from the top, with a crisp lip on each side.
-        ctx.beginPath();
-        ctx.arc(g.cx, g.cy, 100 * u, 0, 2 * Math.PI);
-        ctx.moveTo(g.cx + 93 * u, g.cy);
-        ctx.arc(g.cx, g.cy, 93 * u, 0, 2 * Math.PI);
-        ctx.fillRule = Qt.OddEvenFill;
-        const satin = ctx.createLinearGradient(g.cx, g.cy - 100 * u, g.cx, g.cy + 100 * u);
-        satin.addColorStop(0, face.metalLight.toString());
-        satin.addColorStop(0.55, face.metalDark.toString());
-        satin.addColorStop(1, Qt.darker(face.metalDark, 1.25).toString());
-        ctx.fillStyle = satin;
-        ctx.globalAlpha = 1;
-        ctx.fill();
-        ctx.fillRule = Qt.WindingFill;
-        ctx.lineWidth = Math.max(0.8, 0.45 * u);
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
-        ringArc(ctx, g, 99.4, Math.PI * 1.05, Math.PI * 1.95);
-        ctx.stroke();
-        ctx.strokeStyle = "rgba(0, 0, 0, 0.6)";
-        ringArc(ctx, g, 93.2, 0, 2 * Math.PI);
-        ctx.stroke();
-        // Engraved hairlines on the bezel, a pair at each diagonal.
-        ctx.strokeStyle = "rgba(0, 0, 0, 0.42)";
-        ctx.lineWidth = hair;
-        ctx.beginPath();
-        for (let i = 0; i < 4; i++) {
-            for (const d of [-1.6, 1.6]) {
-                const angle = (45 + i * 90 + d) * Math.PI / 180;
-                spoke(ctx, g, angle, 94.6, 98.4);
-            }
-        }
-        ctx.stroke();
-
-        // The face: flat, just darker under the bezel.
-        const deep = ctx.createRadialGradient(g.cx, g.cy, 70 * u, g.cx, g.cy, 93 * u);
-        deep.addColorStop(0, face.faceColor.toString());
-        deep.addColorStop(1, Qt.darker(face.faceColor, 1.5).toString());
-        ctx.fillStyle = deep;
-        ctx.beginPath();
-        ctx.arc(g.cx, g.cy, 92.6 * u, 0, 2 * Math.PI);
-        ctx.fill();
-
-        // Scale: an enamel band with graduations cut through it, a fine ring inside it, and the
-        // bearing chevrons at 12, 3 and 9; the one at the top is the lubber mark.
-        const cut = face.faceColor.toString();
-        ctx.strokeStyle = mark;
-        ctx.globalAlpha = 0.5;
-        ctx.lineWidth = 3 * u;
-        ringArc(ctx, g, 87.6, 0, 2 * Math.PI);
-        ctx.stroke();
-        ctx.strokeStyle = cut;
-        ctx.globalAlpha = 1;
-        ctx.lineWidth = Math.max(0.7, 0.36 * u);
-        ctx.beginPath();
-        for (let i = 0; i < ticks; i++) {
-            const angle = i * 2 * Math.PI / ticks;
-            spoke(ctx, g, angle, i % 5 === 0 ? 86 : 87.4, 89.4);
-        }
-        ctx.stroke();
-        ctx.strokeStyle = mark;
-        ctx.globalAlpha = 0.4;
-        ctx.lineWidth = hair;
-        ringArc(ctx, g, 84.2, 0, 2 * Math.PI);
-        ctx.stroke();
-        ctx.fillStyle = cut;
-        ctx.globalAlpha = 1;
-        for (const angle of [-Math.PI / 2, 0, Math.PI]) {
-            face.chevron(ctx, g, angle, 89.6, angle === -Math.PI / 2 ? 4.6 : 3.2, true);
-            ctx.fill();
-        }
-
-        // The label plate in the gap: an inset placard, its corners cut.
-        const a0 = Math.PI / 4 + 0.09;
-        const a1 = 3 * Math.PI / 4 - 0.09;
-        ctx.beginPath();
-        ctx.arc(g.cx, g.cy, 81 * u, a0, a1, false);
-        ctx.arc(g.cx, g.cy, plateInner * u, a1, a0, true);
-        ctx.closePath();
-        ctx.fillStyle = "#000000";
-        ctx.globalAlpha = 0.22;
-        ctx.fill();
-        ctx.strokeStyle = mark;
-        ctx.globalAlpha = 0.3;
-        ctx.lineWidth = hair;
-        ctx.stroke();
-        ctx.fillStyle = mark;
-        ctx.globalAlpha = 0.88;
-        for (const [text, radius] of labels)
-            face.bottomText(ctx, g, text, radius, labelPx, 0.32);
-    }
-
-    // An engraved channel over the sweep, with end stops and quarter marks.
-    function groove(ctx, g, inner, outer) {
-        const start = face.sweepStart;
-        const end = start + face.sweep;
-        ctx.strokeStyle = face.mark;
-        ctx.lineWidth = Math.max(0.6, 0.24 * g.u);
-        ctx.globalAlpha = 0.22;
-        for (const radius of [inner, outer]) {
-            ringArc(ctx, g, radius, start, end);
-            ctx.stroke();
-        }
-        ctx.globalAlpha = 0.5;
-        ctx.beginPath();
-        for (const angle of [start, end])
-            spoke(ctx, g, angle, inner, outer);
-        ctx.stroke();
-        ctx.globalAlpha = 0.22;
-        ctx.beginPath();
-        for (let q = 1; q < 4; q++)
-            spoke(ctx, g, start + face.sweep * q / 4, inner, outer);
-        ctx.stroke();
-    }
-
-    // A hairline rail over the sweep.
-    function rail(ctx, g, radius, alpha) {
-        ctx.strokeStyle = face.mark;
-        ctx.lineWidth = Math.max(0.6, 0.24 * g.u);
-        ctx.globalAlpha = alpha;
-        ringArc(ctx, g, radius, face.sweepStart, face.sweepStart + face.sweep);
-        ctx.stroke();
-    }
-
-    // A small attitude disk: sky over ground and a horizon line.
-    function attitude(ctx, g, radius, detail) {
-        const u = g.u;
-        const r = radius * u;
-        const mark = face.mark;
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(g.cx, g.cy, r, 0, 2 * Math.PI);
-        ctx.clip();
-        ctx.fillStyle = mark;
-        ctx.globalAlpha = 0.06;
-        ctx.fillRect(g.cx - r, g.cy - r, 2 * r, r);
-        ctx.fillStyle = "#000000";
-        ctx.globalAlpha = 0.2;
-        ctx.fillRect(g.cx - r, g.cy, 2 * r, r);
-        ctx.restore();
-        ctx.strokeStyle = mark;
-        ctx.fillStyle = mark;
-        ctx.lineWidth = Math.max(0.6, 0.28 * u);
-        ctx.globalAlpha = 0.42;
-        ctx.beginPath();
-        ctx.arc(g.cx, g.cy, r, 0, 2 * Math.PI);
-        ctx.stroke();
-        ctx.globalAlpha = 0.5;
-        ctx.beginPath();
-        ctx.moveTo(g.cx - r, g.cy);
-        ctx.lineTo(g.cx + r, g.cy);
-        ctx.stroke();
-        if (detail) {
-            ctx.globalAlpha = 0.26;
-            ctx.beginPath();
-            for (const [y, half] of [[9, 7], [17, 4.5]]) {
-                ctx.moveTo(g.cx - half * u, g.cy + y * u);
-                ctx.lineTo(g.cx + half * u, g.cy + y * u);
-            }
-            for (const degrees of [-60, -45, -30, -20, -10, 10, 20, 30, 45, 60]) {
-                const long = Math.abs(degrees) % 30 === 0;
-                spoke(ctx, g, -Math.PI / 2 + degrees * Math.PI / 180, radius, radius + (long ? 3 : 1.7));
-            }
-            ctx.stroke();
-        }
-        ctx.globalAlpha = 0.75;
-        face.chevron(ctx, g, -Math.PI / 2, radius + 3.4, 2.4, true);
-        ctx.fill();
-    }
-
-    // Glass over a face: one soft highlight to the top left.
-    function glass(ctx, g) {
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(g.cx, g.cy, 92.6 * g.u, 0, 2 * Math.PI);
-        ctx.clip();
-        ctx.beginPath();
-        ctx.arc(g.cx, g.cy, 90 * g.u, Math.PI * 0.95, Math.PI * 1.6, false);
-        ctx.arc(g.cx + 18 * g.u, g.cy + 20 * g.u, 96 * g.u, Math.PI * 1.52, Math.PI * 1.02, true);
-        ctx.closePath();
-        const dome = ctx.createLinearGradient(g.cx - 70 * g.u, g.cy - 70 * g.u, g.cx - 10 * g.u, g.cy - 10 * g.u);
-        dome.addColorStop(0, "rgba(255, 255, 255, 0.09)");
-        dome.addColorStop(1, "rgba(255, 255, 255, 0)");
-        ctx.fillStyle = dome;
-        ctx.globalAlpha = 1;
-        ctx.fill();
-        ctx.restore();
-    }
-
     Canvas {
         id: faces
         anchors.fill: parent
@@ -417,46 +371,45 @@ Item {
             const ctx = getContext("2d");
             ctx.reset();
             const G = face.gauges(this);
-            const labelPx = Math.max(8, 5.2 * G.unit);
             ctx.lineCap = "butt";
 
-            // Smallest first, so each larger gauge's bezel overlaps the one beside it.
+            // The horizon the three share, across the gaps between them.
+            ctx.strokeStyle = face.mark;
+            ctx.globalAlpha = face.structure;
+            ctx.lineWidth = face.px(G, "hair");
+            ctx.beginPath();
+            ctx.moveTo(G.net.cx - G.net.R - 0.5 * face.gap * G.U * 100, G.main.cy);
+            ctx.lineTo(G.main.cx, G.main.cy);
+            ctx.stroke();
+
             // Network: one rail, in above it and out below.
             const net = G.net;
-            face.gaugeBody(ctx, net, 60, 38, [["IN", 71.8], ["OUT", 52.6]], labelPx);
-            face.rail(ctx, net, 63, 0.5);
-            face.rail(ctx, net, 79, 0.16);
-            face.rail(ctx, net, 47, 0.16);
-            ctx.globalAlpha = 0.45;
-            ctx.beginPath();
-            for (const angle of [face.sweepStart, face.sweepStart + face.sweep])
-                face.spoke(ctx, net, angle, 47, 79);
-            ctx.stroke();
-            face.attitude(ctx, net, 17, false);
+            face.gaugeBody(ctx, G, net, 60);
+            face.tracks(ctx, G, net, [63], 48, 78);
+            face.attitude(ctx, G, net, 16, false);
+            face.labels(ctx, G, net, [["IN", 71], ["OUT", 54]]);
             face.glass(ctx, net);
 
             // Memory.
             const mem = G.mem;
-            face.gaugeBody(ctx, mem, 80, 40, [["MEM", 71.4], ["SWAP", 54.6]], labelPx);
-            face.groove(ctx, mem, 64.6, 78.2);
-            face.groove(ctx, mem, 51, 58.2);
-            face.attitude(ctx, mem, 17, false);
+            face.gaugeBody(ctx, G, mem, 72);
+            face.barTrack(ctx, G, mem, 72);
+            face.barTrack(ctx, G, mem, 56);
+            face.attitude(ctx, G, mem, 16, false);
+            face.labels(ctx, G, mem, [["MEM", 72], ["SWAP", 56]]);
             face.glass(ctx, mem);
 
             // Main: CPU, GPU, temperatures, and the craft on its attitude disk.
             const main = G.main;
-            face.gaugeBody(ctx, main, 120, 37, [["CPU", 74.6], ["GPU", 60.4], ["TEMP", 46.8]], labelPx);
-            face.groove(ctx, main, 69, 80.4);
-            face.groove(ctx, main, 55.6, 65.4);
-            face.rail(ctx, main, 49.6, 0.3);
-            face.rail(ctx, main, 44, 0.3);
-            // The red line over both temperature rails.
+            face.gaugeBody(ctx, G, main, 120);
+            face.tracks(ctx, G, main, [69, 55.6, 48.6, 43.4], 43.4, 80.6);
             ctx.strokeStyle = face.hot;
-            ctx.globalAlpha = 0.8;
-            ctx.lineWidth = Math.max(1, 0.9 * main.u);
-            face.ringArc(ctx, main, 52.4, face.sweepStart + face.sweep * face.redLine, face.sweepStart + face.sweep);
+            ctx.globalAlpha = 0.85;
+            ctx.lineWidth = face.px(G, "trace");
+            face.ringArc(ctx, main, 51, face.sweepStart + face.sweep * face.redLine, face.sweepStart + face.sweep);
             ctx.stroke();
-            face.attitude(ctx, main, face.disk, true);
+            face.attitude(ctx, G, main, face.disk, true);
+            face.labels(ctx, G, main, [["CPU", 75], ["GPU", 61], ["TEMP", 46]]);
             face.glass(ctx, main);
         }
     }
@@ -481,44 +434,29 @@ Item {
             function onVisibleChanged() { readings.refresh(); }
         }
 
-        // A stroke with a wider, fainter one behind it reads as a lit trace.
-        function glow(ctx, color, width, alpha) {
-            ctx.strokeStyle = color;
-            ctx.globalAlpha = alpha * 0.16;
-            ctx.lineWidth = width * 2.6;
-            ctx.stroke();
-            ctx.globalAlpha = alpha;
-            ctx.lineWidth = width;
-            ctx.stroke();
-        }
-
-        // Ticks along the sweep, one per sample, from `base` toward `reach` by the sample's value.
-        function ticks(ctx, g, history, base, reach, value, color, width) {
+        // Ticks along the sweep, one per sample, from `base` toward `reach` by the sample's
+        // value; older samples fade.
+        function ticks(ctx, G, g, history, base, reach, value, color, alpha) {
             const slots = history.capacity;
             const offset = slots - history.count;
             ctx.strokeStyle = color;
-            ctx.lineWidth = width;
+            ctx.lineWidth = face.px(G, "trace");
             for (let i = 0; i < history.count; i++) {
                 const angle = face.sweepStart + face.sweep * (offset + i + 0.5) / slots;
                 const age = (history.count - 1 - i) / slots;
-                ctx.globalAlpha = 0.95 * (1 - 0.6 * age);
+                ctx.globalAlpha = alpha * (1 - 0.65 * age);
                 ctx.beginPath();
-                face.spoke(ctx, g, angle, base, base + (reach - base) * (0.06 + 0.94 * value(history.at(i))));
+                face.spoke(ctx, g, angle, base, base + (reach - base) * (0.05 + 0.95 * value(history.at(i))));
                 ctx.stroke();
             }
         }
 
-        // A filled arc from the start of the sweep to `fraction`, with a cut where it ends.
-        function arc(ctx, g, radius, thickness, fraction, color, alpha) {
-            const end = face.sweepStart + face.sweep * Math.max(0.006, fraction);
-            face.ringArc(ctx, g, radius, face.sweepStart, end);
-            glow(ctx, color, thickness * g.u, alpha);
+        // The bug for a live value: a filled chevron on the inside of the scale.
+        function bug(ctx, G, g, fraction, color) {
+            ctx.fillStyle = color;
             ctx.globalAlpha = 1;
-            ctx.strokeStyle = face.mark;
-            ctx.lineWidth = Math.max(1, 0.55 * g.u);
-            ctx.beginPath();
-            face.spoke(ctx, g, end, radius - thickness / 2 - 1.6, radius + thickness / 2 + 1.6);
-            ctx.stroke();
+            face.chevron(ctx, g, face.sweepStart + face.sweep * fraction, 87, 3.4 * G.U);
+            ctx.fill();
         }
 
         onPaint: {
@@ -530,22 +468,20 @@ Item {
             const mark = face.mark.toString();
             const accent = face.accent.toString();
             const second = face.second.toString();
+            const hot = face.hot.toString();
             const start = face.sweepStart;
             const sweep = face.sweep;
             const fraction = value => Math.max(0, Math.min(1, value));
             ctx.lineCap = "butt";
 
-            // Main: CPU ticks, oldest at the start of the sweep, and the bug for the current load.
+            // Main: CPU ticks, oldest at the start of the sweep, and the bug for the load.
             const main = G.main;
             const cpu = system.cpuHistory;
-            ticks(ctx, main, cpu, 69.4, 80, fraction, mark, Math.max(1, 0.8 * main.u));
-            const load = cpu.count ? fraction(cpu.at(cpu.count - 1)) : 0;
-            ctx.fillStyle = accent;
-            ctx.globalAlpha = 1;
-            face.chevron(ctx, main, start + sweep * load, 84.2, 4, true);
-            ctx.fill();
+            ticks(ctx, G, main, cpu, 69.4, 80.4, fraction, mark, 1);
+            if (cpu.count)
+                bug(ctx, G, main, fraction(cpu.at(cpu.count - 1)), accent);
 
-            // GPU: a band over the groove floor; asleep, nothing but the groove.
+            // GPU: a band over its floor; asleep, nothing but the floor.
             const gpu = system.gpuHistory;
             const base = 55.6 * main.u;
             if (system.gpuActive && gpu.count > 1) {
@@ -553,7 +489,7 @@ Item {
                 const angleAt = i => start + sweep * (gpuOffset + i + 0.5) / gpu.capacity;
                 ctx.beginPath();
                 for (let i = 0; i < gpu.count; i++) {
-                    const radius = base + (0.5 + 9.3 * fraction(gpu.at(i))) * main.u;
+                    const radius = base + (0.4 + 9.6 * fraction(gpu.at(i))) * main.u;
                     const angle = angleAt(i);
                     if (i === 0)
                         ctx.moveTo(main.cx + radius * Math.cos(angle), main.cy + radius * Math.sin(angle));
@@ -561,11 +497,14 @@ Item {
                         ctx.lineTo(main.cx + radius * Math.cos(angle), main.cy + radius * Math.sin(angle));
                 }
                 ctx.lineJoin = "round";
-                glow(ctx, accent, Math.max(1, 0.7 * main.u), 0.95);
+                ctx.strokeStyle = mark;
+                ctx.globalAlpha = 0.8;
+                ctx.lineWidth = face.px(G, "trace");
+                ctx.stroke();
                 ctx.arc(main.cx, main.cy, base, angleAt(gpu.count - 1), angleAt(0), true);
                 ctx.closePath();
-                ctx.globalAlpha = 0.16;
-                ctx.fillStyle = accent;
+                ctx.globalAlpha = 0.14;
+                ctx.fillStyle = mark;
                 ctx.fill();
             }
 
@@ -574,30 +513,36 @@ Item {
             const range = face.temperatureRange;
             const heat = celsius => fraction((celsius - range[0]) / (range[1] - range[0]));
             ctx.lineCap = "round";
-            if (system.cpuTemperature > 0) {
-                const level = heat(system.cpuTemperature);
-                face.ringArc(ctx, main, 49.6, start, start + sweep * Math.max(0.006, level));
-                glow(ctx, level >= face.redLine ? face.hot.toString() : mark, Math.max(1, 1.5 * main.u), 0.95);
+            ctx.lineWidth = face.px(G, "trace") * 1.6;
+            for (const [celsius, radius, shown] of [[system.cpuTemperature, 48.6, true], [system.gpuTemperature, 43.4, system.gpuActive]]) {
+                if (!shown || !(celsius > 0))
+                    continue;
+                const level = heat(celsius);
+                face.sweepArc(ctx, main, radius, level);
+                ctx.strokeStyle = level >= face.redLine ? hot : mark;
+                ctx.globalAlpha = 0.9;
+                ctx.stroke();
             }
-            if (system.gpuActive && system.gpuTemperature > 0) {
-                const level = heat(system.gpuTemperature);
-                face.ringArc(ctx, main, 44, start, start + sweep * Math.max(0.006, level));
-                glow(ctx, level >= face.redLine ? face.hot.toString() : accent, Math.max(1, 1.5 * main.u), 0.95);
-            }
-            ctx.lineCap = "butt";
 
             // Memory gauge: memory and swap in use.
             const mem = G.mem;
+            ctx.lineCap = "butt";
+            ctx.lineWidth = face.px(G, "bar");
             if (system.memoryPercent >= 0) {
                 const used = fraction(system.memoryPercent / 100);
-                arc(ctx, mem, 71.4, 9.6, used, mark, 0.85);
-                ctx.fillStyle = accent;
-                ctx.globalAlpha = 1;
-                face.chevron(ctx, mem, start + sweep * used, 84.2, 5, true);
-                ctx.fill();
+                face.sweepArc(ctx, mem, 72, used);
+                ctx.strokeStyle = mark;
+                ctx.globalAlpha = face.quiet;
+                ctx.stroke();
+                bug(ctx, G, mem, used, accent);
             }
-            if (system.swapTotal > 0 && system.swapUsed >= 0)
-                arc(ctx, mem, 54.6, 4.8, fraction(system.swapUsed / system.swapTotal), second, 0.9);
+            if (system.swapTotal > 0 && system.swapUsed > 0) {
+                ctx.lineWidth = face.px(G, "bar");
+                face.sweepArc(ctx, mem, 56, fraction(system.swapUsed / system.swapTotal));
+                ctx.strokeStyle = second;
+                ctx.globalAlpha = face.quiet;
+                ctx.stroke();
+            }
 
             // Network gauge: in outward and out inward from the rail, against the busiest moment
             // still in the history. The square root keeps an ordinary trickle visible next to a
@@ -605,16 +550,11 @@ Item {
             const net = G.net;
             const peak = Math.max(262144, system.netDownHistory.peak(), system.netUpHistory.peak());
             const rate = value => fraction(Math.sqrt(value / peak));
-            ticks(ctx, net, system.netDownHistory, 64, 78, rate, accent, Math.max(1.3, 1.3 * net.u));
-            ticks(ctx, net, system.netUpHistory, 62, 48, rate, second, Math.max(1.3, 1.3 * net.u));
+            ticks(ctx, G, net, system.netDownHistory, 64, 78, rate, mark, face.quiet);
+            ticks(ctx, G, net, system.netUpHistory, 62, 48, rate, second, face.quiet);
             if (system.netDown >= 0) {
-                ctx.globalAlpha = 1;
-                ctx.fillStyle = second;
-                face.chevron(ctx, net, start + sweep * rate(system.netUp), 84.2, 6, true);
-                ctx.fill();
-                ctx.fillStyle = accent;
-                face.chevron(ctx, net, start + sweep * rate(system.netDown), 84.2, 6, true);
-                ctx.fill();
+                bug(ctx, G, net, rate(system.netUp), second);
+                bug(ctx, G, net, rate(system.netDown), accent);
             }
 
             // The craft: two pairs of wings that sweep back as the last few samples' load rises,
@@ -644,102 +584,56 @@ Item {
             ctx.restore();
         }
 
-        // The hull in craft units, raised off the face: a cast shadow, then pods and body in
-        // satin metal, the glazed cab, and panel lines cut into it.
+        // The hull in craft units: one flat silhouette, the glazed cab and a few lines cut in.
         function paintHull(ctx) {
-            const mark = face.mark;
+            const mark = face.mark.toString();
             const cut = face.faceColor.toString();
             ctx.globalAlpha = 1;
-            ctx.save();
-            ctx.translate(0.6, 1);
+            ctx.fillStyle = mark;
             face.pods(ctx);
-            ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
             ctx.fill();
             face.hull(ctx);
             ctx.fill();
-            ctx.restore();
-            const sheen = ctx.createLinearGradient(-6, 0, 6, 0);
-            sheen.addColorStop(0, Qt.darker(mark, 1.7).toString());
-            sheen.addColorStop(0.45, mark.toString());
-            sheen.addColorStop(1, Qt.darker(mark, 1.9).toString());
-            for (const part of [face.pods, face.hull]) {
-                part(ctx);
-                ctx.fillStyle = sheen;
-                ctx.globalAlpha = 1;
-                ctx.fill();
-                ctx.strokeStyle = cut;
-                ctx.lineWidth = 0.26;
-                ctx.globalAlpha = 0.9;
-                ctx.stroke();
-            }
-            // Intakes and exhaust slots on the pods.
-            ctx.lineWidth = 0.28;
-            ctx.beginPath();
-            for (const side of [1, -1]) {
-                ctx.moveTo(6 * side - 2, -0.6);
-                ctx.lineTo(6 * side + 2, -0.6);
-                ctx.moveTo(6 * side, 2.4);
-                ctx.lineTo(6 * side, 7.6);
-            }
-            ctx.stroke();
-            ctx.fillStyle = cut;
-            for (const side of [1, -1]) {
-                ctx.beginPath();
-                ctx.ellipse(6 * side - 1.1, -2.6, 2.2, 1.5);
-                ctx.fill();
-            }
-            // The glazed cab: dark glass divided into panes by its frame.
-            ctx.beginPath();
-            ctx.moveTo(0, -26.6);
-            ctx.bezierCurveTo(3.1, -26.6, 4.7, -23.9, 4.7, -20.2);
-            ctx.lineTo(4.4, -15.4);
-            ctx.lineTo(-4.4, -15.4);
-            ctx.lineTo(-4.7, -20.2);
-            ctx.bezierCurveTo(-4.7, -23.9, -3.1, -26.6, 0, -26.6);
-            const canopy = ctx.createLinearGradient(-4, -26, 3, -15);
-            canopy.addColorStop(0, Qt.lighter(face.faceColor, 2.2).toString());
-            canopy.addColorStop(1, Qt.darker(face.faceColor, 1.4).toString());
-            ctx.fillStyle = canopy;
-            ctx.globalAlpha = 1;
-            ctx.fill();
-            ctx.strokeStyle = mark.toString();
-            ctx.lineWidth = 0.28;
-            ctx.globalAlpha = 0.8;
-            ctx.beginPath();
-            ctx.moveTo(0, -26.6);
-            ctx.lineTo(0, -15.4);
-            ctx.moveTo(-2.6, -25.6);
-            ctx.lineTo(-2.4, -15.4);
-            ctx.moveTo(2.6, -25.6);
-            ctx.lineTo(2.4, -15.4);
-            ctx.moveTo(-4.6, -21);
-            ctx.quadraticCurveTo(0, -22.2, 4.6, -21);
-            ctx.stroke();
-            // Panel lines, the wing hubs and the jointed boom.
             ctx.strokeStyle = cut;
-            ctx.globalAlpha = 0.85;
-            ctx.lineWidth = 0.26;
+            ctx.lineWidth = 0.3;
+            ctx.stroke();
+            // The glazed cab, its panes split by a spine and one frame.
+            ctx.beginPath();
+            ctx.moveTo(0, -26.4);
+            ctx.bezierCurveTo(3, -26.4, 4.6, -23.8, 4.6, -20.2);
+            ctx.lineTo(4.3, -15.6);
+            ctx.lineTo(-4.3, -15.6);
+            ctx.lineTo(-4.6, -20.2);
+            ctx.bezierCurveTo(-4.6, -23.8, -3, -26.4, 0, -26.4);
+            ctx.fillStyle = cut;
+            ctx.globalAlpha = 0.9;
+            ctx.fill();
+            ctx.strokeStyle = mark;
+            ctx.globalAlpha = 0.55;
+            ctx.lineWidth = 0.3;
+            ctx.beginPath();
+            ctx.moveTo(0, -26.4);
+            ctx.lineTo(0, -15.6);
+            ctx.moveTo(-4.5, -21);
+            ctx.quadraticCurveTo(0, -22.2, 4.5, -21);
+            ctx.stroke();
+            // The cabin seam, the boom joints and the wing hubs.
+            ctx.strokeStyle = cut;
+            ctx.globalAlpha = 0.9;
+            ctx.lineWidth = 0.32;
             ctx.beginPath();
             ctx.moveTo(-4.4, -12.4);
             ctx.lineTo(4.4, -12.4);
-            ctx.moveTo(-1.6, -12.4);
-            ctx.lineTo(-1.6, 5.6);
-            ctx.moveTo(1.6, -12.4);
-            ctx.lineTo(1.6, 5.6);
-            for (let y = 10.4; y < 22.5; y += 2.4) {
+            for (const y of [12, 16.5, 21]) {
                 const half = 1.7 - (y - 8) * 0.045;
                 ctx.moveTo(-half, y);
                 ctx.lineTo(half, y);
             }
             ctx.stroke();
+            ctx.fillStyle = cut;
             for (const [x, y] of [[4.4, -8.6], [-4.4, -8.6], [4.4, -1.6], [-4.4, -1.6]]) {
                 ctx.beginPath();
-                ctx.arc(x, y, 1.05, 0, 2 * Math.PI);
-                ctx.fillStyle = cut;
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(x, y, 0.42, 0, 2 * Math.PI);
-                ctx.fillStyle = mark.toString();
+                ctx.arc(x, y, 0.9, 0, 2 * Math.PI);
                 ctx.fill();
             }
         }
