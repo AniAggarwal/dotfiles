@@ -52,19 +52,10 @@ PanelWindow {
                 }
                 PanelText { text: osd.muted ? "Muted" : osd.level + "%"; color: osd.theme.secondary }
             }
-            Rectangle {
+            UsageBar {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 4
-                radius: 2
-                color: osd.theme.card
-
-                Rectangle {
-                    width: osd.muted ? 0 : parent.width * Math.max(0, Math.min(100, osd.level)) / 100
-                    height: parent.height
-                    radius: 2
-                    color: osd.theme.accent
-                    Behavior on width { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
-                }
+                theme: osd.theme
+                fraction: osd.muted ? 0 : osd.level / 100
             }
         }
     }

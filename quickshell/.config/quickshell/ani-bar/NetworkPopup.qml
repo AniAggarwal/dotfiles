@@ -30,9 +30,8 @@ BarPopup {
         value: net.visible
     }
 
-    component NetButton: BarButton {
-        foreground: net.theme.foreground
-        accent: net.theme.accent
+    component NetButton: PanelButton {
+        theme: net.theme
         fontSize: BarStyle.popupFontSize - 1
     }
 

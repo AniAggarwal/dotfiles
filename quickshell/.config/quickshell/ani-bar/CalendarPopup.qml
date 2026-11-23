@@ -41,9 +41,8 @@ BarPopup {
         }
     }
 
-    component NavButton: BarButton {
-        foreground: calendar.theme.foreground
-        accent: calendar.theme.accent
+    component NavButton: PanelButton {
+        theme: calendar.theme
         fontSize: BarStyle.popupFontSize + 3
         implicitWidth: 30
     }
@@ -142,10 +141,9 @@ BarPopup {
             Layout.fillWidth: true
 
             Item { Layout.fillWidth: true }
-            BarButton {
+            PanelButton {
                 label: "Today"
-                foreground: calendar.theme.foreground
-                accent: calendar.theme.accent
+                theme: calendar.theme
                 selected: !calendar.thisMonth
                 interactive: !calendar.thisMonth
                 opacity: interactive ? 1 : 0.45

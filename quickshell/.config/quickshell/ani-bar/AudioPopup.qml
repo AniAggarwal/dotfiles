@@ -27,9 +27,8 @@ BarPopup {
         objects: mixer.visible ? [mixer.sink, mixer.source].filter(node => !!node).concat(mixer.streams) : []
     }
 
-    component MixerButton: BarButton {
-        foreground: mixer.theme.foreground
-        accent: mixer.theme.accent
+    component MixerButton: PanelButton {
+        theme: mixer.theme
     }
 
     component Level: ColumnLayout {
@@ -166,11 +165,7 @@ BarPopup {
                 }
             }
 
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 1
-                color: Qt.alpha(mixer.theme.outline, 0.36)
-            }
+            Divider { theme: mixer.theme }
 
             PanelText {
                 text: "Applications"

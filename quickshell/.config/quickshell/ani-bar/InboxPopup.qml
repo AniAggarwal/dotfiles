@@ -69,112 +69,13 @@ BarPopup {
         inbox.close();
     }
 
-    component SmallButton: BarButton {
+    component SmallButton: PanelButton {
+        theme: inbox.theme
         foreground: inbox.theme.secondary
-        accent: inbox.theme.accent
         fontSize: BarStyle.popupFontSize - 1
         iconSize: 15
         implicitHeight: 26
         horizontalPadding: 6
-    }
-
-    component MessageRow: Rectangle {
-        id: row
-        required property var modelData
-        readonly property bool unread: modelData.unread
-        readonly property bool urgent: modelData.urgent === true
-        readonly property bool canFocus: (modelData.ancestors || []).length > 0
-
-        Layout.fillWidth: true
-        implicitHeight: rowContent.implicitHeight + 16
-        radius: BarStyle.radius.card
-        color: hover.hovered ? Qt.alpha(inbox.theme.foreground, 0.07) : "transparent"
-        Behavior on color { ColorAnimation { duration: BarStyle.motion.fast } }
-
-        Accessible.role: Accessible.Button
-        Accessible.name: modelData.title + ", from " + inbox.sender(modelData)
-        Accessible.onPressAction: open()
-
-        function open() {
-            inbox.close();
-            inbox.theme.openMessage(modelData);
-        }
-
-        HoverHandler { id: hover; cursorShape: Qt.PointingHandCursor }
-        TapHandler { onTapped: row.open() }
-
-        RowLayout {
-            id: rowContent
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.margins: 8
-            anchors.leftMargin: 10
-            spacing: 10
-
-            PanelText {
-                Layout.alignment: Qt.AlignTop
-                Layout.topMargin: 1
-                Layout.preferredWidth: 20
-                horizontalAlignment: Text.AlignHCenter
-                text: row.modelData.agent === "claude" ? BarStyle.icons.claude : BarStyle.icons.robot
-                font.family: BarStyle.iconFont
-                font.pixelSize: 17
-                color: !row.unread ? inbox.theme.muted : row.urgent ? inbox.theme.warning : inbox.theme.accent
-            }
-
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: 2
-
-                PanelText {
-                    Layout.fillWidth: true
-                    text: row.modelData.title || "Message"
-                    color: row.unread ? inbox.theme.foreground : inbox.theme.secondary
-                    font.weight: row.unread ? Font.DemiBold : Font.Normal
-                    wrapMode: Text.Wrap
-                    maximumLineCount: 2
-                    elide: Text.ElideRight
-                }
-                PanelText {
-                    Layout.fillWidth: true
-                    text: inbox.sender(row.modelData)
-                    color: row.urgent && row.unread ? inbox.theme.warning : inbox.theme.secondary
-                    font.pixelSize: BarStyle.popupFontSize - 2
-                    elide: Text.ElideRight
-                }
-                PanelText {
-                    Layout.fillWidth: true
-                    Layout.topMargin: 2
-                    visible: !!row.modelData.preview
-                    text: row.modelData.preview || ""
-                    color: inbox.theme.muted
-                    font.pixelSize: BarStyle.popupFontSize - 2
-                    wrapMode: Text.Wrap
-                    maximumLineCount: 2
-                    elide: Text.ElideRight
-                }
-            }
-
-            RowLayout {
-                Layout.alignment: Qt.AlignTop
-                spacing: 0
-                opacity: hover.hovered ? 1 : 0
-                Behavior on opacity { NumberAnimation { duration: BarStyle.motion.fast } }
-
-                SmallButton {
-                    visible: row.canFocus
-                    icon: BarStyle.icons.terminal
-                    hint: "Go to " + (row.modelData.from || "agent")
-                    onActivated: inbox.focusSender(row.modelData)
-                }
-                SmallButton {
-                    icon: BarStyle.icons.trash
-                    hint: "Delete"
-                    onActivated: inbox.theme.deleteMessage(row.modelData)
-                }
-            }
-        }
     }
 
     Flickable {
@@ -220,7 +121,41 @@ BarPopup {
 
             Repeater {
                 model: inbox.theme.inbox
-                MessageRow {}
+
+                ListRow {
+                    id: row
+                    required property var modelData
+                    readonly property bool unread: modelData.unread
+                    readonly property bool urgent: modelData.urgent === true
+                    theme: inbox.theme
+                    radius: BarStyle.radius.card
+                    icon: modelData.agent === "claude" ? BarStyle.icons.claude : BarStyle.icons.robot
+                    iconColor: !unread ? inbox.theme.muted : urgent ? inbox.theme.warning : inbox.theme.accent
+                    title: modelData.title || "Message"
+                    titleColor: unread ? inbox.theme.foreground : inbox.theme.secondary
+                    titleLines: 2
+                    emphasized: unread
+                    detail: inbox.sender(modelData)
+                    detailColor: urgent && unread ? inbox.theme.warning : inbox.theme.secondary
+                    note: modelData.preview || ""
+                    trailingOnHover: true
+                    onActivated: {
+                        inbox.close();
+                        inbox.theme.openMessage(modelData);
+                    }
+
+                    SmallButton {
+                        visible: (row.modelData.ancestors || []).length > 0
+                        icon: BarStyle.icons.terminal
+                        hint: "Go to " + (row.modelData.from || "agent")
+                        onActivated: inbox.focusSender(row.modelData)
+                    }
+                    SmallButton {
+                        icon: BarStyle.icons.trash
+                        hint: "Delete"
+                        onActivated: inbox.theme.deleteMessage(row.modelData)
+                    }
+                }
             }
         }
     }

@@ -41,13 +41,24 @@ BarPopup {
             player.shuffle = !player.shuffle;
     }
 
-    // Position only ticks while visible and playing.
+    // Position only ticks while the panel is open and something is playing.
+    function readPosition() {
+        if (!seekArea.pressed)
+            position = player?.position ?? 0;
+    }
+    onVisibleChanged: if (visible) readPosition()
+    onPlayerChanged: readPosition()
+    Connections {
+        target: popup.player
+        enabled: popup.visible
+        function onIsPlayingChanged() { popup.readPosition(); }
+        function onTrackTitleChanged() { popup.readPosition(); }
+    }
     Timer {
         interval: 1000
         repeat: true
-        triggeredOnStart: true
-        running: popup.visible && !!popup.player
-        onTriggered: if (!seekArea.pressed) popup.position = popup.player?.position ?? 0
+        running: popup.visible && (popup.player?.isPlaying ?? false)
+        onTriggered: popup.readPosition()
     }
 
     component Transport: BarButton {
@@ -84,26 +95,13 @@ BarPopup {
             spacing: 10
 
             // Player tabs, only when more than one is open.
-            Row {
+            SegmentedControl {
                 visible: popup.multiple
                 Layout.fillWidth: true
-                spacing: 4
-
-                Repeater {
-                    model: popup.players
-
-                    BarButton {
-                        required property MprisPlayer modelData
-                        foreground: modelData === popup.player ? popup.theme.foreground : popup.theme.secondary
-                        accent: popup.theme.accent
-                        label: modelData.identity
-                        selected: modelData === popup.player
-                        implicitHeight: 28
-                        horizontalPadding: 12
-                        radius: 14
-                        onActivated: popup.playerSelected(modelData)
-                    }
-                }
+                theme: popup.theme
+                labels: popup.players.map(player => player.identity)
+                currentIndex: popup.players.indexOf(popup.player)
+                onSelected: index => popup.playerSelected(popup.players[index])
             }
 
             PanelText {

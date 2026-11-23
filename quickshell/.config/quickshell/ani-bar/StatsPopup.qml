@@ -4,87 +4,90 @@ import Quickshell
 import Quickshell.Io
 import "BarStyle.js" as BarStyle
 
-// The big system panel: gauges for CPU, GPU, memory and swap, then processes, network and disks.
+// The big system panel: history graphs for CPU, GPU and memory, then processes, network and disks.
 // Processes and disks are only sampled while the panel is open.
 BarPopup {
     id: stats
 
     signal terminalRequested(string command)
+    readonly property SystemStats system: theme.system
     property var processes: []
-    property var gpuProcesses: []
+    readonly property var gpuProcesses: {
+        const total = Math.max(1, system.gpuMemoryTotal * 1024);
+        return system.gpuApps.slice(0, 3).map(app => ({ pid: app.pid, name: app.name,
+            fraction: app.megabytes / total, reading: (app.megabytes / 1024).toFixed(1) + "G" }));
+    }
     property var disks: []
     // End a process with two clicks: the first arms the button for a few seconds.
     property int armedPid: -1
-
-    readonly property bool gpuActive: theme.gpuState === "active"
+    readonly property bool sampling: visible && !theme.asleep
     readonly property int gap: 8
 
     panelWidth: 760
-    panelHeight: 548
+    panelHeight: 520
     padding: 12
 
     onVisibleChanged: {
-        if (visible && gpuActive)
-            theme.refreshGpu();
+        theme.watch("stats", visible);
         if (!visible) {
             processes = [];
-            gpuProcesses = [];
             armedPid = -1;
         }
     }
-
-    function duration(seconds) {
-        const minutes = Math.floor(seconds / 60);
-        const days = Math.floor(minutes / 1440);
-        const hours = Math.floor(minutes / 60) % 24;
-        if (days > 0)
-            return days + " d " + hours + " h";
-        return hours > 0 ? hours + " h " + (minutes % 60) + " min" : (minutes % 60) + " min";
+    onSamplingChanged: {
+        if (sampling)
+            startTop(true);
+        else
+            top.running = false;
     }
 
     function gib(value) {
         return value >= 0 ? value.toFixed(1) : "–";
     }
 
-    function rate(bytes) {
-        if (!(bytes >= 0))
-            return "–";
-        if (bytes >= 1048576)
-            return (bytes / 1048576).toFixed(1) + " MB/s";
-        if (bytes >= 1024)
-            return Math.round(bytes / 1024) + " KB/s";
-        return Math.round(bytes) + " B/s";
+    function join(parts) {
+        return parts.filter(part => part).join(" · ");
     }
 
-    // Two top frames 0.6 s apart: the second reports CPU use over that interval, not since process start.
-    Process {
-        id: topProcesses
-        command: ["sh", "-c", "LC_ALL=C top -b -n2 -d0.6 -w 512 -o %CPU | awk '/^top -/ { frame++ } frame == 2 && $1 ~ /^[0-9]+$/ { print $1, $9, $12; if (++rows == 6) exit }'"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                stats.processes = text.trim().split("\n").filter(line => line).map(line => {
-                    const [pid, cpu, ...name] = line.split(" ");
-                    const share = Number(cpu) / stats.theme.threads;
-                    return { pid: Number(pid), name: name.join(" "), fraction: share / 100, reading: share.toFixed(1) + "%" };
-                }).filter(process => Number.isFinite(process.fraction));
-            }
-        }
+    // top reports CPU use since its previous frame, and in its first frame since each process
+    // started. So: a quick two-frame run for a first list, then one long run that prints a frame
+    // every few seconds for as long as the panel is open.
+    property int topFrame: 0
+    property var topRows: []
+
+    function startTop(quick) {
+        topFrame = 0;
+        top.quick = quick;
+        top.running = true;
     }
 
-    // Compute apps holding VRAM. Only queried while the dGPU is already awake.
-    Process {
-        id: gpuApps
-        command: ["sh", Quickshell.shellPath("gpu.sh"), "apps"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const total = Math.max(1, stats.theme.gpuMemoryTotal * 1024);
-                stats.gpuProcesses = text.trim().split("\n").filter(line => line).map(line => {
-                    const [pid, name, used] = line.split(",").map(field => field.trim());
-                    return { pid: Number(pid), name: name.split("/").pop(), fraction: Number(used) / total,
-                        reading: (Number(used) / 1024).toFixed(1) + "G" };
-                }).filter(process => Number.isFinite(process.pid) && Number.isFinite(process.fraction));
-            }
+    function readTop(line) {
+        if (topFrame >= 2 && topRows.length >= 6)
+            return;
+        const fields = line.trim().split(/\s+/);
+        // The column header opens a frame's process list.
+        if (fields[0] === "PID") {
+            topFrame++;
+            topRows = [];
+            return;
         }
+        const share = Number(fields[8]) / system.threads;
+        if (topFrame < 2 || fields.length < 12 || !Number.isFinite(share))
+            return;
+        topRows.push({ pid: Number(fields[0]), name: fields.slice(11).join(" "), fraction: share / 100, reading: share.toFixed(1) + "%" });
+        if (topRows.length === 6)
+            processes = topRows;
+    }
+
+    Process {
+        id: top
+        property bool quick: true
+        environment: ({ LC_ALL: "C" })
+        command: ["top", "-b", "-w", "512", "-o", "%CPU"].concat(quick ? ["-n2", "-d0.6"]
+            : ["-d", String(stats.theme.pace(BarStyle.cadence.processes))])
+        stdout: SplitParser { onRead: line => stats.readTop(line) }
+        // Carry on with the long run, unless top is failing outright.
+        onExited: if (stats.sampling && stats.topFrame > 0) stats.startTop(false)
     }
 
     Process {
@@ -101,25 +104,10 @@ BarPopup {
     }
 
     Timer {
-        interval: 3000
+        interval: stats.theme.pace(BarStyle.cadence.disks)
         repeat: true
         triggeredOnStart: true
-        running: stats.visible
-        onTriggered: {
-            if (!topProcesses.running)
-                topProcesses.running = true;
-            if (stats.gpuActive && !gpuApps.running)
-                gpuApps.running = true;
-            else if (!stats.gpuActive)
-                stats.gpuProcesses = [];
-        }
-    }
-
-    Timer {
-        interval: 30000
-        repeat: true
-        triggeredOnStart: true
-        running: stats.visible
+        running: stats.sampling
         onTriggered: if (!diskUsage.running) diskUsage.running = true
     }
 
@@ -129,52 +117,14 @@ BarPopup {
         onTriggered: stats.armedPid = -1
     }
 
-    component Card: Rectangle {
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-        radius: BarStyle.radius.popup - stats.padding / 2
-        color: Qt.alpha(stats.theme.foreground, 0.05)
-        border.color: Qt.alpha(stats.theme.foreground, 0.06)
-    }
-
-    component CardTitle: PanelText {
+    component Title: PanelText {
         color: stats.theme.foreground
         font.weight: Font.DemiBold
     }
 
-    component Divider: Rectangle {
-        Layout.fillHeight: true
-        Layout.topMargin: 18
-        Layout.bottomMargin: 18
-        Layout.preferredWidth: 1
-        color: Qt.alpha(stats.theme.foreground, 0.08)
-    }
-
-    // A gauge that opens a monitor when clicked.
-    component Meter: Gauge {
-        id: meter
-        property string command: "btop"
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-        Layout.margins: 10
-        theme: stats.theme
-        HoverHandler { cursorShape: Qt.PointingHandCursor }
-        TapHandler { onTapped: stats.terminalRequested(meter.command) }
-    }
-
-    component UsageBar: Rectangle {
-        property real fraction: 0
-        property color fill: stats.theme.accent
-        implicitHeight: 4
-        radius: 2
-        color: Qt.alpha(stats.theme.foreground, 0.1)
-
-        Rectangle {
-            width: parent.width * Math.max(0, Math.min(1, parent.fraction))
-            height: parent.height
-            radius: parent.radius
-            color: parent.fill
-        }
+    component Reading: PanelText {
+        color: stats.theme.secondary
+        font.features: { "tnum": 1 }
     }
 
     component ProcessRow: RowLayout {
@@ -195,14 +145,13 @@ BarPopup {
         }
         UsageBar {
             Layout.preferredWidth: 60
+            theme: stats.theme
             fraction: processRow.modelData.fraction
         }
-        PanelText {
+        Reading {
             Layout.preferredWidth: 40
             horizontalAlignment: Text.AlignRight
             text: processRow.modelData.reading
-            color: stats.theme.secondary
-            font.features: { "tnum": 1 }
         }
         BarButton {
             Layout.preferredWidth: 42
@@ -243,14 +192,13 @@ BarPopup {
             }
             PanelText {
                 Layout.leftMargin: 8
-                visible: stats.theme.uptime >= 0
-                text: "Up " + stats.duration(stats.theme.uptime)
+                visible: stats.system.uptime >= 0
+                text: "Up " + BarStyle.duration(stats.system.uptime)
                 color: stats.theme.secondary
             }
             Item { Layout.fillWidth: true }
-            BarButton {
-                foreground: stats.theme.foreground
-                accent: stats.theme.accent
+            PanelButton {
+                theme: stats.theme
                 icon: BarStyle.icons.terminal
                 label: "Open btop"
                 fontSize: BarStyle.popupFontSize - 1
@@ -261,55 +209,76 @@ BarPopup {
         RowLayout {
             Layout.fillWidth: true
             Layout.fillHeight: false
-            Layout.preferredHeight: 200
+            Layout.preferredHeight: 172
             spacing: stats.gap
 
-            Card {
-                RowLayout {
-                    anchors.fill: parent
-                    spacing: 0
-
-                    Meter {
-                        label: "CPU"
-                        value: stats.theme.cpu >= 0 ? stats.theme.cpu / 100 : -1
-                        color: stats.theme.tone(BarStyle.severity(stats.theme.cpu, BarStyle.limits.cpu))
-                        reading: stats.theme.cpu >= 0 ? Math.round(stats.theme.cpu) + "%" : "–"
-                        above: stats.theme.cpuTemperature >= 0 ? stats.theme.cpuTemperature + "°C" : ""
-                        below: stats.theme.cpuFrequency > 0 ? stats.theme.cpuFrequency.toFixed(1) + " GHz" : ""
-                    }
-                    Divider {}
-                    Meter {
-                        label: "GPU"
-                        command: "nvitop"
-                        value: stats.gpuActive && stats.theme.gpuUtil >= 0 ? stats.theme.gpuUtil / 100 : -1
-                        color: stats.theme.tone(stats.gpuActive ? BarStyle.severity(stats.theme.gpuUtil, BarStyle.limits.gpu) : 0)
-                        reading: stats.gpuActive ? (stats.theme.gpuUtil >= 0 ? Math.round(stats.theme.gpuUtil) + "%" : "On")
-                            : stats.theme.gpuState === "suspended" ? "Asleep" : "Off"
-                        above: stats.gpuActive && stats.theme.gpuTemperature >= 0 ? stats.theme.gpuTemperature + "°C" : ""
-                        below: stats.gpuActive && stats.theme.gpuMemoryTotal > 0
-                            ? stats.gib(stats.theme.gpuMemoryUsed) + " / " + stats.gib(stats.theme.gpuMemoryTotal) + " GiB" : ""
-                    }
-                }
+            GraphCard {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.preferredWidth: 1
+                theme: stats.theme
+                title: "CPU"
+                value: stats.system.cpu >= 0 ? Math.round(stats.system.cpu) + "%" : "–"
+                detail: stats.join([stats.system.cpuTemperature >= 0 ? stats.system.cpuTemperature + "°C" : "",
+                    stats.system.cpuFrequency > 0 ? stats.system.cpuFrequency.toFixed(1) + " GHz" : ""])
+                histories: [stats.system.cpuHistory]
+                colors: [stats.theme.tone(BarStyle.severity(stats.system.cpu, BarStyle.limits.cpu))]
+                interactive: true
+                onActivated: stats.terminalRequested("btop")
             }
 
-            Card {
-                RowLayout {
-                    anchors.fill: parent
-                    spacing: 0
+            GraphCard {
+                readonly property bool active: stats.system.gpuActive
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.preferredWidth: 1
+                theme: stats.theme
+                title: "GPU"
+                dimmed: !active
+                value: active ? (stats.system.gpuUtil >= 0 ? Math.round(stats.system.gpuUtil) + "%" : "On")
+                    : stats.system.gpuState === "suspended" ? "Asleep" : "Off"
+                detail: !active ? "" : stats.join([stats.system.gpuTemperature >= 0 ? stats.system.gpuTemperature + "°C" : "",
+                    stats.system.gpuMemoryTotal > 0 ? stats.gib(stats.system.gpuMemoryUsed) + " / " + stats.gib(stats.system.gpuMemoryTotal) + " GiB" : ""])
+                histories: [stats.system.gpuHistory]
+                colors: [active ? stats.theme.tone(BarStyle.severity(stats.system.gpuUtil, BarStyle.limits.gpu)) : stats.theme.muted]
+                interactive: true
+                onActivated: stats.terminalRequested("nvitop")
+            }
 
-                    Meter {
-                        label: "Memory"
-                        value: stats.theme.memoryPercent >= 0 ? stats.theme.memoryPercent / 100 : -1
-                        color: stats.theme.tone(BarStyle.severity(stats.theme.memoryPercent, BarStyle.limits.memory))
-                        reading: stats.gib(stats.theme.memoryUsed) + " G"
-                        below: "of " + stats.gib(stats.theme.memoryTotal) + " GiB"
+            GraphCard {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.preferredWidth: 1
+                theme: stats.theme
+                title: "Memory"
+                value: stats.system.memoryPercent >= 0 ? Math.round(stats.system.memoryPercent) + "%" : "–"
+                detail: stats.gib(stats.system.memoryUsed) + " / " + stats.gib(stats.system.memoryTotal) + " GiB"
+                histories: [stats.system.memoryHistory]
+                colors: [stats.theme.tone(BarStyle.severity(stats.system.memoryPercent, BarStyle.limits.memory))]
+                interactive: true
+                onActivated: stats.terminalRequested("btop")
+
+                footer: RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+
+                    Reading {
+                        text: "Swap"
+                        font.pixelSize: BarStyle.popupFontSize - 2
                     }
-                    Divider {}
-                    Meter {
-                        label: "Swap"
-                        value: stats.theme.swapTotal > 0 ? stats.theme.swapUsed / stats.theme.swapTotal : -1
-                        reading: stats.theme.swapTotal > 0 ? stats.gib(stats.theme.swapUsed) + " G" : "Off"
-                        below: stats.theme.swapTotal > 0 ? "of " + stats.gib(stats.theme.swapTotal) + " GiB" : ""
+                    UsageBar {
+                        Layout.fillWidth: true
+                        implicitHeight: 3
+                        theme: stats.theme
+                        visible: stats.system.swapTotal > 0
+                        fraction: stats.system.swapTotal > 0 ? stats.system.swapUsed / stats.system.swapTotal : 0
+                    }
+                    Reading {
+                        Layout.fillWidth: !(stats.system.swapTotal > 0)
+                        horizontalAlignment: Text.AlignRight
+                        text: stats.system.swapTotal > 0
+                            ? stats.gib(stats.system.swapUsed) + " / " + stats.gib(stats.system.swapTotal) + " GiB" : "Off"
+                        font.pixelSize: BarStyle.popupFontSize - 2
                     }
                 }
             }
@@ -321,14 +290,16 @@ BarPopup {
             spacing: stats.gap
 
             Card {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
                 Layout.preferredWidth: 1
+                theme: stats.theme
 
                 ColumnLayout {
                     anchors.fill: parent
-                    anchors.margins: 14
                     spacing: 4
 
-                    CardTitle { text: "Processes"; Layout.bottomMargin: 4 }
+                    Title { text: "Processes"; Layout.bottomMargin: 4 }
 
                     PanelText {
                         visible: !stats.processes.length
@@ -341,7 +312,7 @@ BarPopup {
                         ProcessRow {}
                     }
 
-                    CardTitle {
+                    Title {
                         visible: stats.gpuProcesses.length > 0
                         Layout.topMargin: 8
                         Layout.bottomMargin: 2
@@ -349,7 +320,7 @@ BarPopup {
                     }
 
                     Repeater {
-                        model: stats.gpuProcesses.slice(0, 3)
+                        model: stats.gpuProcesses
                         ProcessRow {}
                     }
 
@@ -363,90 +334,54 @@ BarPopup {
                 Layout.preferredWidth: 1
                 spacing: stats.gap
 
-                Card {
-                    ColumnLayout {
-                        anchors.fill: parent
-                        anchors.margins: 14
-                        spacing: 6
+                // Both lines share one scale so their heights compare honestly.
+                GraphCard {
+                    id: network
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    theme: stats.theme
+                    title: "Network"
+                    histories: [stats.system.netDownHistory, stats.system.netUpHistory]
+                    colors: [stats.theme.accent, stats.theme.charging]
+                    ceiling: 0
+                    floor: 1024
+                    scaleLabel: BarStyle.rate(shownCeiling)
 
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 6
-
-                            CardTitle { text: "Network"; Layout.fillWidth: true }
-                            PanelText {
-                                text: BarStyle.icons.download
-                                font.family: BarStyle.iconFont
-                                color: stats.theme.accent
-                            }
-                            PanelText {
-                                Layout.preferredWidth: 66
-                                text: stats.rate(stats.theme.netDown)
-                                color: stats.theme.foreground
-                                font.features: { "tnum": 1 }
-                            }
-                            PanelText {
-                                text: BarStyle.icons.upload
-                                font.family: BarStyle.iconFont
-                                color: stats.theme.charging
-                            }
-                            PanelText {
-                                Layout.preferredWidth: 66
-                                text: stats.rate(stats.theme.netUp)
-                                color: stats.theme.foreground
-                                font.features: { "tnum": 1 }
-                            }
+                    trailing: [
+                        Icon { text: BarStyle.icons.download; size: BarStyle.popupFontSize; color: stats.theme.accent },
+                        PanelText {
+                            Layout.preferredWidth: 66
+                            text: BarStyle.rate(stats.system.netDown)
+                            color: stats.theme.foreground
+                            font.features: { "tnum": 1 }
+                        },
+                        Icon { text: BarStyle.icons.upload; size: BarStyle.popupFontSize; color: stats.theme.charging },
+                        PanelText {
+                            Layout.preferredWidth: 66
+                            text: BarStyle.rate(stats.system.netUp)
+                            color: stats.theme.foreground
+                            font.features: { "tnum": 1 }
                         }
-
-                        // Both lines share one scale so their heights compare honestly.
-                        Item {
-                            id: chart
-                            readonly property real peak: Math.max(1024, ...stats.theme.netDownHistory, ...stats.theme.netUpHistory)
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-
-                            Sparkline {
-                                anchors.fill: parent
-                                capacity: stats.theme.historyLength
-                                values: stats.theme.netDownHistory.map(value => value / chart.peak)
-                                color: stats.theme.accent
-                            }
-                            Sparkline {
-                                anchors.fill: parent
-                                capacity: stats.theme.historyLength
-                                values: stats.theme.netUpHistory.map(value => value / chart.peak)
-                                color: stats.theme.charging
-                            }
-                            PanelText {
-                                anchors.right: parent.right
-                                anchors.top: parent.top
-                                text: stats.rate(chart.peak)
-                                color: stats.theme.muted
-                                font.pixelSize: BarStyle.popupFontSize - 3
-                            }
-                        }
-                    }
+                    ]
                 }
 
                 Card {
-                    Layout.fillHeight: false
-                    Layout.preferredHeight: diskColumn.implicitHeight + 28
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: diskColumn.implicitHeight + 2 * padding
+                    theme: stats.theme
 
                     ColumnLayout {
                         id: diskColumn
                         anchors.left: parent.left
                         anchors.right: parent.right
-                        anchors.top: parent.top
-                        anchors.margins: 14
                         spacing: 6
 
                         RowLayout {
                             Layout.fillWidth: true
-                            CardTitle { text: "Disks"; Layout.fillWidth: true }
-                            PanelText {
-                                visible: stats.theme.nvmeTemperature >= 0
-                                text: "SSD " + stats.theme.nvmeTemperature + "°C"
-                                color: stats.theme.secondary
+                            Title { text: "Disks"; Layout.fillWidth: true }
+                            Reading {
+                                visible: stats.system.nvmeTemperature >= 0
+                                text: "SSD " + stats.system.nvmeTemperature + "°C"
                             }
                         }
 
@@ -468,14 +403,13 @@ BarPopup {
                                         color: stats.theme.foreground
                                         elide: Text.ElideMiddle
                                     }
-                                    PanelText {
+                                    Reading {
                                         text: Math.round(disk.modelData.used) + " / " + Math.round(disk.modelData.total) + " GiB"
-                                        color: stats.theme.secondary
-                                        font.features: { "tnum": 1 }
                                     }
                                 }
                                 UsageBar {
                                     Layout.fillWidth: true
+                                    theme: stats.theme
                                     fraction: disk.fraction
                                     fill: stats.theme.tone(disk.fraction >= 0.95 ? 2 : disk.fraction >= 0.85 ? 1 : 0)
                                 }

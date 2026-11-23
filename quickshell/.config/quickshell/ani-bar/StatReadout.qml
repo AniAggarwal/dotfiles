@@ -35,14 +35,21 @@ Item {
             color: Qt.alpha(stat.theme.foreground, 0.14)
 
             Rectangle {
+                id: fill
+                // Whole pixels, so a reading that wobbles by a percent does not redraw the bar.
+                readonly property int level: Math.max(2, Math.round(parent.height * Math.max(0, Math.min(1, stat.fraction))))
                 visible: stat.fraction >= 0
                 anchors.bottom: parent.bottom
                 width: parent.width
                 radius: parent.radius
-                height: Math.max(2, parent.height * Math.max(0, Math.min(1, stat.fraction)))
+                height: level
                 color: stat.tone
-                Behavior on height { NumberAnimation { duration: BarStyle.motion.meter; easing.type: Easing.OutCubic } }
-                Behavior on color { ColorAnimation { duration: BarStyle.motion.normal } }
+                // Every animated frame redraws the bar and re-blurs what is behind it. Only a real
+                // jump is worth that, and never on battery.
+                Behavior on height {
+                    enabled: !stat.theme.onBattery && Math.abs(fill.level - fill.height) >= 3
+                    NumberAnimation { duration: BarStyle.motion.meter; easing.type: Easing.OutCubic }
+                }
             }
         }
 

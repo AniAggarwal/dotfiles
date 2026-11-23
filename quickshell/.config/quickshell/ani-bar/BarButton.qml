@@ -115,15 +115,18 @@ Rectangle {
         cursorShape: chip.interactive ? Qt.PointingHandCursor : Qt.ArrowCursor
     }
 
+    // Exclusive grabs: a button inside a clickable row takes the click, the row does not.
     TapHandler {
         enabled: chip.interactive
         acceptedButtons: Qt.LeftButton
+        gesturePolicy: TapHandler.ReleaseWithinBounds
         onTapped: chip.activated()
     }
 
     TapHandler {
         enabled: chip.interactive
         acceptedButtons: Qt.RightButton
+        gesturePolicy: TapHandler.ReleaseWithinBounds
         onTapped: chip.secondaryActivated()
     }
 }

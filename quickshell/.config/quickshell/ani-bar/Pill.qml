@@ -14,7 +14,7 @@ Rectangle {
     implicitWidth: row.implicitWidth + 2 * BarStyle.pillPadding
     implicitHeight: BarStyle.barHeight
     radius: BarStyle.radius.pill
-    color: Qt.alpha(theme.background, BarStyle.glass.pill)
+    color: Qt.alpha(theme.background, theme.pillAlpha)
     border.width: 1
     border.color: Qt.alpha(theme.foreground, 0.1)
 

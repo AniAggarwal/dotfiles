@@ -39,17 +39,10 @@ BarPopup {
             name: "Battery"
             value: Math.round((card.battery?.percentage || 0) * 100) + "%"
         }
-        Rectangle {
+        UsageBar {
             Layout.fillWidth: true
-            Layout.preferredHeight: 4
-            radius: 2
-            color: card.theme.card
-            Rectangle {
-                width: parent.width * (card.battery?.percentage || 0)
-                height: parent.height
-                radius: 2
-                color: card.theme.accent
-            }
+            theme: card.theme
+            fraction: card.battery?.percentage || 0
         }
         Detail {
             name: "Status"

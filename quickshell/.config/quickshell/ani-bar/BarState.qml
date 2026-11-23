@@ -1,13 +1,23 @@
 import QtQuick
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Services.UPower
+import Quickshell.Wayland
+import "BarStyle.js" as BarStyle
 
+// Everything the bars on all screens share: palette, settings, the power policy that paces
+// sampling, and the system services behind the chips. Components receive it as `theme`.
 Scope {
     id: state
 
     readonly property string home: Quickshell.env("HOME")
     readonly property string scripts: home + "/.config/hypr/scripts/"
+    // A preview instance (ANI_BAR_PREVIEW=<screen>) must not touch the session it previews in.
+    property bool preview: false
+
+    // Palette, from the active theme's waybar colors.
+    property var palette: ({})
     readonly property color foreground: palette.bar_fg || "#cdd6f4"
     readonly property color accent: palette.accent_workspace_active || "#89b4fa"
     readonly property color background: palette.panel_bg || "#1e1e2e"
@@ -19,11 +29,116 @@ Scope {
     readonly property color critical: palette.accent_critical || "#f38ba8"
     readonly property color hot: palette.accent_temp_critical || critical
     readonly property color charging: palette.accent_charging || accent
-    property var palette: ({})
 
-    // Polling slows down on battery. Event-driven sources (PipeWire, inotify) are unaffected.
-    readonly property bool onBattery: UPower.onBattery
-    function every(acMs, batteryMs) { return onBattery ? batteryMs : acMs; }
+    function tone(severity) {
+        return severity === 2 ? critical : severity === 1 ? warning : accent;
+    }
+
+    // Power policy. On battery everything periodic runs slower; once nobody has touched the
+    // machine for a while it slows further, and it stops when the screen is locked or off.
+    // Event-driven sources (PipeWire, UPower, D-Bus signals, inotify) cost nothing while quiet.
+    readonly property bool onBattery: UPower.onBattery || pretendBattery
+    // Set through the preview IPC, to see the battery behavior while plugged in.
+    property bool pretendBattery: false
+    property bool keepAwake: false
+    property bool locked: false
+    readonly property bool idle: slowIdle.isIdle
+    readonly property bool asleep: locked || (stopIdle.isIdle && !keepAwake)
+    function every(pluggedMs, batteryMs) { return onBattery ? batteryMs : pluggedMs; }
+    function pace(pair) { return pair[onBattery ? 1 : 0]; }
+
+    IdleMonitor { id: slowIdle; timeout: BarStyle.idle.slow; respectInhibitors: false }
+    IdleMonitor { id: stopIdle; timeout: BarStyle.idle.stop; respectInhibitors: true }
+
+    // Dropdowns say what they need while they are open: watch("stats", true) on show and
+    // watch("stats", false) on hide. Keys: stats, system, network.
+    property var watching: ({})
+    function watch(key, on) {
+        const next = Object.assign({}, watching);
+        next[key] = Math.max(0, (next[key] || 0) + (on ? 1 : -1));
+        watching = next;
+        if (!on)
+            return;
+        if (key === "system") {
+            refreshBrightness();
+            refreshBluetooth();
+        } else if (key === "network") {
+            refreshVpn();
+        }
+    }
+    readonly property bool statsWatched: (watching.stats || 0) > 0
+
+    // Settings, kept in ~/.local/state/ani-bar/settings.json.
+    readonly property bool glassEnabled: settings.glassEnabled
+    function setGlassEnabled(enabled) { settings.glassEnabled = enabled; }
+    // Frosted glass needs Hyprland to blur what is behind every pill, so it is off on battery.
+    readonly property bool glassActive: glassEnabled && !onBattery
+    // 1 = glass, 0 = solid.
+    property real glassAmount: glassActive ? 1 : 0
+    Behavior on glassAmount { NumberAnimation { duration: BarStyle.motion.glass; easing.type: Easing.InOutQuad } }
+    readonly property real pillAlpha: 1 - glassAmount * (1 - BarStyle.glass.pill)
+    readonly property real popupAlpha: 1 - glassAmount * (1 - BarStyle.glass.popup)
+    // Blur comes on before the pills start to clear and goes off once they are solid again.
+    readonly property bool blurWanted: glassActive || glassAmount > 0
+    onBlurWantedChanged: applyBlur()
+
+    // Redefines the "ani-bar-frost" layer rule from hyprland.lua, with blur on or off.
+    function applyBlur() {
+        if (preview)
+            return;
+        Quickshell.execDetached(["hyprctl", "eval", 'hl.layer_rule({ name = "ani-bar-frost", match = { namespace = "^ani-bar(-popup|-osd)?$" }, blur = '
+            + (blurWanted ? "true" : "false") + ', ignore_alpha = 0.2 })']);
+    }
+
+    // A config reload restores the rule as hyprland.lua wrote it.
+    Connections {
+        target: Hyprland
+        function onRawEvent(event) {
+            if (event.name === "configreloaded")
+                state.applyBlur();
+        }
+    }
+
+    FileView {
+        id: settingsFile
+        path: (Quickshell.env("XDG_STATE_HOME") || state.home + "/.local/state") + "/ani-bar/settings.json"
+        blockLoading: true
+        printErrors: false
+        watchChanges: true
+        onFileChanged: reload()
+        onAdapterUpdated: writeAdapter()
+        onLoadFailed: writeAdapter()
+
+        JsonAdapter {
+            id: settings
+            property bool glassEnabled: true
+        }
+    }
+
+    // CPU, memory, GPU and network readings: status.system.cpu and so on.
+    readonly property alias system: systemStats
+    readonly property string gpuState: systemStats.gpuState
+    SystemStats {
+        id: systemStats
+        active: !state.asleep
+        interval: state.idle ? BarStyle.cadence.idle
+            : state.pace(state.statsWatched ? BarStyle.cadence.statsOpen : BarStyle.cadence.stats)
+        detail: state.statsWatched
+        gpuAppsWanted: state.statsWatched
+        gpuBusyInterval: state.pace(BarStyle.cadence.gpuBusy)
+        gpuIdleInterval: state.pace(BarStyle.cadence.gpuIdle)
+        onSensorsReady: state.refreshBrightness()
+        // A VPN shows up as a new interface; ask who owns it only then.
+        onInterfacesChanged: vpnSettle.restart()
+    }
+    function toggleGpu() { gpuAction.running = true; }
+
+    // dunst pause level and notification history: status.notifications.entries and so on.
+    readonly property alias notifications: dunstState
+    readonly property string dunstLevel: dunstState.level
+    function cycleDunst() { dunstState.cycle(); }
+    DunstState { id: dunstState }
+
     // Messages from agents (see ~/bin/agent-inbox), newest first:
     // [{file, id, title, from, agent, project, branch, cwd, pid, sent, urgent, unread, preview, ancestors}]
     readonly property string inboxTool: home + "/bin/agent-inbox"
@@ -37,99 +152,10 @@ Scope {
     function markInboxRead() { Quickshell.execDetached([inboxTool, "read", "all"]); }
     function clearInbox() { Quickshell.execDetached([inboxTool, "rm", "all"]); }
 
-    // dunst history timestamps. Unseen = newer than the newest one shown when the popup last opened.
-    property var notificationStamps: []
-    property int lastSeenNotification: -1
-    readonly property int unseenNotifications: lastSeenNotification < 0 ? 0
-        : notificationStamps.filter(stamp => stamp > lastSeenNotification).length
-    function markNotificationsSeen() {
-        lastSeenNotification = Math.max(lastSeenNotification, ...notificationStamps, 0);
-    }
-    function refreshNotifications() { if (!readNotifications.running) readNotifications.running = true; }
-
-    function tone(severity) {
-        return severity === 2 ? critical : severity === 1 ? warning : accent;
-    }
-
-    // Live system readings. Negative numbers mean "not read yet".
-    readonly property int historyLength: 40
-    property real cpu: -1
-    property real memoryUsed: -1
-    property real memoryTotal: -1
-    readonly property real memoryPercent: memoryTotal > 0 ? 100 * memoryUsed / memoryTotal : -1
-    property int cpuTemperature: -1
-    property int nvmeTemperature: -1
-    property real load: -1
-    property int threads: 1
-    property real uptime: -1
+    // Backlight in percent, -1 without one. Read when quick settings opens; the OSD pushes changes.
     property int brightness: -1
     property int pendingBrightness: -1
-    property var cpuHistory: []
-    property var memoryHistory: []
-    property var temperatureHistory: []
-    property var gpuHistory: []
-
-    // gpuState: absent | suspended | active. Telemetry fields are -1 until nvidia-smi answers.
-    property string gpuState: ""
-    property real gpuUtil: -1
-    property int gpuTemperature: -1
-    property real gpuMemoryUsed: -1
-    property real gpuMemoryTotal: -1
-    property real gpuPower: -1
-    onGpuStateChanged: {
-        if (gpuState === "active")
-            readGpu.running = true;
-        else {
-            gpuUtil = gpuTemperature = gpuMemoryUsed = gpuMemoryTotal = gpuPower = -1;
-        }
-    }
-
-    property real previousCpuTotal: 0
-    property real previousCpuIdle: 0
-    // Swap in GiB, average core clock in GHz, network throughput in bytes per second.
-    property real swapUsed: -1
-    property real swapTotal: 0
-    property real cpuFrequency: -1
-    property real netDown: -1
-    property real netUp: -1
-    property var netDownHistory: []
-    property var netUpHistory: []
-    property var previousNet: null
-
-    property var dunst: ({})
-    readonly property string dunstLevel: dunst.alt || "all"
-    property var bluetoothRadios: []
-    property bool bluetoothServiceActive: false
-    readonly property bool bluetoothAvailable: bluetoothRadios.some(radio => radio.hard === "unblocked")
-    readonly property bool bluetoothOn: bluetoothServiceActive && bluetoothRadios.some(radio => radio.hard === "unblocked" && radio.soft === "unblocked")
-    property string vpnProvider: ""
-
-    function pushRaw(history, value) {
-        return history.concat([value]).slice(-historyLength);
-    }
-
-    function pushHistory(history, value) {
-        return history.concat([Math.max(0, Math.min(1, value))]).slice(-historyLength);
-    }
-
-    function readObject(source, previous) {
-        try {
-            return JSON.parse(source);
-        } catch (_) {
-            return previous;
-        }
-    }
-
-    function refresh() {
-        stats.running = true;
-        readGpu.running = true;
-        readDunst.running = true;
-        readBluetooth.running = true;
-    }
-
-    function refreshGpu() { readGpu.running = true; }
-    function cycleDunst() { dunstAction.running = true; }
-    function toggleGpu() { gpuAction.running = true; }
+    function refreshBrightness() { brightness = systemStats.readBrightness(); }
 
     function setBrightness(percent) {
         pendingBrightness = Math.max(1, Math.min(100, Math.round(percent)));
@@ -145,6 +171,13 @@ Scope {
         brightnessAction.running = true;
     }
 
+    // Bluetooth radio and service state. Read when quick settings opens and after a toggle.
+    property var bluetoothRadios: []
+    property bool bluetoothServiceActive: false
+    readonly property bool bluetoothAvailable: bluetoothRadios.some(radio => radio.hard === "unblocked")
+    readonly property bool bluetoothOn: bluetoothServiceActive && bluetoothRadios.some(radio => radio.hard === "unblocked" && radio.soft === "unblocked")
+    function refreshBluetooth() { readBluetooth.running = true; }
+
     function toggleBluetooth() {
         if (!bluetoothAvailable || bluetoothAction.running)
             return;
@@ -152,6 +185,55 @@ Scope {
         bluetoothAction.running = true;
     }
 
+    // "Proton VPN", "Windscribe" or "". Re-read when the set of network interfaces changes.
+    property string vpnProvider: ""
+    function refreshVpn() { vpnStatus.running = true; }
+
+    function readObject(source, previous) {
+        try {
+            return JSON.parse(source);
+        } catch (_) {
+            return previous;
+        }
+    }
+
+    // Re-reads everything that is not sampled on a timer.
+    function refresh() {
+        systemStats.sample();
+        dunstState.reload();
+        refreshBluetooth();
+        refreshBrightness();
+        refreshVpn();
+        refreshInbox();
+    }
+
+    IpcHandler {
+        target: "bar"
+
+        function reloadPalette(): void { paletteFile.reload(); }
+        function refresh(): void { state.refresh(); }
+        function setGlass(enabled: bool): void { state.setGlassEnabled(enabled); }
+        // For the lock script: sampling stops while the session is locked.
+        function setLocked(locked: bool): void { state.locked = locked; }
+    }
+
+    FileView {
+        id: paletteFile
+        path: state.home + "/.config/themes/current/colors-waybar.css"
+        watchChanges: true
+        printErrors: false
+        onFileChanged: reload()
+        onLoaded: {
+            const values = {};
+            const source = text();
+            const definition = /@define-color\s+(\w+)\s+(#[0-9a-fA-F]{6})\s*;/g;
+            for (let match; (match = definition.exec(source)) !== null;)
+                values[match[1]] = match[2];
+            state.palette = values;
+        }
+    }
+
+    Timer { id: vpnSettle; interval: 1500; onTriggered: state.refreshVpn() }
     Process {
         id: vpnStatus
         command: ["sh", Quickshell.shellPath("vpn-status.sh")]
@@ -172,7 +254,7 @@ Scope {
         onExited: function(exitCode) {
             if (exitCode !== 0) {
                 Quickshell.execDetached(["notify-send", "Display brightness", "The backlight level could not be changed."]);
-                stats.running = true;
+                state.refreshBrightness();
             }
             Qt.callLater(state.applyBrightness);
         }
@@ -196,122 +278,7 @@ Scope {
         onExited: function(exitCode) {
             if (exitCode !== 0)
                 Quickshell.execDetached(["notify-send", "Bluetooth", "The Bluetooth service or radio could not be changed."]);
-            readBluetooth.running = true;
-        }
-    }
-
-    FileView {
-        id: paletteFile
-        path: state.home + "/.config/themes/current/colors-waybar.css"
-        watchChanges: true
-        printErrors: false
-        onFileChanged: reload()
-        onLoaded: {
-            const values = {};
-            const source = text();
-            const definition = /@define-color\s+(\w+)\s+(#[0-9a-fA-F]{6})\s*;/g;
-            for (let match; (match = definition.exec(source)) !== null;)
-                values[match[1]] = match[2];
-            state.palette = values;
-        }
-    }
-
-    IpcHandler {
-        target: "bar"
-
-        function reloadPalette(): void { paletteFile.reload(); }
-        function refresh(): void { state.refresh(); }
-    }
-
-    Process {
-        id: stats
-        command: ["sh", Quickshell.shellPath("stats.sh")]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const readings = {};
-                let nvme = -1;
-                for (const line of text.trim().split("\n")) {
-                    const fields = line.trim().split(/\s+/);
-                    if (fields[0] === "nvmetemp")
-                        nvme = Math.max(nvme, Number(fields[1]) / 1000);
-                    else
-                        readings[fields[0]] = fields.slice(1);
-                }
-
-                const ticks = (readings.cpu || []).slice(0, 8).map(Number);
-                if (ticks.length === 8 && ticks.every(Number.isFinite)) {
-                    const total = ticks.reduce((sum, tick) => sum + tick, 0);
-                    const idle = ticks[3] + ticks[4];
-                    if (state.previousCpuTotal && total > state.previousCpuTotal) {
-                        const percent = 100 * (1 - (idle - state.previousCpuIdle) / (total - state.previousCpuTotal));
-                        state.cpu = Math.max(0, Math.min(100, percent));
-                        state.cpuHistory = state.pushHistory(state.cpuHistory, state.cpu / 100);
-                    }
-                    state.previousCpuTotal = total;
-                    state.previousCpuIdle = idle;
-                }
-
-                const memory = (readings.mem || []).map(Number);
-                if (memory.length === 2 && memory.every(Number.isFinite) && memory[0] > 0) {
-                    state.memoryTotal = memory[0] / 1048576;
-                    state.memoryUsed = (memory[0] - memory[1]) / 1048576;
-                    state.memoryHistory = state.pushHistory(state.memoryHistory, state.memoryUsed / state.memoryTotal);
-                }
-
-                const cpuTemp = Number(readings.cputemp?.[0]);
-                if (Number.isFinite(cpuTemp) && cpuTemp > 0) {
-                    state.cpuTemperature = Math.round(cpuTemp / 1000);
-                    state.temperatureHistory = state.pushHistory(state.temperatureHistory, state.cpuTemperature / 100);
-                }
-                state.nvmeTemperature = nvme >= 0 ? Math.round(nvme) : -1;
-                state.load = Number(readings.load?.[0] ?? -1);
-                state.uptime = Number(readings.uptime?.[0] ?? -1);
-                state.threads = Math.max(1, Number(readings.threads?.[0]) || 1);
-                state.gpuState = readings.gpu?.[0] || "";
-
-                const swap = (readings.swap || []).map(Number);
-                if (swap.length === 2 && swap.every(Number.isFinite)) {
-                    state.swapTotal = swap[0] / 1048576;
-                    state.swapUsed = (swap[0] - swap[1]) / 1048576;
-                }
-                const frequency = Number(readings.cpufreq?.[0]);
-                state.cpuFrequency = Number.isFinite(frequency) ? frequency / 1e6 : -1;
-
-                const net = (readings.net || []).map(Number);
-                if (net.length === 2 && net.every(Number.isFinite)) {
-                    const now = Date.now();
-                    const last = state.previousNet;
-                    if (last && now > last.time && net[0] >= last.rx && net[1] >= last.tx) {
-                        const seconds = (now - last.time) / 1000;
-                        state.netDown = (net[0] - last.rx) / seconds;
-                        state.netUp = (net[1] - last.tx) / seconds;
-                        state.netDownHistory = state.pushRaw(state.netDownHistory, state.netDown);
-                        state.netUpHistory = state.pushRaw(state.netUpHistory, state.netUp);
-                    }
-                    state.previousNet = { rx: net[0], tx: net[1], time: now };
-                }
-
-                const level = readings.brightness?.[0] || "";
-                state.brightness = /^\d+%$/.test(level) ? parseInt(level) : -1;
-            }
-        }
-    }
-
-    Process {
-        id: readGpu
-        command: ["sh", Quickshell.shellPath("gpu.sh"), "telemetry"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const values = text.trim().split(",").map(value => Number(value.trim()));
-                if (values.length < 5 || !Number.isFinite(values[0]))
-                    return;
-                state.gpuUtil = values[0];
-                state.gpuTemperature = Number.isFinite(values[1]) ? values[1] : -1;
-                state.gpuMemoryUsed = Number.isFinite(values[2]) ? values[2] / 1024 : -1;
-                state.gpuMemoryTotal = Number.isFinite(values[3]) ? values[3] / 1024 : -1;
-                state.gpuPower = Number.isFinite(values[4]) ? values[4] : -1;
-                state.gpuHistory = state.pushHistory(state.gpuHistory, state.gpuUtil / 100);
-            }
+            state.refreshBluetooth();
         }
     }
 
@@ -321,20 +288,8 @@ Scope {
         onExited: function(exitCode) {
             if (exitCode !== 0)
                 Quickshell.execDetached(["notify-send", "GPU toggle failed", "Run sudo gpu-toggle --notify from a terminal."]);
-            stats.running = true;
+            systemStats.sampleGpuState();
         }
-    }
-
-    Process {
-        id: readDunst
-        command: [state.scripts + "dunst-pause-leve.sh"]
-        stdout: StdioCollector { onStreamFinished: state.dunst = state.readObject(text, state.dunst) }
-    }
-
-    Process {
-        id: dunstAction
-        command: [state.scripts + "dunst-pause-leve.sh", "--cycle"]
-        onExited: readDunst.running = true
     }
 
     Process {
@@ -349,39 +304,17 @@ Scope {
         }
     }
 
-    // inotify on the maildir: re-read only when a message arrives, is read or is deleted. No polling.
+    // inotify on the maildir: re-read only when a message arrives, is read or is deleted.
     Process {
         running: true
         command: ["sh", "-c", 'mkdir -p "$1/new" "$1/cur" "$1/tmp" && exec inotifywait -m -q -e moved_to,moved_from,delete,close_write --format x "$1/new" "$1/cur"', "sh", state.inboxDir]
         stdout: SplitParser { onRead: inboxDebounce.restart() }
     }
     Timer { id: inboxDebounce; interval: 150; onTriggered: readInbox.running ? restart() : (readInbox.running = true) }
-    Component.onCompleted: readInbox.running = true
 
-    Process {
-        id: readNotifications
-        command: ["sh", "-c", "dunstctl history | jq -c '[.data[0][].timestamp.data]'"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const stamps = state.readObject(text, null);
-                if (!Array.isArray(stamps))
-                    return;
-                state.notificationStamps = stamps;
-                if (state.lastSeenNotification < 0)
-                    state.lastSeenNotification = Math.max(...stamps, 0);
-            }
-        }
+    Component.onCompleted: {
+        readInbox.running = true;
+        refreshVpn();
+        applyBlur();
     }
-    Timer { interval: state.every(10000, 30000); repeat: true; running: true; triggeredOnStart: true; onTriggered: state.refreshNotifications() }
-
-    Timer { interval: state.every(3000, 6000); repeat: true; running: true; triggeredOnStart: true; onTriggered: stats.running = true }
-    Timer { interval: state.every(10000, 30000); repeat: true; running: true; triggeredOnStart: true; onTriggered: readBluetooth.running = true }
-    // nvidia-smi resets the dGPU's runtime-suspend timer, so poll it slowly unless the GPU is already busy.
-    Timer {
-        interval: state.gpuUtil > 0 ? 5000 : 30000
-        repeat: true
-        running: state.gpuState === "active"
-        onTriggered: readGpu.running = true
-    }
-    Timer { interval: state.every(5000, 15000); repeat: true; running: true; triggeredOnStart: true; onTriggered: { readDunst.running = true; vpnStatus.running = true; } }
 }

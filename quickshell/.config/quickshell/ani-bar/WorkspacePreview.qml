@@ -8,13 +8,14 @@ import Quickshell.Wayland
 BarPopup {
     id: preview
 
-    property int workspaceId
-    property string label
+    readonly property int workspaceId: anchorItem?.modelData?.id ?? 0
+    readonly property string label: anchorItem?.label ?? ""
     readonly property var windows: visible && workspaceId > 0 ? Hyprland.toplevels.values
         .filter(window => window.lastIpcObject.workspace?.id === workspaceId).slice(0, 4) : []
     readonly property int columns: Math.max(1, Math.min(2, windows.length))
     onVisibleChanged: if (visible) Hyprland.refreshToplevels()
     pinnable: false
+    centered: true
     panelWidth: Math.max(178, 28 + columns * 178 + (columns - 1) * 8)
     panelHeight: 70 + Math.ceil(windows.length / columns) * 125
 

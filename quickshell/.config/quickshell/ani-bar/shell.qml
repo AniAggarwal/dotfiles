@@ -16,7 +16,11 @@ import "BarStyle.js" as BarStyle
 ShellRoot {
     id: root
 
-    property bool inhibitIdle: true
+    // ANI_BAR_PREVIEW=<screen> runs a second copy for looking at changes: one bar on that screen,
+    // drawn over the windows below the real bar, taking no space and leaving the session alone.
+    readonly property string previewScreen: Quickshell.env("ANI_BAR_PREVIEW") || ""
+    readonly property bool preview: previewScreen !== ""
+    property bool inhibitIdle: !preview
     property string osdKind
     property string osdScreen
     property int osdLevel
@@ -76,7 +80,41 @@ ShellRoot {
         Hyprland.dispatch('hl.dsp.focus({ workspace = "' + id + '" })');
     }
 
+    // The bar of the focused monitor, for requests that do not name a screen.
+    function focusedBar() {
+        return bars.instances.find(bar => bar.modelData.name === Hyprland.focusedMonitor?.name) || bars.instances[0] || null;
+    }
+
     Timer { id: mediaLinger; interval: 60000; onTriggered: root.recentPlayer = null }
+
+    // A workspace's hasFullscreen is also true for a maximized window; the window's own state tells
+    // the two apart, and it is only current after a refresh.
+    Connections {
+        target: Hyprland
+        function onRawEvent(event) {
+            if (event.name === "fullscreen")
+                Hyprland.refreshToplevels();
+        }
+    }
+    Component.onCompleted: Hyprland.refreshToplevels()
+
+    // qs ipc call popup toggle calendar: open or close a dropdown on the focused monitor.
+    // Names: privacy, inbox, media, stats, system, notifications, network, audio, battery, calendar.
+    IpcHandler {
+        target: "popup"
+        function toggle(name: string): void { root.focusedBar()?.togglePopup(name); }
+        function close(): void { root.focusedBar()?.closePopup(); }
+    }
+
+    // For a preview instance: drive what otherwise needs a pointer or a real power change.
+    IpcHandler {
+        target: "preview"
+        enabled: root.preview
+        function peek(name: string): void { root.focusedBar()?.peekPopup(name); }
+        function fullscreen(on: bool): void { for (const bar of bars.instances) bar.pretendFullscreen = on; }
+        function battery(on: bool): void { status.pretendBattery = on; }
+        function idle(on: bool): void { status.locked = on; }
+    }
 
     Process {
         command: ["systemd-inhibit", "--no-ask-password", "--what=idle", "--mode=block",
@@ -106,14 +144,19 @@ ShellRoot {
         }
     }
 
-    BarState { id: status }
+    BarState {
+        id: status
+        preview: root.preview
+        keepAwake: root.inhibitIdle
+    }
     PowerConfirm { id: powerDialog; theme: status }
     WorkspaceState { id: workspaceState }
     SystemClock { id: clock; precision: SystemClock.Minutes }
     PwObjectTracker { objects: (root.sink ? [root.sink] : []).concat(root.captureStreams) }
 
     Variants {
-        model: Quickshell.screens
+        id: bars
+        model: root.preview ? Quickshell.screens.filter(screen => screen.name === root.previewScreen) : Quickshell.screens
 
         delegate: PanelWindow {
             id: panel
@@ -121,101 +164,48 @@ ShellRoot {
             readonly property var workspaces: workspaceState.rows.filter(ws => ws.monitor === panel.modelData?.name)
             readonly property int activeWorkspace: workspaceState.active[panel.modelData?.name] ?? -1
 
-            // Popup controller: at most one popup per bar. See BarPopup for peek vs. pinned.
-            property BarPopup openPopup
-            property Item popupAnchor
-            property BarPopup pendingPopup
-            property Item pendingAnchor
-            property Item hoveredTip
-            property string tipText
             property real workspaceWheel: 0
 
-            function hideTip() {
-                tipDelay.stop();
-                tooltip.visible = false;
-                hoveredTip = null;
+            // The bar steps aside for a fullscreen window. It lives on the overlay layer, above
+            // fullscreen windows, so that it can slide away itself; once gone it drops to the top
+            // layer, which Hyprland does not draw over a fullscreen window at all.
+            readonly property HyprlandMonitor monitor: Hyprland.monitorFor(modelData)
+            property bool pretendFullscreen: false
+            readonly property bool fullscreen: {
+                if (root.preview)
+                    return pretendFullscreen;
+                const workspace = monitor?.activeWorkspace;
+                if (!workspace?.hasFullscreen)
+                    return false;
+                return Hyprland.toplevels.values.some(window => window.lastIpcObject?.workspace?.id === workspace.id
+                    && ((window.lastIpcObject?.fullscreen ?? 0) & 2));
+            }
+            // 1 = in place, 0 = slid off the top edge.
+            property real presence: fullscreen ? 0 : 1
+            Behavior on presence { NumberAnimation { duration: BarStyle.motion.hide; easing.type: Easing.OutCubic } }
+            onFullscreenChanged: if (fullscreen) {
+                host.close();
+                tooltip.hide();
             }
 
-            function updateTip(item, show, text) {
-                if (show && text && !openPopup) {
-                    hoveredTip = item;
-                    tipText = text;
-                    tipDelay.restart();
-                } else if (hoveredTip === item) {
-                    hideTip();
-                }
+            // Dropdowns by name, each with the chip it hangs from.
+            readonly property var popupTargets: ({
+                privacy: [privacyMenu, privacyChip], inbox: [inboxMenu, inboxChip], media: [media, mediaChip],
+                stats: [statsMenu, statsPill], system: [systemMenu, systemChip], notifications: [notificationMenu, bellChip],
+                network: [networkMenu, networkChip], audio: [audio, audioChip], battery: [batteryDetails, batteryChip],
+                calendar: [calendar, clockChip]
+            })
+            function togglePopup(name) {
+                const target = popupTargets[name];
+                if (target && target[1].visible && !fullscreen)
+                    host.toggle(target[0], target[1]);
             }
-
-            function showPopup(target, anchor, pin) {
-                hideTip();
-                hoverOpen.stop();
-                hoverClose.stop();
-                pendingPopup = null;
-                pendingAnchor = null;
-                if (openPopup && openPopup !== target)
-                    openPopup.close();
-                openPopup = target;
-                popupAnchor = anchor;
-                target.open(anchor);
-                if (pin && target.pinnable)
-                    target.pinned = true;
+            function peekPopup(name) {
+                const target = popupTargets[name];
+                if (target && target[1].visible)
+                    host.show(target[0], target[1], false);
             }
-
-            function closePopup() {
-                hoverOpen.stop();
-                hoverClose.stop();
-                pendingPopup = null;
-                pendingAnchor = null;
-                const target = openPopup;
-                openPopup = null;
-                popupAnchor = null;
-                if (target)
-                    target.close();
-            }
-
-            // Click: pin the popup, or close it if it is already pinned to this anchor.
-            function togglePopup(target, anchor) {
-                if (openPopup === target && popupAnchor === anchor && target.pinned)
-                    closePopup();
-                else
-                    showPopup(target, anchor, true);
-            }
-
-            // Hover: peek after a short delay. While one popup is peeking, moving to another chip
-            // switches immediately, like a menu bar. A pinned popup ignores hover until dismissed.
-            function hoverPopup(target, anchor, hovered) {
-                if (hovered) {
-                    if (openPopup?.pinned)
-                        return;
-                    hoverClose.stop();
-                    if (openPopup === target && popupAnchor === anchor)
-                        return;
-                    if (openPopup) {
-                        showPopup(target, anchor, false);
-                        return;
-                    }
-                    pendingPopup = target;
-                    pendingAnchor = anchor;
-                    hoverOpen.restart();
-                } else {
-                    if (pendingAnchor === anchor) {
-                        hoverOpen.stop();
-                        pendingPopup = null;
-                        pendingAnchor = null;
-                    }
-                    if (popupAnchor === anchor && openPopup && !openPopup.pinned)
-                        hoverClose.restart();
-                }
-            }
-
-            function popupX(popupWidth, centered) {
-                const item = popupAnchor;
-                if (!item)
-                    return 0;
-                const point = item.mapToItem(surface, 0, 0);
-                return Math.max(0, Math.min(width - popupWidth,
-                    point.x + (item.width - popupWidth) * (centered ? 0.5 : 1)));
-            }
+            function closePopup() { host.close(); }
 
             function scrollWorkspaces(delta) {
                 workspaceWheel += delta;
@@ -242,22 +232,27 @@ ShellRoot {
                 implicitHeight: BarStyle.chipHeight
                 radius: BarStyle.radius.chip
                 boldWhenSelected: false
-                selected: !!popup && panel.openPopup === popup && panel.popupAnchor === chip
+                selected: !!popup && host.current === popup && host.anchor === chip
                 onHoveredChanged: {
                     if (popup)
-                        panel.hoverPopup(popup, chip, hovered);
+                        host.hover(popup, chip, hovered);
                     else
-                        panel.updateTip(chip, hovered, hint);
+                        tooltip.update(chip, hovered, hint);
                 }
-                onActivated: if (popup) panel.togglePopup(popup, chip)
+                onActivated: if (popup) host.toggle(popup, chip)
             }
 
             screen: modelData
             anchors { top: true; left: true; right: true }
-            margins { top: BarStyle.topGap; left: BarStyle.sideInset; right: BarStyle.sideInset }
+            margins { top: root.preview ? 48 : BarStyle.topGap; left: BarStyle.sideInset; right: BarStyle.sideInset }
             implicitHeight: BarStyle.barHeight
             color: "transparent"
+            exclusionMode: root.preview ? ExclusionMode.Ignore : ExclusionMode.Auto
+            mask: fullscreen ? clickThrough : null
             WlrLayershell.namespace: "ani-bar"
+            WlrLayershell.layer: presence > 0 || root.preview ? WlrLayer.Overlay : WlrLayer.Top
+
+            Region { id: clickThrough }
 
             LevelOsd {
                 screen: panel.modelData
@@ -271,12 +266,16 @@ ShellRoot {
 
             Item {
                 id: surface
-                anchors.fill: parent
+                width: parent.width
+                height: parent.height
+                y: (panel.presence - 1) * (panel.height + panel.margins.top)
+                opacity: panel.presence
+                visible: panel.presence > 0
 
                 MouseArea {
                     anchors.fill: parent
-                    enabled: !!panel.openPopup
-                    onClicked: panel.closePopup()
+                    enabled: !!host.current
+                    onClicked: host.close()
                 }
 
                 RowLayout {
@@ -330,23 +329,22 @@ ShellRoot {
                                     hoverEnabled: true
                                     acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
                                     cursorShape: Qt.PointingHandCursor
-                                    onContainsMouseChanged: panel.updateTip(trayIcon, containsMouse,
+                                    onContainsMouseChanged: tooltip.update(trayIcon, containsMouse,
                                         trayIcon.modelData.tooltipTitle || trayIcon.modelData.title)
                                     onClicked: function(event) {
                                         const item = trayIcon.modelData;
-                                        const menuWasOpen = panel.openPopup === trayMenu && panel.popupAnchor === trayIcon;
-                                        panel.closePopup();
-                                        panel.hideTip();
-                                        if (menuWasOpen && event.button === Qt.RightButton)
+                                        const menuWasOpen = host.current === trayMenu && host.anchor === trayIcon;
+                                        const wantsMenu = event.button === Qt.RightButton || item.onlyMenu;
+                                        tooltip.hide();
+                                        if (wantsMenu && item.hasMenu && !menuWasOpen) {
+                                            host.show(trayMenu, trayIcon, true);
                                             return;
+                                        }
+                                        host.close();
                                         if (event.button === Qt.MiddleButton)
                                             item.secondaryActivate();
-                                        else if (event.button === Qt.RightButton || item.onlyMenu) {
-                                            if (item.hasMenu)
-                                                panel.showPopup(trayMenu, trayIcon, true);
-                                        } else {
+                                        else if (!wantsMenu)
                                             item.activate();
-                                        }
                                     }
                                     onWheel: function(event) {
                                         const horizontal = event.angleDelta.y === 0;
@@ -413,10 +411,10 @@ ShellRoot {
                                         Component.onDestruction: if (activeMarker.target === workspaceChip) activeMarker.target = null
 
                                         onActivated: {
-                                            panel.closePopup();
+                                            host.close();
                                             root.focusWorkspace(modelData.id);
                                         }
-                                        onHoveredChanged: panel.hoverPopup(workspacePreview, workspaceChip, hovered)
+                                        onHoveredChanged: host.hover(workspacePreview, workspaceChip, hovered)
                                     }
                                 }
                             }
@@ -474,7 +472,7 @@ ShellRoot {
                             foreground: player?.isPlaying ? status.foreground : status.secondary
                             hint: "Now playing"
                             onActivated: {
-                                if (!media.visible)
+                                if (host.current !== media)
                                     root.chosenPlayer = mediaChip.player;
                             }
                             onSecondaryActivated: if (player?.canTogglePlaying) player.togglePlaying()
@@ -508,49 +506,49 @@ ShellRoot {
                         id: statsPill
                         theme: status
                         spacing: 0
-                        border.color: panel.openPopup === statsMenu ? Qt.alpha(status.accent, 0.55) : Qt.alpha(status.outline, 0.3)
-                        onHoveredChanged: panel.hoverPopup(statsMenu, statsPill, hovered)
+                        border.color: host.current === statsMenu ? Qt.alpha(status.accent, 0.55) : Qt.alpha(status.outline, 0.3)
+                        onHoveredChanged: host.hover(statsMenu, statsPill, hovered)
                         Accessible.role: Accessible.Button
                         Accessible.name: "System usage"
-                        Accessible.onPressAction: panel.togglePopup(statsMenu, statsPill)
+                        Accessible.onPressAction: host.toggle(statsMenu, statsPill)
 
-                        TapHandler { onTapped: panel.togglePopup(statsMenu, statsPill) }
+                        TapHandler { onTapped: host.toggle(statsMenu, statsPill) }
                         HoverHandler { cursorShape: Qt.PointingHandCursor }
 
                         StatReadout {
                             theme: status
                             icon: BarStyle.icons.cpu
-                            value: status.cpu >= 0 ? Math.round(status.cpu) + "%" : "–"
+                            value: status.system.cpu >= 0 ? Math.round(status.system.cpu) + "%" : "–"
                             valueTemplate: "100%"
-                            fraction: status.cpu / 100
-                            severity: BarStyle.severity(status.cpu, BarStyle.limits.cpu)
+                            fraction: status.system.cpu / 100
+                            severity: BarStyle.severity(status.system.cpu, BarStyle.limits.cpu)
                         }
                         StatReadout {
-                            readonly property bool active: status.gpuState === "active"
+                            readonly property bool active: status.system.gpuActive
                             theme: status
                             icon: BarStyle.icons.gpu
-                            value: active ? (status.gpuUtil >= 0 ? Math.round(status.gpuUtil) + "%" : "on")
-                                : status.gpuState === "suspended" ? "idle" : "off"
+                            value: active ? (status.system.gpuUtil >= 0 ? Math.round(status.system.gpuUtil) + "%" : "on")
+                                : status.system.gpuState === "suspended" ? "idle" : "off"
                             valueTemplate: "100%"
-                            fraction: active && status.gpuUtil >= 0 ? status.gpuUtil / 100 : -1
-                            severity: active ? BarStyle.severity(status.gpuUtil, BarStyle.limits.gpu) : 0
+                            fraction: active && status.system.gpuUtil >= 0 ? status.system.gpuUtil / 100 : -1
+                            severity: active ? BarStyle.severity(status.system.gpuUtil, BarStyle.limits.gpu) : 0
                             dimmed: !active
                         }
                         StatReadout {
                             theme: status
                             icon: BarStyle.icons.memory
-                            value: status.memoryUsed >= 0 ? status.memoryUsed.toFixed(1) + "G" : "–"
+                            value: status.system.memoryUsed >= 0 ? status.system.memoryUsed.toFixed(1) + "G" : "–"
                             valueTemplate: "00.0G"
-                            fraction: status.memoryPercent / 100
-                            severity: BarStyle.severity(status.memoryPercent, BarStyle.limits.memory)
+                            fraction: status.system.memoryPercent / 100
+                            severity: BarStyle.severity(status.system.memoryPercent, BarStyle.limits.memory)
                         }
                         StatReadout {
                             theme: status
                             icon: BarStyle.icons.temperature
-                            value: status.cpuTemperature >= 0 ? status.cpuTemperature + "°" : "–"
+                            value: status.system.cpuTemperature >= 0 ? status.system.cpuTemperature + "°" : "–"
                             valueTemplate: "100°"
-                            fraction: status.cpuTemperature / 100
-                            severity: BarStyle.severity(status.cpuTemperature, BarStyle.limits.temperature)
+                            fraction: status.system.cpuTemperature / 100
+                            severity: BarStyle.severity(status.system.cpuTemperature, BarStyle.limits.temperature)
                         }
                     }
 
@@ -569,7 +567,7 @@ ShellRoot {
                             id: bellChip
                             popup: notificationMenu
                             icon: BarStyle.dunstIcon(status.dunstLevel)
-                            iconColor: status.unseenNotifications > 0 ? status.accent : status.muted
+                            iconColor: status.notifications.unseen > 0 ? status.accent : status.muted
                             horizontalPadding: 4
                             hint: "Notifications"
                         }
@@ -704,203 +702,107 @@ ShellRoot {
                 }
             }
 
-            Timer {
-                id: hoverOpen
-                interval: 260
-                onTriggered: if (panel.pendingPopup && panel.pendingAnchor?.hovered)
-                    panel.showPopup(panel.pendingPopup, panel.pendingAnchor, false)
-            }
-
-            Timer {
-                id: hoverClose
-                interval: 220
-                onTriggered: if (panel.openPopup && !panel.openPopup.pinned && !panel.openPopup.hoverWithin
-                        && !panel.popupAnchor?.hovered)
-                    panel.closePopup()
-            }
-
-            Connections {
-                target: panel.openPopup
-                function onHoverWithinChanged() {
-                    if (panel.openPopup.hoverWithin)
-                        hoverClose.stop();
-                    else if (!panel.openPopup.pinned)
-                        hoverClose.restart();
-                }
-                // The popup closed itself (Escape, outside click, or its content went away).
-                function onVisibleChanged() {
-                    if (!panel.openPopup.visible) {
-                        panel.openPopup = null;
-                        panel.popupAnchor = null;
-                    }
-                }
-            }
-
-            Timer {
-                id: tipDelay
-                interval: 430
-                onTriggered: tooltip.visible = !panel.openPopup
-            }
-
-            // Fixed-size, click-through surface; only the bubble inside resizes, so text is never clipped
-            // by a window that has not caught up with a new size. Long hints wrap.
-            PopupWindow {
+            BarTooltip {
                 id: tooltip
-                readonly property int maxBubble: 300
-                readonly property real anchorCenter: {
-                    const item = panel.hoveredTip;
-                    return item ? item.mapToItem(surface, item.width / 2, 0).x : 0;
-                }
-                color: "transparent"
-                visible: false
-                mask: Region {}
-                implicitWidth: maxBubble + 16
-                implicitHeight: 96
-                anchor.window: panel
-                anchor.rect.x: Math.max(0, Math.min(panel.width - implicitWidth, anchorCenter - implicitWidth / 2))
-                anchor.rect.y: panel.height + BarStyle.popupGap
+                theme: status
+                bar: panel
+                suppressed: !!host.current
+            }
 
-                TextMetrics {
-                    id: tipMetrics
-                    font: tipLabel.font
-                    text: panel.tipText
+            PopupHost {
+                id: host
+                theme: status
+                bar: panel
+
+                WorkspacePreview {
+                    id: workspacePreview
+                    theme: status
                 }
 
-                Rectangle {
-                    id: bubble
-                    width: Math.min(tooltip.maxBubble, Math.ceil(tipMetrics.advanceWidth) + 22)
-                    height: tipLabel.implicitHeight + 12
-                    x: Math.max(0, Math.min(tooltip.width - width, tooltip.anchorCenter - tooltip.anchor.rect.x - width / 2))
-                    radius: BarStyle.radius.control
-                    color: status.background
-                    border.color: Qt.alpha(status.outline, 0.48)
-
-                    PanelText {
-                        id: tipLabel
-                        x: 10
-                        y: 6
-                        width: bubble.width - 20
-                        wrapMode: Text.Wrap
-                        color: status.foreground
-                        font.pixelSize: BarStyle.popupFontSize - 1
-                        text: panel.tipText
+                StatsPopup {
+                    id: statsMenu
+                    theme: status
+                    onTerminalRequested: command => {
+                        close();
+                        root.openTerminal(command);
                     }
                 }
-            }
 
-            WorkspacePreview {
-                id: workspacePreview
-                theme: status
-                bar: panel
-                workspaceId: panel.openPopup === workspacePreview ? panel.popupAnchor?.modelData?.id ?? 0 : 0
-                label: panel.openPopup === workspacePreview ? panel.popupAnchor?.label ?? "" : ""
-                offsetX: panel.popupX(panelWidth, true)
-            }
-
-            StatsPopup {
-                id: statsMenu
-                theme: status
-                bar: panel
-                offsetX: panel.popupX(panelWidth, false)
-                onTerminalRequested: command => {
-                    close();
-                    root.openTerminal(command);
+                MediaPopup {
+                    id: media
+                    theme: status
+                    player: root.activePlayer
+                    players: root.players
+                    onPlayerSelected: player => root.chosenPlayer = player
+                    onPlayerChanged: if (!player) close()
                 }
-            }
 
-            MediaPopup {
-                id: media
-                theme: status
-                player: root.activePlayer
-                players: root.players
-                onPlayerSelected: player => root.chosenPlayer = player
-                onPlayerChanged: if (!player) close()
-                bar: panel
-                offsetX: panel.popupX(panelWidth, false)
-            }
-
-            PrivacyPopup {
-                id: privacyMenu
-                theme: status
-                microphone: root.micUsers
-                video: root.videoUsers
-                screenShare: root.screenShare
-                bar: panel
-                offsetX: panel.popupX(panelWidth, false)
-            }
-
-            InboxPopup {
-                id: inboxMenu
-                theme: status
-                bar: panel
-                offsetX: panel.popupX(panelWidth, false)
-            }
-
-            NotificationPopup {
-                id: notificationMenu
-                theme: status
-                bar: panel
-                offsetX: panel.popupX(panelWidth, false)
-            }
-
-            NetworkPopup {
-                id: networkMenu
-                theme: status
-                wired: root.wired
-                wifiAdapter: root.wifiAdapter
-                onTerminalRequested: command => {
-                    close();
-                    root.openTerminal(command);
+                PrivacyPopup {
+                    id: privacyMenu
+                    theme: status
+                    microphone: root.micUsers
+                    video: root.videoUsers
+                    screenShare: root.screenShare
                 }
-                bar: panel
-                offsetX: panel.popupX(panelWidth, false)
-            }
 
-            TrayMenu {
-                id: trayMenu
-                theme: status
-                item: panel.openPopup === trayMenu ? panel.popupAnchor?.modelData ?? null : null
-                bar: panel
-                offsetX: panel.popupX(panelWidth, true)
-            }
-
-            SystemPopup {
-                id: systemMenu
-                theme: status
-                onPowerRequested: action => {
-                    close();
-                    powerDialog.request(action);
+                InboxPopup {
+                    id: inboxMenu
+                    theme: status
                 }
-                inhibitIdle: root.inhibitIdle
-                dunstIcon: BarStyle.dunstIcon(status.dunstLevel)
-                onIdleToggled: root.inhibitIdle = !root.inhibitIdle
-                onTerminalRequested: command => root.openTerminal(command)
-                bar: panel
-                offsetX: panel.popupX(panelWidth, false)
-            }
 
-            AudioPopup {
-                id: audio
-                theme: status
-                bar: panel
-                offsetX: panel.popupX(panelWidth, false)
-            }
+                NotificationPopup {
+                    id: notificationMenu
+                    theme: status
+                }
 
-            BatteryPopup {
-                id: batteryDetails
-                theme: status
-                battery: root.battery
-                healthBattery: root.healthBattery
-                bar: panel
-                offsetX: panel.popupX(panelWidth, false)
-            }
+                NetworkPopup {
+                    id: networkMenu
+                    theme: status
+                    wired: root.wired
+                    wifiAdapter: root.wifiAdapter
+                    onVisibleChanged: status.watch("network", visible)
+                    onTerminalRequested: command => {
+                        close();
+                        root.openTerminal(command);
+                    }
+                }
 
-            CalendarPopup {
-                id: calendar
-                theme: status
-                now: clock.date
-                bar: panel
-                offsetX: panel.popupX(panelWidth, false)
+                TrayMenu {
+                    id: trayMenu
+                    theme: status
+                }
+
+                SystemPopup {
+                    id: systemMenu
+                    theme: status
+                    onPowerRequested: action => {
+                        close();
+                        powerDialog.request(action);
+                    }
+                    inhibitIdle: root.inhibitIdle
+                    dunstIcon: BarStyle.dunstIcon(status.dunstLevel)
+                    onIdleToggled: root.inhibitIdle = !root.inhibitIdle
+                    onTerminalRequested: command => root.openTerminal(command)
+                    onVisibleChanged: status.watch("system", visible)
+                }
+
+                AudioPopup {
+                    id: audio
+                    theme: status
+                }
+
+                BatteryPopup {
+                    id: batteryDetails
+                    theme: status
+                    battery: root.battery
+                    healthBattery: root.healthBattery
+                }
+
+                CalendarPopup {
+                    id: calendar
+                    theme: status
+                    now: clock.date
+                }
             }
         }
     }

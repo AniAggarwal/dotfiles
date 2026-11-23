@@ -8,14 +8,15 @@ import "BarStyle.js" as BarStyle
 BarPopup {
     id: menu
 
-    property var item
+    readonly property var item: anchorItem?.modelData ?? null
     property var stack: []
     readonly property var current: stack.length ? stack[stack.length - 1] : item?.menu ?? null
 
     padding: 6
+    centered: true
     panelWidth: 264
     panelHeight: Math.min(entries.implicitHeight + 2 * padding, 520)
-    onItemChanged: stack = []
+    onItemChanged: if (stack.length) stack = []
     onVisibleChanged: if (!visible) stack = []
 
     // Strip mnemonic markers ("&File" -> "File", "&&" -> "&").

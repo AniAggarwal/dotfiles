@@ -39,10 +39,9 @@ BarPopup {
             system.showBluetooth = false
     }
 
-    component SystemButton: BarButton {
+    component SystemButton: PanelButton {
         id: button
-        foreground: system.theme.foreground
-        accent: system.theme.accent
+        theme: system.theme
         opacity: interactive ? 1 : 0.45
         onHoveredChanged: {
             if (hovered && hint)
@@ -52,66 +51,15 @@ BarPopup {
         }
     }
 
-    // Icon over a short name, so every toggle is identifiable without hovering.
-    component ToggleTile: Rectangle {
+    // A ToggleTile whose hint shows in the header while it is hovered.
+    component Tile: ToggleTile {
         id: tile
-        required property string icon
-        required property string name
-        property string hint
-        property bool selected: false
-        property bool interactive: true
-        readonly property bool hovered: hover.hovered
-        signal activated()
-        signal secondaryActivated()
-
-        Layout.fillWidth: true
-        implicitHeight: 54
-        radius: BarStyle.radius.card
-        opacity: interactive ? 1 : 0.45
-        color: selected ? Qt.alpha(system.theme.accent, hover.hovered ? 0.26 : 0.18)
-            : hover.hovered && interactive ? Qt.tint(system.theme.card, Qt.alpha(system.theme.foreground, 0.05))
-            : system.theme.card
-        border.width: 1
-        border.color: activeFocus ? Qt.alpha(system.theme.accent, 0.6) : "transparent"
-        activeFocusOnTab: interactive
-        Behavior on color { ColorAnimation { duration: BarStyle.motion.fast } }
-
-        Accessible.role: Accessible.CheckBox
-        Accessible.checkable: true
-        Accessible.checked: selected
-        Accessible.name: hint || name
-        Accessible.onPressAction: activated()
-        Keys.onReturnPressed: activated()
-        Keys.onSpacePressed: activated()
-
-        HoverHandler { id: hover; cursorShape: tile.interactive ? Qt.PointingHandCursor : Qt.ArrowCursor }
-        TapHandler { enabled: tile.interactive; onTapped: tile.activated() }
-        TapHandler { enabled: tile.interactive; acceptedButtons: Qt.RightButton; onTapped: tile.secondaryActivated() }
+        theme: system.theme
         onHoveredChanged: {
             if (hovered && hint)
                 system.hintedControl = tile;
             else if (system.hintedControl === tile)
                 system.hintedControl = null;
-        }
-
-        Column {
-            anchors.centerIn: parent
-            spacing: 3
-
-            PanelText {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: tile.icon
-                font.family: BarStyle.iconFont
-                font.pixelSize: 18
-                color: tile.selected ? system.theme.accent : system.theme.foreground
-            }
-            PanelText {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: tile.name
-                font.pixelSize: BarStyle.popupFontSize - 2
-                font.weight: tile.selected ? Font.DemiBold : Font.Normal
-                color: tile.selected ? system.theme.foreground : system.theme.secondary
-            }
         }
     }
 
@@ -150,14 +98,14 @@ BarPopup {
             Layout.fillWidth: true
             spacing: 6
 
-            ToggleTile {
+            Tile {
                 icon: Networking.wifiEnabled ? BarStyle.icons.wifi[4] : BarStyle.icons.wifiOff
                 name: "Wi-Fi"
                 hint: "Wi-Fi is " + (Networking.wifiEnabled ? "on" : "off")
                 selected: Networking.wifiEnabled
                 onActivated: Networking.wifiEnabled = !Networking.wifiEnabled
             }
-            ToggleTile {
+            Tile {
                 id: bluetoothTile
                 icon: system.theme.bluetoothOn ? BarStyle.icons.bluetoothOn : BarStyle.icons.bluetoothOff
                 name: "Bluetooth"
@@ -180,21 +128,21 @@ BarPopup {
                     }
                 }
             }
-            ToggleTile {
+            Tile {
                 icon: system.dunstIcon
                 name: "Alerts"
                 hint: "Notifications: " + BarStyle.dunstName(system.theme.dunstLevel)
                 selected: system.theme.dunstLevel === "all"
                 onActivated: system.theme.cycleDunst()
             }
-            ToggleTile {
+            Tile {
                 icon: system.inhibitIdle ? BarStyle.icons.awakeOn : BarStyle.icons.awakeOff
                 name: "Awake"
                 hint: system.inhibitIdle ? "Screen stays on" : "Screen sleeps when idle"
                 selected: system.inhibitIdle
                 onActivated: system.idleToggled()
             }
-            ToggleTile {
+            Tile {
                 icon: BarStyle.icons.gpu
                 name: "dGPU"
                 hint: system.theme.gpuState === "absent" ? "Discrete GPU is off" : "Discrete GPU is on"
@@ -251,11 +199,7 @@ BarPopup {
             }
         }
 
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 1
-            color: Qt.alpha(system.theme.outline, 0.3)
-        }
+        Divider { theme: system.theme }
 
         RowLayout {
             Layout.fillWidth: true
