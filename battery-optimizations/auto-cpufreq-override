@@ -1,0 +1,44 @@
+#!/bin/sh
+# Root-owned entry point for CPU performance overrides (polkit action org.auto-cpufreq.override).
+#   auto-cpufreq-override <action>                  one override (the old Waybar actions)
+#   auto-cpufreq-override apply <governor> <turbo>  both overrides, then reload the config:
+#       governor: auto | performance | powersave    turbo: auto | always | never
+# The ani-bar CPU panel saves /etc/auto-cpufreq.conf itself, then calls "apply" once,
+# so one authentication covers the whole change.
+set -eu
+
+run() {
+    exec_env="/usr/bin/env -i PATH=/usr/bin:/usr/sbin HOME=/root USER=root LOGNAME=root"
+    $exec_env /usr/bin/auto-cpufreq --config=/etc/auto-cpufreq.conf "$@"
+}
+
+if [ "$#" -eq 3 ] && [ "$1" = apply ]; then
+    case "$2" in
+        auto) force=reset ;;
+        performance|powersave) force=$2 ;;
+        *) exit 64 ;;
+    esac
+    case "$3" in
+        auto|always|never) turbo=$3 ;;
+        *) exit 64 ;;
+    esac
+    # The daemon watches /etc for config changes, but the config is a symlink into a user
+    # directory, so edits there go unnoticed; restart it to load them.
+    /usr/bin/systemctl restart auto-cpufreq.service
+    run --force="$force"
+    run --turbo="$turbo"
+    exit 0
+fi
+
+[ "$#" -eq 1 ] || exit 64
+case "$1" in
+    force-performance) set -- --force=performance ;;
+    force-powersave)   set -- --force=powersave ;;
+    force-reset)      set -- --force=reset ;;
+    turbo-always)     set -- --turbo=always ;;
+    turbo-never)      set -- --turbo=never ;;
+    turbo-auto)       set -- --turbo=auto ;;
+    *) exit 64 ;;
+esac
+/usr/bin/systemctl start auto-cpufreq.service
+run "$@"

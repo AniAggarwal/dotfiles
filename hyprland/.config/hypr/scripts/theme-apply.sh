@@ -19,6 +19,13 @@ else
     echo "theme-apply: cache hit for $stem" >&2
 fi
 
+# Desktop clock placement for this wallpaper, computed once and kept with its palette.
+if [ ! -f "$target/layout.json" ]; then
+    screens=$(hyprctl monitors -j | jq -r '.[] | "--screen=\(.name):\((.width / .scale) | round)x\((.height / .scale) | round)"')
+    # shellcheck disable=SC2086
+    (uv run --script "$(dirname "$0")/wallpaper-layout.py" "$wp" "$target/layout.json" $screens >/dev/null 2>&1 &)
+fi
+
 ln -sfn "$target" "$HOME/.config/themes/current"
 echo "$wp" > "$cache_root/last-wallpaper"
 

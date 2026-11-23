@@ -412,7 +412,7 @@ bind_exec("ALT + XF86AudioRaiseVolume", scripts_path .. "/adjust-volume.sh sourc
 bind_exec("ALT + XF86AudioLowerVolume", scripts_path .. "/adjust-volume.sh source 5%-", { repeating = true })
 bind_exec("ALT + XF86AudioMute", scripts_path .. "/mute-volume.sh source toggle", { repeating = true })
 
-bind_exec(main_mod .. " + S", "hyprlock &")
+bind_exec(main_mod .. " + S", "~/bin/lock-hidden &")
 bind_exec(main_mod .. " + SHIFT + S", "systemctl suspend-then-hibernate")
 bind_exec(main_mod .. " + CTRL + SHIFT + S", "systemctl hibernate")
 

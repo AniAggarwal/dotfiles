@@ -1,0 +1,35 @@
+#!/bin/sh
+# Lock with hyprlock, but first move every monitor to an empty workspace so open windows
+# don't show through the lock screen's fade-in. After unlock, each monitor returns to the
+# workspace it was on. Arguments pass through to hyprlock.
+#
+# Locking always happens: if hiding fails, hyprlock still runs.
+set -u
+
+pidof hyprlock >/dev/null && exit 0
+
+dispatch() { hyprctl dispatch "$1" >/dev/null 2>&1 || true; }
+
+state=$(hyprctl monitors -j 2>/dev/null | jq -r '.[] | "\(.name) \(.activeWorkspace.id) \(.focused)"' 2>/dev/null) || state=""
+
+if [ -n "$state" ]; then
+    echo "$state" | while read -r monitor _ _; do
+        dispatch "hl.dsp.focus({ monitor = \"$monitor\" })"
+        dispatch "hl.dsp.focus({ workspace = \"name:locked-$monitor\" })"
+    done
+fi
+
+hyprlock "$@"
+status=$?
+
+if [ -n "$state" ]; then
+    focused=""
+    echo "$state" | while read -r monitor workspace _; do
+        dispatch "hl.dsp.focus({ monitor = \"$monitor\" })"
+        dispatch "hl.dsp.focus({ workspace = \"$workspace\" })"
+    done
+    focused=$(echo "$state" | awk '$3 == "true" { print $1 }')
+    [ -n "$focused" ] && dispatch "hl.dsp.focus({ monitor = \"$focused\" })"
+fi
+
+exit "$status"
