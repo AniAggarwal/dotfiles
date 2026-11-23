@@ -31,4 +31,5 @@ else
 fi
 
 # Adjust the volume of the running sink using wpctl
-wpctl set-mute $object_id $adjustment
+wpctl set-mute "$object_id" "$adjustment" || exit "$?"
+"$script_dir/show-bar-osd.sh" "$device" "$object_id" || true

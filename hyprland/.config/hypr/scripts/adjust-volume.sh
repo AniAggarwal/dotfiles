@@ -33,7 +33,8 @@ fi
 
 # Adjust the volume of the running sink using wpctl
 echo "wpctl set-volume -l 1.0 $object_id $adjustment"
-wpctl set-volume -l 1.0 $object_id $adjustment
+wpctl set-volume -l 1.0 "$object_id" "$adjustment" || exit "$?"
+"$script_dir/show-bar-osd.sh" "$device" "$object_id" || true
 
 # # Send a notification with the new volume
 # # first get current volume

@@ -31,7 +31,7 @@ echo "$wp" > "$cache_root/last-wallpaper"
 
 # live reloads (each best-effort)
 pkill -SIGUSR1 kitty || true            # kitty reloads config in place
-pkill -SIGUSR2 waybar || true           # waybar re-reads style.css
+qs -c ani-bar ipc call bar reloadPalette >/dev/null 2>&1 || true
 dunstctl reload || true
 hyprctl reload || true
 # GTK live nudge: flip color-scheme twice so running apps re-read named colors
