@@ -119,6 +119,20 @@ ShellRoot {
         function fullscreen(on: bool): void { for (const bar of bars.instances) bar.pretendFullscreen = on; }
         function battery(on: bool): void { status.pretendBattery = on; }
         function idle(on: bool): void { status.locked = on; }
+        function tone(name: string): void { status.pretendTone = name; }
+        // Fills the histories with a made-up minute or three, so graphs can be judged at once.
+        function fill(): void {
+            const system = status.system;
+            for (let i = 0; i < system.historyLength; i++) {
+                const wave = 0.5 + 0.5 * Math.sin(i / 5);
+                system.cpuHistory.push(Math.min(1, 0.08 + 0.5 * wave * wave + 0.25 * Math.random()));
+                system.memoryHistory.push(0.5);
+                system.gpuHistory.push(Math.max(0, 0.6 * Math.sin(i / 9) + 0.1 * Math.random()));
+                system.netDownHistory.push(4e5 * wave);
+                system.netUpHistory.push(1e5 * (1 - wave));
+            }
+            system.gpuState = "active";
+        }
     }
 
     Process {
@@ -263,8 +277,17 @@ ShellRoot {
                 now: clock.date
             }
 
+            DesktopDial {
+                screen: panel.modelData
+                visible: status.desktopStyle === "dial"
+                preview: root.preview
+                theme: status
+                workspace: panel.activeWorkspace
+            }
+
             DesktopStats {
                 screen: panel.modelData
+                visible: status.desktopStyle === "minimal"
                 preview: root.preview
                 theme: status
                 workspace: panel.activeWorkspace

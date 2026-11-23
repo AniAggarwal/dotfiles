@@ -34,13 +34,15 @@ Scope {
     // and whether text there should be light or dark. Written once per wallpaper by
     // wallpaper-layout.py into the theme folder; a screen without an entry gets the default.
     property var layout: ({})
+    // Set through the preview IPC, to see the other tone without changing the wallpaper.
+    property string pretendTone: ""
     readonly property var defaultClock: ({ x: 0.06, y: 0.14, w: 0.24, h: 0.2, tone: "light" })
     function clockPlacement(screen) {
         const entry = layout.screens?.[screen];
         const box = entry?.clock;
         if (!box || !(box.w > 0) || !(box.h > 0))
             return defaultClock;
-        return { x: box.x, y: box.y, w: box.w, h: box.h, tone: entry.tone === "dark" ? "dark" : "light" };
+        return { x: box.x, y: box.y, w: box.w, h: box.h, tone: pretendTone || (entry.tone === "dark" ? "dark" : "light") };
     }
 
     function tone(severity) {
@@ -84,6 +86,9 @@ Scope {
     // Settings, kept in ~/.local/state/ani-bar/settings.json.
     readonly property bool glassEnabled: settings.glassEnabled
     function setGlassEnabled(enabled) { settings.glassEnabled = enabled; }
+    // The desktop system monitor: "dial" (DesktopDial) or "minimal" (DesktopStats).
+    readonly property string desktopStyle: settings.desktopStyle === "minimal" ? "minimal" : "dial"
+    function setDesktopStyle(style) { settings.desktopStyle = style; }
     // Frosted glass needs Hyprland to blur what is behind every pill, so it is off on battery.
     readonly property bool glassActive: glassEnabled && !onBattery
     // 1 = glass, 0 = solid.
@@ -125,6 +130,7 @@ Scope {
         JsonAdapter {
             id: settings
             property bool glassEnabled: true
+            property string desktopStyle: "dial"
         }
     }
 
@@ -226,6 +232,7 @@ Scope {
         function reloadPalette(): void { state.reloadTheme(); }
         function refresh(): void { state.refresh(); }
         function setGlass(enabled: bool): void { state.setGlassEnabled(enabled); }
+        function setDesktopStyle(style: string): void { state.setDesktopStyle(style); }
         // For the lock script: sampling stops while the session is locked.
         function setLocked(locked: bool): void { state.locked = locked; }
     }
