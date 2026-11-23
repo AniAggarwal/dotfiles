@@ -74,6 +74,10 @@ ignores/: files and directories to be ignored by fd.
 
 .fdignore: file containing patterns to ignore while searching using fd.
 
+herdr/: configuration files for HerdR, a terminal workspace manager.
+
+.config/herdr/config.toml: main HerdR configuration file.
+
 kitty/: configuration files for kitty, a terminal emulator.
 
 .config/kitty/gnome-terminal-theme.conf: configuration file for gnome-terminal-theme.

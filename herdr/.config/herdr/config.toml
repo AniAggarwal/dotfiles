@@ -1,0 +1,173 @@
+onboarding = false
+
+[ui]
+pane_borders = true
+pane_gaps = false
+pane_outer_borders = true
+window_title = "{hostname}: {workspace} / {tab}"
+tab_bar_right = [
+  { type = "zoom" },
+  { type = "datetime", format = "%H:%M" },
+]
+tab_bar_right_separator = " · "
+
+# ---------------------------------------------------------------------------
+# Vim-style motion, shared by Neovim splits, herdr panes and kitty windows.
+#
+# Each chord is bound to a herdr-kitty-chain action, which tries the innermost
+# layer that can answer it: forward into Neovim if the focused pane is running
+# it, else act on herdr panes, else escalate to kitty over remote control.
+# Kitty declines the same chords while a herdr client is focused (see the
+# pass_to_herdr kitten in kitty.conf), which is what lets them reach herdr.
+#
+# Direct chords, no prefix.
+# ---------------------------------------------------------------------------
+[keys]
+
+# Herdr-only concepts (sidebar, worktrees, notifications, goto, settings) stay
+# on the ctrl+b prefix. Everything below names something kitty and Neovim also
+# have, so it gets a direct chord and the same chord means the same thing at
+# every layer.
+
+# Agent rows in the sidebar. Free keyspace — kitty binds nothing on alt+digit.
+focus_agent = "alt+1..9"
+
+# Cycle workspaces directly; numbered workspace jumps are deliberately unset.
+previous_workspace = "ctrl+alt+["
+next_workspace = "ctrl+alt+]"
+
+# Tabs keep the kitty bracket pair they shadow.
+previous_tab = "ctrl+shift+["
+next_tab = "ctrl+shift+]"
+
+# Back to the pane focused before this one. Neovim's own <C-w>p still covers
+# the equivalent hop between splits inside a pane.
+last_pane = "ctrl+;"
+
+# Splitting, matching kitty's own two: kitty_mod+enter opens a split in the
+# current directory, alt+shift+enter opens the other axis.
+split_vertical = "ctrl+shift+enter"
+split_horizontal = "alt+shift+enter"
+
+# Dropped: alt+shift+hjkl resizes directly, so a resize mode is a prefix by
+# another name.
+resize_mode = ""
+
+# --- ctrl+hjkl: focus ---
+[[keys.command]]
+key = "ctrl+h"
+description = "focus pane left"
+type = "plugin_action"
+command = "herdr-kitty-chain.nav-left"
+
+[[keys.command]]
+key = "ctrl+j"
+description = "focus pane down"
+type = "plugin_action"
+command = "herdr-kitty-chain.nav-down"
+
+[[keys.command]]
+key = "ctrl+k"
+description = "focus pane up"
+type = "plugin_action"
+command = "herdr-kitty-chain.nav-up"
+
+[[keys.command]]
+key = "ctrl+l"
+description = "focus pane right"
+type = "plugin_action"
+command = "herdr-kitty-chain.nav-right"
+
+# --- alt+shift+hjkl: resize ---
+# Deliberately not alt+hjkl (the herdr-splits default): that would take alt+l,
+# and it keeps the chord identical to the kitty binding it replaces.
+[[keys.command]]
+key = "alt+shift+h"
+description = "resize pane left"
+type = "plugin_action"
+command = "herdr-kitty-chain.resize-left"
+
+[[keys.command]]
+key = "alt+shift+j"
+description = "resize pane down"
+type = "plugin_action"
+command = "herdr-kitty-chain.resize-down"
+
+[[keys.command]]
+key = "alt+shift+k"
+description = "resize pane up"
+type = "plugin_action"
+command = "herdr-kitty-chain.resize-up"
+
+[[keys.command]]
+key = "alt+shift+l"
+description = "resize pane right"
+type = "plugin_action"
+command = "herdr-kitty-chain.resize-right"
+
+# --- ctrl+alt+shift+hjkl: swap positions ---
+[[keys.command]]
+key = "ctrl+alt+shift+w"
+description = "rotate the focused pane split"
+type = "plugin_action"
+command = "herdr-kitty-chain.rotate-split"
+
+[[keys.command]]
+key = "ctrl+alt+shift+h"
+description = "swap pane left"
+type = "plugin_action"
+command = "herdr-kitty-chain.swap-left"
+
+[[keys.command]]
+key = "ctrl+alt+shift+j"
+description = "swap pane down"
+type = "plugin_action"
+command = "herdr-kitty-chain.swap-down"
+
+[[keys.command]]
+key = "ctrl+alt+shift+k"
+description = "swap pane up"
+type = "plugin_action"
+command = "herdr-kitty-chain.swap-up"
+
+[[keys.command]]
+key = "ctrl+alt+shift+l"
+description = "swap pane right"
+type = "plugin_action"
+command = "herdr-kitty-chain.swap-right"
+
+# --- alt+l: clear the pane, keeping scrollback ---
+# herdr has no clear action of its own, so this delivers a real ctrl+l to the
+# focused pane and lets the app there do the clearing.
+[[keys.command]]
+key = "alt+l"
+description = "clear pane, keeping scrollback"
+type = "plugin_action"
+command = "herdr-kitty-chain.clear-pane"
+
+# --- ctrl+shift+w: close pane, tab, workspace, then kitty tab ---
+# Close the innermost live unit first. The plugin falls through from a final
+# pane in the current herdr tab to that tab, then its workspace, then the
+# containing kitty tab.
+[[keys.command]]
+key = "ctrl+shift+w"
+description = "close pane, tab, workspace, then kitty tab"
+type = "plugin_action"
+command = "herdr-kitty-chain.close-pane"
+
+# --- prefix+m / prefix+shift+m: relocate panes and tabs (drovr) ---
+# Moving between herdr tabs and workspaces is a herdr-only idea, so it keeps the
+# prefix. Inside the picker the split keys match this machine's telescope
+# bindings — ctrl+v opens right, ctrl+s opens down — so the two fuzzy finders
+# want the same fingers. Panes are relocated live; running agents survive.
+[[keys.command]]
+key = "prefix+m"
+description = "move pane to tab"
+type = "plugin_action"
+command = "drovr.move-pane"
+
+[[keys.command]]
+key = "prefix+shift+m"
+description = "move tab to workspace"
+type = "plugin_action"
+command = "drovr.move-tab"
