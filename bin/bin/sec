@@ -17,7 +17,7 @@ Usage:
 Examples:
   sec HF_TOKEN -- hf upload org/model ./out
   sec AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY -- aws s3 ls
-  pbpaste | sec set NEW_TOKEN
+  wl-paste | sec set NEW_TOKEN
 
 Per project, put `use secret NAME...` in a direnv .envrc instead.
 Secrets need KeePassXC unlocked with the Machine Secrets database open.
