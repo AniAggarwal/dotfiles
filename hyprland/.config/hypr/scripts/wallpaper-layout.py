@@ -27,7 +27,7 @@ from PIL import Image, ImageFilter
 
 WORK_WIDTH = 480
 CLOCK_FRACTION = (0.24, 0.20)  # clock box as a fraction of screen width/height
-STATS_BOX = (0.78, 0.76)  # the stats window occupies x >= 0.78 and y >= 0.76
+STATS_BOX = (0.70, 0.76)  # the stats window occupies x >= 0.70 and y >= 0.76
 BAR_FRACTION = 0.06  # keep clear of the top bar
 
 
