@@ -230,3 +230,5 @@ eval "$(starship init zsh)"
 
 # Completes measurement of zsh startup speed
 # zprof
+
+fpath+=~/.zfunc; autoload -Uz compinit; compinit

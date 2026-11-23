@@ -1,5 +1,5 @@
 # Set of aliases to use for both bash and zsh
-alias Hypr="start-hyprland </dev/null &> ~/.cache/hyprland/session.log"
+alias Hypr="HYPRLAND_NO_RT=1 start-hyprland </dev/null &> ~/.cache/hyprland/session.log"
 alias ls='eza --group-directories-first --icons=never'
 alias ll='eza -alhF --icons=always'
 alias l='eza -alhF --icons=always'
@@ -13,6 +13,7 @@ alias suspend="systemctl suspend-then-hibernate"
 alias bon="systemctl start bluetooth.service"
 alias boff="systemctl stop bluetooth.service"
 alias pow="watchc upower -i /org/freedesktop/UPower/devices/battery_BAT0"
+alias display-off="hyprctl dispatch 'hl.dsp.dpms({ action= \"off\"})'"
 
 mnt-usb() {
     sudo mount -o uid="$UID" "$1" /media/usb
