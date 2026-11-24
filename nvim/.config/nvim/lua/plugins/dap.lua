@@ -4,62 +4,6 @@ return {
 		lazy = true,
 		config = function()
 			local dap = require("dap")
-			-- Python - NOTE: this isn't needed anymore with nvim-dap-python plugin
-			-- dap.adapters.python = function(cb, config)
-			-- 	if config.request == "attach" then
-			-- 		---@diagnostic disable-next-line: undefined-field
-			-- 		local port = (config.connect or config).port
-			-- 		---@diagnostic disable-next-line: undefined-field
-			-- 		local host = (config.connect or config).host or "127.0.0.1"
-			-- 		cb({
-			-- 			type = "server",
-			-- 			port = assert(port, "`connect.port` is required for a python `attach` configuration"),
-			-- 			host = host,
-			-- 			options = {
-			-- 				source_filetype = "python",
-			-- 			},
-			-- 		})
-			-- 	else
-			-- 		cb({
-			-- 			type = "executable",
-			-- 			command = "/home/ani/micromamba/envs/utils/bin/python",
-			-- 			args = { "-m", "debugpy.adapter" },
-			-- 			options = {
-			-- 				source_filetype = "python",
-			-- 			},
-			-- 		})
-			-- 	end
-			-- end
-			--
-			-- dap.configurations.python = {
-			-- 	{
-			-- 		-- The first three options are required by nvim-dap
-			-- 		type = "python", -- the type here established the link to the adapter definition: `dap.adapters.python`
-			-- 		request = "launch",
-			-- 		name = "Launch file",
-			--
-			-- 		-- Options below are for debugpy, see https://github.com/microsoft/debugpy/wiki/Debug-configuration-settings for supported options
-			--
-			-- 		program = "${file}", -- This configuration will launch the current file if used.
-			-- 		pythonPath = function()
-			-- 			-- debugpy supports launching an application with a different interpreter then the one used to launch debugpy itself.
-			-- 			-- The code below looks for a `venv` or `.venv` folder in the current directly and uses the python within.
-			-- 			-- You could adapt this - to for example use the `VIRTUAL_ENV` environment variable.
-			-- 			local cwd = vim.fn.getcwd()
-			-- 			if vim.fn.executable(cwd .. "/venv/bin/python") == 1 then
-			-- 				return cwd .. "/venv/bin/python"
-			-- 			elseif vim.fn.executable(cwd .. "/.venv/bin/python") == 1 then
-			-- 				return cwd .. "/.venv/bin/python"
-			-- 			-- check if env var CONDA_PREFIX is set and if so use it
-			-- 			elseif os.getenv("CONDA_PREFIX") then
-			-- 				return os.getenv("CONDA_PREFIX") .. "/bin/python"
-			-- 			else
-			-- 				return "/usr/bin/python"
-			-- 			end
-			-- 		end,
-			-- 	},
-			-- }
-
 			-- C/C++
 			dap.adapters.gdb = {
 				type = "executable",
@@ -191,11 +135,9 @@ return {
 		"mfussenegger/nvim-dap-python",
 		dependencies = { "mfussenegger/nvim-dap" },
 		config = function()
-			local python = vim.fn.stdpath("data") .. "/python/bin/python"
-			if vim.fn.executable(python) ~= 1 then
-				python = vim.fn.expand("~/micromamba/envs/utils/bin/python")
-			end
-			require("dap-python").setup(python)
+			-- debugpy lives in the uv venv made by ~/bin/nvim-python-setup; the debuggee's
+			-- interpreter comes from VIRTUAL_ENV or the project's .venv (dap-python default)
+			require("dap-python").setup(vim.fn.stdpath("data") .. "/python/bin/python")
 			table.insert(require("dap").configurations.python, {
 				-- more options, see https://github.com/microsoft/debugpy/wiki/Debug-configuration-settings
 				type = "python",

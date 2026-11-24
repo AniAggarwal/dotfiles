@@ -17,6 +17,8 @@ install_all_no_sudo() {
     stow -d "$dir" -t ~/ dev-env   # per-tree direnv .envrc files (secret names only)
     # Scan every commit for secrets (the repo is public). Needs: sudo pacman -S gitleaks
     git -C "$dir" config core.hooksPath .githooks
+    # Neovim's Python venv (pynvim + debugpy). Needs: uv
+    "$dir/bin/bin/nvim-python-setup"
 }
 
 install_all_sudo() {

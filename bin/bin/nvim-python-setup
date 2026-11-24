@@ -1,0 +1,10 @@
+#!/usr/bin/bash
+# nvim-python-setup: (re)create Neovim's Python venv with uv. It holds pynvim (the python3
+# provider, see nvim lua/config/options.lua) and debugpy (nvim-dap-python, see lua/plugins/dap.lua).
+# Uses a uv-managed interpreter so pacman Python upgrades can't break it. Safe to rerun; it
+# rebuilds the venv with the latest versions.
+set -euo pipefail
+
+venv="${XDG_DATA_HOME:-$HOME/.local/share}/nvim/python"
+uv venv --managed-python --clear "$venv"
+uv pip install --python "$venv/bin/python" pynvim debugpy

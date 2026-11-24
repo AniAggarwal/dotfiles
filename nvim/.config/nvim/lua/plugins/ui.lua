@@ -94,7 +94,24 @@ return {
 				disabled_filetypes = { "alpha" },
 			},
 			sections = {
-				lualine_x = { "encoding", "filetype", "' ' .. os.getenv('CONDA_DEFAULT_ENV')" },
+				lualine_x = {
+					"encoding",
+					"filetype",
+					{
+						-- active venv; a project .venv shows as its project dir name
+						function()
+							local venv = vim.fn.fnamemodify(vim.env.VIRTUAL_ENV, ":p:h")
+							local name = vim.fn.fnamemodify(venv, ":t")
+							if name == ".venv" or name == "venv" then
+								name = vim.fn.fnamemodify(venv, ":h:t")
+							end
+							return " " .. name
+						end,
+						cond = function()
+							return vim.env.VIRTUAL_ENV ~= nil
+						end,
+					},
+				},
 			},
 		},
 	},

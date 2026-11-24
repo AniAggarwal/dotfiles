@@ -73,13 +73,10 @@ vim.opt.shortmess:append("c") -- Shorten messages (e.g., completion messages)
 vim.opt.whichwrap:append("<,>,[,],h,l") -- Allow movement across wrapped lines
 vim.opt.spelloptions:append({ "camel" }) -- Handle camel case in spell check
 
--- Set python interpreter for Neovim
-for _, python in ipairs({
-	vim.fn.stdpath("data") .. "/python/bin/python",
-	vim.fn.expand("~/micromamba/envs/nvim/bin/python"),
-}) do
+-- Python provider (pynvim): uv venv made by ~/bin/nvim-python-setup
+do
+	local python = vim.fn.stdpath("data") .. "/python/bin/python"
 	if vim.fn.executable(python) == 1 then
 		vim.g.python3_host_prog = python
-		break
 	end
 end
