@@ -36,3 +36,15 @@ regenerate the current menu rather than restoring old kernel references:
 Opening an entry inside this submenu still uses the package's original
 BootNext/reboot behavior. Grouping does not fix a firmware target that
 returns to GRUB instead of starting another OS.
+
+Recovery entries (70-recovery.cfg)
+
+  sudo install -m644 ~/dotfiles/grub-menu/70-recovery.cfg /etc/default/grub.d/70-recovery.cfg
+  sudo grub-mkconfig -o /boot/grub/grub.cfg
+
+Adds "(recovery mode)" entries inside "Advanced options for Arch Linux"; the top-level menu
+is unchanged. They boot without GRUB_CMDLINE_LINUX_DEFAULT (no resume, no pcie_aspm, no
+experiments), so they work when a kernel option or a stale hibernation image breaks normal
+boot. They open the rescue shell, which asks for the root password; run `systemctl default`
+there to continue to a normal login. GRUB_SAVEDEFAULT=true remembers the entry you pick, so
+choose the normal entry again on the next boot.
