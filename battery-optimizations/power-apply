@@ -1,77 +1,192 @@
 #!/bin/sh
 # Root-owned CPU power settings: governor, energy preference (EPP), platform profile, turbo and
 # frequency limits, one profile for the charger and one for battery (polkit action
-# org.ani.power-apply). No daemon runs. ani-power.service calls `power-apply event` at boot,
-# after resume, and from the udev rule whenever AC is plugged in or out. The ani-bar CPU panel
-# calls `power-apply apply ...` through pkexec.
+# org.ani.power-apply). No daemon runs: ani-power.service calls `power-apply event` at boot,
+# after resume, and from the udev rule whenever AC is plugged in or out; the ani-bar CPU panel
+# calls `power-apply apply ...` through pkexec. `power-apply help` has the full usage.
 #
-#   power-apply event
-#       Apply the profile for the current power source, with the overrides on top.
-#   power-apply apply <governor> <turbo> [<section>.<key>=<value>...]
-#       Save the overrides and any profile values given, then apply.
-#       governor: auto | performance | powersave       turbo: auto | on | off
-#       section: charger | battery
-#       key=value: governor=performance|powersave, energy_performance_preference=<one the CPU
-#       lists>, platform_profile=<one the firmware lists>, turbo=on|off
+# Runs as root with arguments from an unprivileged caller, so:
+#   - the environment is not trusted: PATH is fixed, IFS reset, globbing off (set -f) except
+#     for the two sysfs globs, which turn it on for themselves;
+#   - every caller value must be one word of [A-Za-z0-9_-], at most 32 characters, and exactly
+#     equal to an entry of a fixed list or of the choices sysfs offers; the caller never names a
+#     path, and nothing it sends can carry a newline, `=`, `#` or `[` into the config;
+#   - the config and the override are only read when root-owned regular files that nobody else
+#     can write, and only written through a temporary file in the same root-owned directory;
+#   - the state and lock directories are created by root and refused if they are anything but a
+#     root-owned directory not writable by others (a symlink included).
 #
-# The overrides hold across plug, unplug, resume and reboot until they are set back to auto.
-# Every value is checked against a fixed list or against the choices sysfs offers. The caller
-# never names a path.
-#
-# Files:
-#   /etc/ani-power.conf          the two profiles (format: ani-power.conf in the dotfiles)
-#   /var/lib/ani-power/override  the overrides, one key=value per line
-# Exit codes: 64 bad arguments, 65 a config value was skipped, 1 a setting could not be written.
+# Lint: `shellcheck -s sh -o all` is clean apart from three checks disabled on purpose: SC2250 (braces
+# around every variable, style only), SC2310 (functions used as conditions; valid, in_list and
+# friends are predicates) and SC2312 (command substitutions whose status is ignored; read_sys
+# never fails by design, and every other value is checked after it is read).
+# shellcheck disable=SC2250,SC2310,SC2312
 set -eu
 PATH=/usr/bin
 export PATH
+unset IFS
 umask 022
+set -f
 
 config=/etc/ani-power.conf
 state=/var/lib/ani-power
 override=$state/override
+run=/run/ani-power
 cpu=/sys/devices/system/cpu
 platform=/sys/firmware/acpi/platform_profile
+supplies=/sys/class/power_supply
+root_uid=0
 keys="governor energy_performance_preference platform_profile turbo scaling_min_freq scaling_max_freq"
+panel_keys="governor energy_performance_preference platform_profile turbo"
 status=0
 
+read_sys() { cat "$1" 2>/dev/null || true; }
+
 usage() {
-    echo "usage: power-apply event | apply <auto|performance|powersave> <auto|on|off> [<charger|battery>.<key>=<value>...]" >&2
+    echo "usage: power-apply event | status | help | apply <governor> <turbo> [<section>.<key>=<value>...]" >&2
+    echo "Run \`power-apply help\` for details." >&2
     exit 64
 }
 
-# in_list <word> <list>: whether word is one of the space-separated list.
+show_help() {
+    # What this machine accepts, by the same checks apply uses.
+    governors=
+    for value in performance powersave; do
+        valid governor "$value" && governors="$governors $value"
+    done
+    energies=
+    # A sysfs list, split on purpose; set -f keeps the split from globbing.
+    for value in $(read_sys "$cpu/cpu0/cpufreq/energy_performance_available_preferences"); do
+        valid energy_performance_preference "$value" && energies="$energies $value"
+    done
+    platforms=$(read_sys "$platform"_choices)
+    cat <<EOF
+power-apply: CPU power settings for the charger and for battery, applied once per event.
+
+Usage:
+  power-apply event
+      Apply the profile for the current power source, with the overrides on top. Run by
+      ani-power.service at boot, after resume, and on every AC plug or unplug. Needs root.
+  power-apply apply <governor> <turbo> [<section>.<key>=<value>...]
+      Save the overrides, and any profile values given, then apply. Needs root (the CPU panel
+      runs it through pkexec). At most 8 values, one word each.
+        <governor>  auto | performance | powersave    (auto: follow the profile)
+        <turbo>     auto | on | off                   (auto: follow the profile)
+        <section>   charger | battery
+  power-apply status
+      Print the power source, what the CPU runs now, the overrides and both profiles.
+      Read-only; any user can run it.
+  power-apply help | -h | --help
+      This page.
+
+Profile keys and the values this machine accepts:
+  governor                      ${governors:- unavailable}
+  energy_performance_preference ${energies:- unavailable}
+  platform_profile               ${platforms:-unavailable}
+  turbo                          on off
+  scaling_min_freq               kHz, digits only; config file only (missing: the CPU's lowest)
+  scaling_max_freq               kHz, digits only; config file only (missing: the CPU's highest)
+A key missing from a profile leaves that setting as it is.
+
+Examples:
+  power-apply status
+  sudo power-apply apply auto auto battery.energy_performance_preference=balance_power
+  sudo power-apply apply performance on          # force until set back to auto
+  sudo power-apply apply auto auto               # clear both overrides
+  sudoedit $config && sudo power-apply event
+
+Files:
+  $config            the charger and battery profiles (rewritten by apply)
+  $override  the overrides; they hold across plug, resume and reboot
+  journalctl -u ani-power        one line per event: the source and what was applied
+
+Exit codes:
+  0   applied
+  1   a setting could not be written (the rest were)
+  64  bad arguments; nothing changed
+  65  a config value was skipped (the rest were applied), or the config was not trusted
+  73  a state directory is not a root-owned directory
+  77  needs root
+EOF
+}
+
+# safe_word <value>: one word of [A-Za-z0-9_-], 1 to 32 characters.
+safe_word() {
+    case $1 in
+        '' | *[!A-Za-z0-9_-]*) return 1 ;;
+        *) ;;
+    esac
+    [ "${#1}" -le 32 ]
+}
+
+# in_list <word> <list>: whether word is exactly one of the whitespace-separated list.
 in_list() {
+    safe_word "$1" || return 1
+    # The list comes from sysfs; set -f keeps the split from globbing.
+    # shellcheck disable=SC2086
     for choice in $2; do
-        [ "$choice" = "$1" ] && return 0
+        if [ "$choice" = "$1" ]; then
+            return 0
+        fi
     done
     return 1
 }
-
-read_sys() { cat "$1" 2>/dev/null || true; }
 
 # valid <key> <value>: whether this machine accepts value for key.
 valid() {
     case $1 in
         governor)
-            case $2 in performance|powersave) ;; *) return 1 ;; esac
-            in_list "$2" "$(read_sys $cpu/cpu0/cpufreq/scaling_available_governors)" ;;
+            case $2 in
+                performance | powersave) in_list "$2" "$(read_sys "$cpu/cpu0/cpufreq/scaling_available_governors")" ;;
+                *) return 1 ;;
+            esac ;;
         energy_performance_preference)
-            [ "$2" != default ] && in_list "$2" "$(read_sys $cpu/cpu0/cpufreq/energy_performance_available_preferences)" ;;
+            [ "$2" != default ] && in_list "$2" "$(read_sys "$cpu/cpu0/cpufreq/energy_performance_available_preferences")" ;;
         platform_profile)
-            in_list "$2" "$(read_sys /sys/firmware/acpi/platform_profile_choices)" ;;
+            in_list "$2" "$(read_sys "$platform"_choices)" ;;
         turbo)
-            case $2 in on|off) ;; *) return 1 ;; esac ;;
-        scaling_min_freq|scaling_max_freq)
-            case $2 in ''|*[!0-9]*) return 1 ;; esac ;;
+            case $2 in
+                on | off) return 0 ;;
+                *) return 1 ;;
+            esac ;;
+        scaling_min_freq | scaling_max_freq)
+            # Digits only, and short enough for `[ -le ]` to compare.
+            case $2 in
+                '' | *[!0-9]*) return 1 ;;
+                *) [ "${#2}" -le 8 ] ;;
+            esac ;;
         *)
             return 1 ;;
     esac
 }
 
-# raw_get <section> <key>: the value in the config as written, or nothing.
+# trusted_file <path>: a root-owned regular file that nobody else can write. A missing file is
+# not trusted, silently; anything else is reported.
+trusted_file() {
+    [ -e "$1" ] || [ -L "$1" ] || return 1
+    if [ -L "$1" ] || [ ! -f "$1" ] || [ "$(stat -c %u -- "$1")" != "$root_uid" ] \
+        || [ -n "$(find "$1" -maxdepth 0 -perm /022)" ]; then
+        echo "power-apply: ignoring $1: not a root-owned regular file, or writable by others" >&2
+        status=65
+        return 1
+    fi
+}
+
+# ensure_dir <path>: create it root-owned 755 if missing; refuse anything else already there.
+ensure_dir() {
+    if [ ! -e "$1" ] && [ ! -L "$1" ]; then
+        mkdir -m 755 -- "$1"
+    fi
+    if [ -L "$1" ] || [ ! -d "$1" ] || [ "$(stat -c %u -- "$1")" != "$root_uid" ] \
+        || [ -n "$(find "$1" -maxdepth 0 -perm /022)" ]; then
+        echo "power-apply: refusing $1: not a root-owned directory, or writable by others" >&2
+        exit 73
+    fi
+}
+
+# raw_get <section> <key>: the value in the config as written, or nothing. section and key are
+# always literals from this script.
 raw_get() {
-    [ -r "$config" ] || return 0
     awk -v want_section="$1" -v want_key="$2" '
         /^[[:space:]]*\[/ { section = $0; sub(/^[[:space:]]*\[/, "", section); sub(/\].*/, "", section); next }
         { sub(/#.*/, "") }
@@ -83,11 +198,21 @@ raw_get() {
         END { print found }' "$config"
 }
 
+# Set once per run by load_config: whether the config can be read at all.
+config_trusted=0
+load_config() {
+    if trusted_file "$config"; then
+        config_trusted=1
+        check_config
+    fi
+}
+
 # get <section> <key>: the value in the config when this machine accepts it, or nothing.
 get() {
+    [ "$config_trusted" = 1 ] || return 0
     value=$(raw_get "$1" "$2")
     if [ -n "$value" ] && valid "$2" "$value"; then
-        echo "$value"
+        printf '%s\n' "$value"
     fi
 }
 
@@ -97,28 +222,32 @@ check_config() {
         for key in $keys; do
             value=$(raw_get "$section" "$key")
             if [ -n "$value" ] && ! valid "$key" "$value"; then
-                echo "power-apply: skipping $section.$key = $value in $config" >&2
+                echo "power-apply: skipping $section.$key in $config: not a value this machine accepts" >&2
                 status=65
             fi
         done
     done
 }
 
-# Overrides: o_governor and o_turbo, auto when unset or unreadable.
+# Overrides: o_governor and o_turbo, auto when unset, unreadable or untrusted.
 read_override() {
     o_governor=auto
     o_turbo=auto
-    [ -r "$override" ] || return 0
+    trusted_file "$override" || return 0
     while IFS='=' read -r key value; do
         case $key=$value in
-            governor=auto|governor=performance|governor=powersave) o_governor=$value ;;
-            turbo=auto|turbo=on|turbo=off) o_turbo=$value ;;
+            governor=auto | governor=performance | governor=powersave) o_governor=$value ;;
+            turbo=auto | turbo=on | turbo=off) o_turbo=$value ;;
+            *) ;;
         esac
     done < "$override"
 }
 
 on_ac() {
-    for supply in /sys/class/power_supply/*; do
+    set +f
+    set -- "$supplies"/*
+    set -f
+    for supply in "$@"; do
         [ "$(read_sys "$supply/type")" = Mains ] || continue
         [ "$(read_sys "$supply/online")" = 1 ] && return 0
     done
@@ -136,22 +265,27 @@ put() {
 # apply_now: apply the profile for the current power source; prints what it applied.
 apply_now() {
     if on_ac; then source=charger; else source=battery; fi
-    governor=$(get $source governor)
-    epp=$(get $source energy_performance_preference)
-    profile=$(get $source platform_profile)
-    turbo=$(get $source turbo)
-    min_freq=$(get $source scaling_min_freq)
-    max_freq=$(get $source scaling_max_freq)
+    governor=$(get "$source" governor)
+    epp=$(get "$source" energy_performance_preference)
+    profile=$(get "$source" platform_profile)
+    turbo=$(get "$source" turbo)
+    min_freq=$(get "$source" scaling_min_freq)
+    max_freq=$(get "$source" scaling_max_freq)
     read_override
     [ "$o_governor" = auto ] || governor=$o_governor
     [ "$o_turbo" = auto ] || turbo=$o_turbo
 
     # Turbo first: it changes cpuinfo_max_freq, which the frequency limits below are held to.
     case $turbo in
-        on) put $cpu/intel_pstate/no_turbo 0 ;;
-        off) put $cpu/intel_pstate/no_turbo 1 ;;
+        on) put "$cpu/intel_pstate/no_turbo" 0 ;;
+        off) put "$cpu/intel_pstate/no_turbo" 1 ;;
+        *) ;;
     esac
-    for policy in "$cpu"/cpufreq/policy*; do
+    set +f
+    set -- "$cpu"/cpufreq/policy*
+    set -f
+    for policy in "$@"; do
+        [ -d "$policy" ] || continue
         if [ -n "$governor" ]; then
             put "$policy/scaling_governor" "$governor"
         fi
@@ -161,7 +295,9 @@ apply_now() {
         fi
         lowest=$(read_sys "$policy/cpuinfo_min_freq")
         highest=$(read_sys "$policy/cpuinfo_max_freq")
-        [ -n "$lowest" ] && [ -n "$highest" ] || continue
+        if ! valid scaling_min_freq "$lowest" || ! valid scaling_max_freq "$highest"; then
+            continue
+        fi
         low=${min_freq:-$lowest}
         high=${max_freq:-$highest}
         [ "$low" -ge "$lowest" ] || low=$lowest
@@ -179,19 +315,47 @@ apply_now() {
         "freq=${min_freq:-min}..${max_freq:-max} (override governor=$o_governor turbo=$o_turbo)"
 }
 
-# write_atomic <path> <mode>: stdin to path through a temporary file beside it.
+show_status() {
+    if on_ac; then source=charger; else source=battery; fi
+    case $(read_sys "$cpu/intel_pstate/no_turbo") in
+        0) turbo_now=on ;;
+        1) turbo_now=off ;;
+        *) turbo_now=- ;;
+    esac
+    read_override
+    printf '%-9s %s\n' \
+        source "$source" \
+        governor "$(read_sys "$cpu/cpu0/cpufreq/scaling_governor")" \
+        energy "$(read_sys "$cpu/cpu0/cpufreq/energy_performance_preference")" \
+        platform "$(read_sys "$platform")" \
+        turbo "$turbo_now" \
+        freq "$(read_sys "$cpu/cpu0/cpufreq/scaling_min_freq")..$(read_sys "$cpu/cpu0/cpufreq/scaling_max_freq") kHz (cpu0)" \
+        override "governor=$o_governor turbo=$o_turbo"
+    for section in charger battery; do
+        line=
+        for key in $keys; do
+            value=$(get "$section" "$key")
+            [ -n "$value" ] && line="$line $key=$value"
+        done
+        printf '%-9s%s\n' "$section" "${line:- (none)}"
+    done
+}
+
+# write_atomic <path> <mode>: stdin to path through a temporary file in the same directory.
 write_atomic() {
-    tmp=$(mktemp "$1.XXXXXX")
-    cat > "$tmp"
-    chmod "$2" "$tmp"
-    mv -f "$tmp" "$1"
+    tmp=$(mktemp -- "$1.XXXXXX")
+    if ! cat > "$tmp" || ! chmod "$2" -- "$tmp" || ! mv -f -- "$tmp" "$1"; then
+        rm -f -- "$tmp"
+        echo "power-apply: could not write $1" >&2
+        exit 1
+    fi
 }
 
 # save_config <section.key=value>...: rewrite the config with these values over the current ones.
 save_config() {
     {
         echo "# CPU power settings for power-apply. Written by \`power-apply apply\` (the ani-bar CPU panel)."
-        echo "# Edit with sudoedit, then run \`sudo power-apply event\`. Keys: ani-power.conf in the dotfiles."
+        echo "# Edit with sudoedit, then run \`sudo power-apply event\`. Keys: \`power-apply help\`."
         for section in charger battery; do
             printf '\n[%s]\n' "$section"
             for key in $keys; do
@@ -205,45 +369,75 @@ save_config() {
     } | write_atomic "$config" 644
 }
 
+need_root() {
+    if [ "$(id -u)" != "$root_uid" ]; then
+        echo "power-apply: $1 needs root (sudo, or pkexec)" >&2
+        exit 77
+    fi
+}
+
 [ "$#" -ge 1 ] || usage
 mode=$1
 shift
 case $mode in
+    help | -h | --help)
+        [ "$#" -eq 0 ] || usage
+        show_help
+        exit 0 ;;
+    status)
+        [ "$#" -eq 0 ] || usage
+        load_config
+        show_status
+        exit "$status" ;;
     event)
-        [ "$#" -eq 0 ] || usage ;;
+        [ "$#" -eq 0 ] || usage
+        need_root event ;;
     apply)
-        [ "$#" -ge 2 ] || usage
-        case $1 in auto|performance|powersave) ;; *) usage ;; esac
-        case $2 in auto|on|off) ;; *) usage ;; esac
+        if [ "$#" -lt 2 ] || [ "$#" -gt 10 ]; then
+            usage
+        fi
+        case $1 in
+            auto | performance | powersave) ;;
+            *) usage ;;
+        esac
+        case $2 in
+            auto | on | off) ;;
+            *) usage ;;
+        esac
         new_governor=$1
         new_turbo=$2
         shift 2
-        # Checked before anything is written, so a bad pair changes nothing.
+        # Every pair is checked before anything is written, so one bad pair changes nothing.
         for pair in "$@"; do
             case $pair in
-                charger.*=*|battery.*=*) ;;
+                charger.*=* | battery.*=*) ;;
                 *) usage ;;
             esac
             key=${pair#*.}
             key=${key%%=*}
-            case $key in governor|energy_performance_preference|platform_profile|turbo) ;; *) usage ;; esac
+            in_list "$key" "$panel_keys" || usage
             valid "$key" "${pair#*=}" || usage
-        done ;;
+        done
+        need_root apply ;;
     *)
         usage ;;
 esac
 
-install -d -m 755 /run/ani-power
-exec 9> /run/ani-power/lock
+# Serialize runs: the lock is the root-owned directory itself, so no file is created for it.
+ensure_dir "$run"
+exec 9< "$run"
 flock 9
 
+load_config
 if [ "$mode" = apply ]; then
-    [ "$#" -eq 0 ] || save_config "$@"
-    install -d -m 755 "$state"
+    if [ "$#" -gt 0 ]; then
+        save_config "$@"
+        config_trusted=1
+    fi
+    ensure_dir "$state"
     printf 'governor=%s\nturbo=%s\n' "$new_governor" "$new_turbo" | write_atomic "$override" 644
 fi
 
-check_config
 # An AC change while applying would leave the other profile in place: apply until it settles.
 for _ in 1 2 3; do
     if on_ac; then before=1; else before=0; fi

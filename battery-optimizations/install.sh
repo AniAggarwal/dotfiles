@@ -5,12 +5,20 @@
 #   sudo sh ~/dotfiles/battery-optimizations/install.sh --config   also replace /etc/ani-power.conf
 # /etc/ani-power.conf is copied only when missing (or with --config): after that the ani-bar
 # CPU panel edits the /etc copy, and this repo's ani-power.conf is only the starting point.
+# Lint: `shellcheck -s sh -o all` is clean apart from SC2250 (braces around every variable,
+# style only), disabled on purpose.
+# shellcheck disable=SC2250
 set -eu
 PATH=/usr/bin
 export PATH
 
-[ "$(id -u)" = 0 ] || { echo "run with sudo" >&2; exit 1; }
-here=$(dirname "$(readlink -f "$0")")
+uid=$(id -u)
+if [ "$uid" != 0 ]; then
+    echo "run with sudo" >&2
+    exit 1
+fi
+script=$(readlink -f "$0")
+here=$(dirname "$script")
 
 install -m 755 -o root -g root "$here/power-apply" /usr/local/bin/power-apply
 install -m 644 -o root -g root "$here/org.ani.power-apply.policy" /usr/share/polkit-1/actions/org.ani.power-apply.policy

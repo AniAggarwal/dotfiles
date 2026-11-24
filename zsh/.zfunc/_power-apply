@@ -1,0 +1,57 @@
+#compdef power-apply
+# Completion for power-apply (battery-optimizations/ in the dotfiles): modes, then the governor
+# and turbo overrides, then charger.|battery. keys with the values this machine offers.
+_power_apply_values() {
+    local key=$1
+    local -a values
+    case $key in
+        governor) values=(performance powersave) ;;
+        turbo) values=(on off) ;;
+        energy_performance_preference)
+            values=(${=$(</sys/devices/system/cpu/cpu0/cpufreq/energy_performance_available_preferences)})
+            values=(${values:#default}) ;;
+        platform_profile)
+            values=(${=$(</sys/firmware/acpi/platform_profile_choices)}) ;;
+    esac
+    _describe -t values "$key" values
+}
+
+_power_apply_pairs() {
+    local -a sections keys
+    sections=('charger:profile used on AC' 'battery:profile used on battery')
+    keys=(
+        'governor:performance or powersave'
+        'energy_performance_preference:energy-performance preference (EPP)'
+        'platform_profile:firmware platform profile'
+        'turbo:on or off'
+    )
+    if compset -P '(charger|battery).(#b)([a-z_]##)='; then
+        _power_apply_values $match[1]
+    elif compset -P '(charger|battery).'; then
+        _describe -t keys 'key' keys -qS =
+    else
+        _describe -t sections 'section' sections -qS .
+    fi
+}
+
+_power-apply() {
+    local -a modes
+    modes=(
+        'event:apply the profile for the current power source'
+        'apply:save overrides and profile values, then apply'
+        'status:show the source, live values, overrides and profiles'
+        'help:show help'
+    )
+    if (( CURRENT == 2 )); then
+        _describe -t modes 'mode' modes
+        return
+    fi
+    [[ ${words[2]} == apply ]] || return
+    case $CURRENT in
+        3) _values 'governor override' 'auto[follow the profile]' performance powersave ;;
+        4) _values 'turbo override' 'auto[follow the profile]' on off ;;
+        *) _power_apply_pairs ;;
+    esac
+}
+
+_power-apply "$@"
