@@ -21,6 +21,8 @@ var barIconBox = 16;
 var trayIconSize = 14;
 var popupFontSize = 13;
 var popupGap = 6;
+// Level OSD and privacy toast: extra distance below their usual spot, as a fraction of screen height.
+var osdDrop = 0.10;
 
 // Dropdowns share one surface per screen (PopupHost); it is this tall below the bar.
 var popupMaxHeight = 620;

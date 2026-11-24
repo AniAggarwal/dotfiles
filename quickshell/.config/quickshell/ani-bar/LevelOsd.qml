@@ -26,7 +26,7 @@ PanelWindow {
         : BarStyle.volumeIcon(level / 100, muted)
 
     anchors.top: true
-    margins.top: topOffset
+    margins.top: topOffset + (screen?.height ?? 0) * BarStyle.osdDrop
     implicitWidth: privacy ? Math.min(420, privacyRow.implicitWidth + 28) : 230
     implicitHeight: privacy ? 40 : 59
     exclusionMode: ExclusionMode.Ignore
