@@ -13,7 +13,10 @@ front porch): vtotal 2208, 59.57 Hz, vblank about 365 µs, which fits the 44 lin
 time needs. Nothing else changed; base-block checksum recomputed. The EDID carries no serial
 number (bytes 12–15 are zero).
 
-Whether the panel accepts the longer back porch is what the test finds out.
+**Result (2026-11-23): failed.** Booting with this EDID left the laptop panel black (no
+console, no login prompt), though the system itself ran. The panel's timing controller does not
+accept the longer back porch, so PSR stays unavailable on this panel. Kept for reference only;
+don't install it. A fix would have to be a kernel-side change (see the battery report).
 
 ## Test for one boot (nothing persistent at boot)
 
