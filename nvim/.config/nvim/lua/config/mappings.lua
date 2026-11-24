@@ -6,6 +6,9 @@ local opts = { silent = true }
 vim.keymap.set("", "<Space>", "<Nop>", { silent = true })
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
+-- ftplugin/mail.vim (also used by gitsendemail, i.e. .patch files) maps <LocalLeader>q to
+-- "quote with > ", shadowing <leader>q (quit)
+vim.g.no_mail_maps = 1
 
 -- Better paste - pasting on highlighted text keeps the original yanked text
 keymap("v", "p", '"_dP', opts)
