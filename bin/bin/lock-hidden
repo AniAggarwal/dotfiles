@@ -8,30 +8,33 @@ set -u
 
 pidof hyprlock >/dev/null && exit 0
 
-dispatch() { hyprctl dispatch "$1" >/dev/null 2>&1 || true; }
+# Every compositor and bar call is time-boxed: a hung Hyprland IPC or bar must never stop the
+# lock from starting.
+hc() { timeout 1 hyprctl "$@"; }
+dispatch() { hc dispatch "$1" >/dev/null 2>&1 || true; }
 
-state=$(hyprctl monitors -j 2>/dev/null | jq -r '.[] | "\(.name) \(.activeWorkspace.id) \(.focused)"' 2>/dev/null) || state=""
+state=$(hc monitors -j 2>/dev/null | jq -r '.[] | "\(.name) \(.activeWorkspace.id) \(.focused)"' 2>/dev/null) || state=""
 
 if [ -n "$state" ]; then
     # Switch instantly: with the workspace slide running, the old screen would still show while
     # hyprlock fades in. Animations come back on before locking, so a killed script can't leave
     # them off.
-    animations=$(hyprctl -j getoption animations:enabled 2>/dev/null | jq -r '.bool' 2>/dev/null)
+    animations=$(hc -j getoption animations:enabled 2>/dev/null | jq -r '.bool' 2>/dev/null)
     [ "$animations" = false ] || animations=true
-    hyprctl eval 'hl.config({ animations = { enabled = false } })' >/dev/null 2>&1 || true
+    hc eval 'hl.config({ animations = { enabled = false } })' >/dev/null 2>&1 || true
     echo "$state" | while read -r monitor _ _; do
         dispatch "hl.dsp.focus({ monitor = \"$monitor\" })"
         dispatch "hl.dsp.focus({ workspace = \"name:locked-$monitor\" })"
     done
     sleep 0.05  # let the empty workspaces reach the screen
-    hyprctl eval "hl.config({ animations = { enabled = $animations } })" >/dev/null 2>&1 || true
+    hc eval "hl.config({ animations = { enabled = $animations } })" >/dev/null 2>&1 || true
 fi
 
-# The bar stops sampling while nobody can see it.
-qs -c ani-bar ipc call bar setLocked true >/dev/null 2>&1 || true
+# The bar stops sampling while nobody can see it. In the background, so it can't delay the lock.
+timeout 1 qs -c ani-bar ipc call bar setLocked true >/dev/null 2>&1 &
 hyprlock "$@"
 status=$?
-qs -c ani-bar ipc call bar setLocked false >/dev/null 2>&1 || true
+timeout 1 qs -c ani-bar ipc call bar setLocked false >/dev/null 2>&1 || true
 
 if [ -n "$state" ]; then
     focused=""

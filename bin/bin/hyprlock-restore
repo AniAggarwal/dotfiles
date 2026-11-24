@@ -5,3 +5,6 @@ pkill -u "$(id -u)" -x hyprlock || true
 hyprctl --instance 0 eval 'hl.config({ misc = { allow_session_lock_restore = true } })'
 sleep 1
 hyprctl --instance 0 dispatch 'hl.dsp.exec_cmd("hyprlock")'
+# Restoring is a one-time recovery: turn it back off so nothing else can take over the lock.
+sleep 2
+hyprctl --instance 0 eval 'hl.config({ misc = { allow_session_lock_restore = false } })'

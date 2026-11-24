@@ -439,8 +439,9 @@ bind_exec("ALT + XF86AudioLowerVolume", scripts_path .. "/adjust-volume.sh sourc
 bind_exec("ALT + XF86AudioMute", scripts_path .. "/mute-volume.sh source toggle", { repeating = true })
 
 bind_exec(main_mod .. " + S", "~/bin/lock-hidden &")
-bind_exec(main_mod .. " + SHIFT + S", "systemctl suspend-then-hibernate")
-bind_exec(main_mod .. " + CTRL + SHIFT + S", "systemctl hibernate")
+-- Lock first, then sleep, so the lock doesn't depend on hypridle being alive.
+bind_exec(main_mod .. " + SHIFT + S", "sh -c '~/bin/lock-hidden & sleep 1; systemctl suspend-then-hibernate'")
+bind_exec(main_mod .. " + CTRL + SHIFT + S", "sh -c '~/bin/lock-hidden & sleep 1; systemctl hibernate'")
 
 bind_exec(main_mod .. " + Print", "hyprshot -z -m region -o ~/Downloads/")
 bind_exec(main_mod .. " + SHIFT + Print", "hyprshot -z -m region --clipboard-only")
