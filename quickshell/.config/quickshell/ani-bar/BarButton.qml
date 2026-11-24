@@ -22,6 +22,8 @@ Rectangle {
     property int maximumLabelWidth: 0
     // Fixed label width (0 = natural); long labels elide, short ones leave the space empty.
     property int labelWidth: 0
+    property int labelAlignment: Text.AlignLeft
+    property string labelFont: BarStyle.textFont
     property bool boldWhenSelected: true
     // Fixed icon box width (0 = natural glyph width).
     property int iconBox: 0
@@ -100,10 +102,11 @@ Rectangle {
             width: chip.labelWidth > 0 ? chip.labelWidth
                 : chip.maximumLabelWidth > 0 ? Math.min(implicitWidth, chip.maximumLabelWidth)
                 : Math.max(implicitWidth, Math.ceil(template.advanceWidth))
+            horizontalAlignment: chip.labelAlignment
             elide: Text.ElideRight
             text: chip.label
             color: chip.foreground
-            font.family: BarStyle.textFont
+            font.family: chip.labelFont
             font.pixelSize: chip.fontSize
             font.weight: chip.selected && chip.boldWhenSelected ? Font.DemiBold : Font.Normal
             font.features: { "tnum": 1 }

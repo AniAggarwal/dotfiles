@@ -45,10 +45,6 @@ ShellRoot {
             mediaLinger.restart();
         }
     }
-    readonly property var workspaceLabels: [
-        "一", "二", "三", "四", "五", "六", "七", "八", "九", "十",
-        "十一", "十二", "十三", "十四", "十五", "十六", "十七", "十八", "十九", "二十"
-    ]
     readonly property var wired: Networking.devices.values.find(device => device.type === DeviceType.Wired && device.connected)
     readonly property var wifiAdapter: Networking.devices.values.find(device => device.type === DeviceType.Wifi) || null
     readonly property var wifi: Networking.devices.values.find(device => device.type === DeviceType.Wifi && device.connected)
@@ -482,7 +478,17 @@ ShellRoot {
                             onWheel: event => panel.scrollWorkspaces(event.angleDelta.y || event.angleDelta.x)
                         }
 
+                        // Dune Rise has no tabular figures: every digit gets a cell as wide as
+                        // the widest, so a chip's width depends only on how many digits it has.
+                        FontMetrics {
+                            id: duneDigits
+                            font.family: BarStyle.displayFont
+                            font.pixelSize: BarStyle.barFontSize
+                        }
+
                         Item {
+                            id: workspaceStrip
+                            readonly property int digitCell: Math.ceil(Math.max(...Array.from("0123456789", digit => duneDigits.advanceWidth(digit))))
                             implicitWidth: workspaceRow.implicitWidth
                             implicitHeight: BarStyle.chipHeight
 
@@ -517,7 +523,10 @@ ShellRoot {
                                         implicitHeight: BarStyle.chipHeight
                                         horizontalPadding: 7
                                         radius: BarStyle.radius.chip
-                                        label: root.workspaceLabels[Number(modelData.name) - 1] || modelData.name
+                                        label: modelData.name
+                                        labelFont: BarStyle.displayFont
+                                        labelWidth: workspaceStrip.digitCell * modelData.name.length
+                                        labelAlignment: Text.AlignHCenter
                                         hint: "Workspace " + modelData.name + " on " + panel.modelData.name
                                         accent: status.accent
                                         foreground: urgent ? status.critical : active ? status.accent : status.secondary
