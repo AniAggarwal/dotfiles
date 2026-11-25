@@ -50,7 +50,9 @@ hl.on("hyprland.start", function()
     local startup = {
         "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP",
         "systemctl --user start hyprpolkitagent",
-        "/usr/bin/quickshell -n -d -c ani-bar",
+        -- No detailed logs: the logger writes a line per file read, every sample. To debug a bug
+        -- or crash, restart the bar without the flag and reproduce it.
+        "/usr/bin/quickshell -n -d --no-detailed-logs -c ani-bar",
         "hyprpaper",
         scripts_path .. "/restore-wallpaper.sh",
         "systemctl --user start hypridle.service",
