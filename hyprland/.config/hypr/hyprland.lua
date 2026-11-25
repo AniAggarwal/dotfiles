@@ -65,6 +65,7 @@ hl.on("hyprland.start", function()
         'gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"',
         scripts_path .. "/hpr-scratcher.py",
         "keepassxc",
+        os.getenv("HOME") .. "/bin/keepassxc-default-alias",
         "fcitx5 -d",
         "/usr/lib/deja-dup/deja-dup-monitor",
         "pypr &> /tmp/pypr.log",

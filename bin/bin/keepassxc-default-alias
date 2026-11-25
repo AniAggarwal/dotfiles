@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Point the Secret Service "default" alias at the KeePassXC collection once it appears.
+#
+# KeePassXC 2.8.0 only sets the alias if the database tab is current when its collection is
+# created, which isn't true at startup. Without the alias, libsecret apps (Brave, Spotify) ask
+# for a new collection and KeePassXC opens its new-database wizard. Started from Hyprland's
+# autostart, next to keepassxc. Gives up after two minutes.
+set -euo pipefail
+
+svc=(org.freedesktop.secrets /org/freedesktop/secrets org.freedesktop.Secret.Service)
+
+for _ in $(seq 60); do
+	if alias=$(busctl --user call "${svc[@]}" ReadAlias s default 2>/dev/null); then
+		[[ $alias == 'o "/"' ]] || exit 0
+		# `ao 1 "/org/.../collection/x"`: take the first collection.
+		coll=$(busctl --user get-property "${svc[@]}" Collections | awk -F'"' '{ print $2 }')
+		if [[ -n $coll ]]; then
+			busctl --user call "${svc[@]}" SetAlias so default "$coll"
+			exit 0
+		fi
+	fi
+	sleep 2
+done
+echo "keepassxc-default-alias: no Secret Service collection after 2 min" >&2
+exit 1
