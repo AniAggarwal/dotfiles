@@ -45,6 +45,12 @@ Scope {
         return { x: box.x, y: box.y, w: box.w, h: box.h, tone: pretendTone || (entry.tone === "dark" ? "dark" : "light") };
     }
 
+    // Whether light or dark text belongs over the stats corner of a screen, judged on its own:
+    // the clock's spot can be lighter or darker than that corner.
+    function statsTone(screen) {
+        return pretendTone || (layout.screens?.[screen]?.stats?.tone === "dark" ? "dark" : "light");
+    }
+
     function tone(severity) {
         return severity === 2 ? critical : severity === 1 ? warning : accent;
     }
@@ -66,7 +72,8 @@ Scope {
     IdleMonitor { id: stopIdle; timeout: BarStyle.idle.stop; respectInhibitors: true }
 
     // Dropdowns say what they need while they are open: watch("stats", true) on show and
-    // watch("stats", false) on hide. Keys: stats, system, network.
+    // watch("stats", false) on hide. Keys: stats, system, network; and dial, held by each
+    // desktop dial while it is on screen with nothing covering it.
     property var watching: ({})
     function watch(key, on) {
         const next = Object.assign({}, watching);
@@ -82,6 +89,7 @@ Scope {
         }
     }
     readonly property bool statsWatched: (watching.stats || 0) > 0
+    readonly property bool dialWatched: (watching.dial || 0) > 0
 
     // Settings, kept in ~/.local/state/ani-bar/settings.json.
     readonly property bool glassEnabled: settings.glassEnabled
@@ -150,6 +158,8 @@ Scope {
         interval: state.idle ? BarStyle.cadence.idle
             : state.pace(state.statsWatched ? BarStyle.cadence.statsOpen : BarStyle.cadence.stats)
         detail: state.statsWatched
+        // Only the dial shows these, and reading a core's temperature wakes that core.
+        perCore: state.dialWatched
         gpuAppsWanted: state.statsWatched
         gpuBusyInterval: state.pace(BarStyle.cadence.gpuBusy)
         gpuIdleInterval: state.pace(BarStyle.cadence.gpuIdle)

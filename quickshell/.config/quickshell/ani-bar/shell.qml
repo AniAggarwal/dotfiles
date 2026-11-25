@@ -1,5 +1,8 @@
 //@ pragma UseQApplication
 //@ pragma IconTheme breeze-dark
+//@ pragma Env QT_NO_GUI_THREADPOOL=1
+// QT_NO_GUI_THREADPOOL: Qt otherwise splits every Canvas gradient fill over a pool of threads,
+// and a small repaint then wakes several sleeping cores to save well under a millisecond.
 import QtQuick
 import QtQuick.Layouts
 import Quickshell

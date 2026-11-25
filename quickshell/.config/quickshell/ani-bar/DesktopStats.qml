@@ -22,7 +22,7 @@ PanelWindow {
         const height = Math.min(330, Math.round(screen.height * 0.24) - inset);
         return Qt.rect(screen.width - inset - width, screen.height - inset - height, width, height);
     }
-    readonly property bool dark: theme.clockPlacement(screen?.name ?? "").tone === "dark"
+    readonly property bool dark: theme.statsTone(screen?.name ?? "") === "dark"
     readonly property color ink: dark ? "#1a1814" : "#f4efe6"
     // A preview instance draws it over the windows instead, to be looked at.
     property bool preview: false

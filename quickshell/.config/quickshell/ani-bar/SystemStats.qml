@@ -12,6 +12,8 @@ Scope {
     property int interval: 3000
     // Also read what only the system panel shows: core clock, uptime, SSD temperature.
     property bool detail: false
+    // Also read the load of every thread and the temperature of every core (the desktop dial).
+    property bool perCore: false
     property int gpuBusyInterval: 5000
     property int gpuIdleInterval: 30000
 
@@ -24,6 +26,13 @@ Scope {
     readonly property real memoryPercent: memoryTotal > 0 ? 100 * memoryUsed / memoryTotal : -1
     property real swapUsed: -1
     property real swapTotal: 0
+    // Physical cores in core-id order, each with its logical CPUs: [{id, threads: [cpu, ...]}].
+    // Read once at start.
+    property var cores: []
+    // 0..1 per logical CPU and °C per entry of `cores` (-1 = unknown), refilled in place every
+    // sample while perCore; readers repaint on cpuHistory.revision.
+    readonly property var threadLoads: new Float32Array(256)
+    readonly property var coreTemperatures: new Float32Array(64).fill(-1)
     // °C
     property int cpuTemperature: -1
     property int nvmeTemperature: -1
@@ -62,6 +71,10 @@ Scope {
     property real previousRx: -1
     property real previousTx: -1
     property real previousNetTime: 0
+    readonly property var previousThreadTotals: new Float64Array(256)
+    readonly property var previousThreadIdles: new Float64Array(256)
+    // Per entry of `cores`, its own sensor's temp*_input, or "" to use the package reading.
+    property var coreTemperaturePaths: []
     property string cpuTemperaturePath: ""
     property var nvmeTemperaturePaths: []
     property string backlightPath: ""
@@ -88,6 +101,8 @@ Scope {
             if (reading > 0)
                 cpuTemperature = Math.round(reading / 1000);
         }
+        if (perCore)
+            sampleCores();
         sampleGpuState();
         // One sample per tick, awake or not, so the GPU graph shares the CPU graph's time axis.
         gpuHistory.push(gpuActive && gpuUtil > 0 ? gpuUtil / 100 : 0);
@@ -112,6 +127,35 @@ Scope {
         }
         previousCpuTotal = total;
         previousCpuIdle = idle;
+        if (perCore)
+            sampleThreads(source);
+    }
+
+    function sampleThreads(source) {
+        const line = /^cpu(\d+) +(.*)$/gm;
+        for (let match; (match = line.exec(source)) !== null;) {
+            const cpu = Number(match[1]);
+            const ticks = match[2].split(" ").slice(0, 8).map(Number);
+            if (cpu >= 256 || ticks.length !== 8)
+                continue;
+            let total = 0;
+            for (const tick of ticks)
+                total += tick;
+            const idle = ticks[3] + ticks[4];
+            const spent = total - previousThreadTotals[cpu];
+            if (previousThreadTotals[cpu] && spent > 0)
+                threadLoads[cpu] = Math.max(0, Math.min(1, 1 - (idle - previousThreadIdles[cpu]) / spent));
+            previousThreadTotals[cpu] = total;
+            previousThreadIdles[cpu] = idle;
+        }
+    }
+
+    function sampleCores() {
+        for (let i = 0; i < cores.length && i < 64; i++) {
+            const file = coreTemperatureFiles.objectAt(i);
+            const reading = file && file.path ? Number(read(file)) / 1000 : NaN;
+            coreTemperatures[i] = reading > 0 ? reading : cpuTemperature;
+        }
     }
 
     function sampleMemory() {
@@ -214,6 +258,14 @@ Scope {
     }
     onGpuAppsWantedChanged: gpuAppsWanted ? queryGpu() : gpuApps = []
     onDetailChanged: if (detail) sampleDetail()
+    // The dial has come into view: read what only it shows now, not an interval from now. The
+    // thread loads are then averages over the time nobody was reading them.
+    onPerCoreChanged: {
+        if (perCore && active) {
+            sampleThreads(read(statFile));
+            sampleCores();
+        }
+    }
     signal sensorsReady()
 
     // One sample right away whenever sampling (re)starts, then one per interval.
@@ -236,8 +288,11 @@ Scope {
         onTriggered: stats.queryGpu()
     }
 
+    // Read on the spot. With blockLoading alone only a file's first read waits: every later one
+    // returns the previous sample's text and hands the read to a thread pool, which wakes
+    // another core for each file and leaves every reading one interval old.
     component Source: FileView {
-        blockLoading: true
+        blockAllReads: true
         printErrors: false
         preload: false
     }
@@ -252,11 +307,23 @@ Scope {
     Source { id: brightnessFile; path: stats.backlightPath ? stats.backlightPath + "/brightness" : "" }
     Source { id: maxBrightnessFile; path: stats.backlightPath ? stats.backlightPath + "/max_brightness" : "" }
     Instantiator {
-        id: nvmeFiles
-        model: stats.nvmeTemperaturePaths
+        id: coreTemperatureFiles
+        model: stats.coreTemperaturePaths
         Source {
             required property string modelData
             path: modelData
+        }
+    }
+    Instantiator {
+        id: nvmeFiles
+        model: stats.nvmeTemperaturePaths
+        // The SSD takes milliseconds to answer, so only its first read may hold up the
+        // interface; after that the reading shown is the previous sample's.
+        Source {
+            required property string modelData
+            path: modelData
+            blockAllReads: false
+            blockLoading: true
         }
     }
 
@@ -281,6 +348,31 @@ Scope {
                 if (reading > 0)
                     stats.cpuTemperature = Math.round(reading / 1000);
                 stats.sensorsReady();
+            }
+        }
+    }
+
+    // Which logical CPUs share a physical core, and which coretemp sensor belongs to each core.
+    // Lines: "cpu <n> <core id>" and "temp <core id> <temp*_input path>".
+    Process {
+        running: true
+        command: ["sh", "-c", 'for c in /sys/devices/system/cpu/cpu[0-9]*; do read -r id < "$c/topology/core_id" && echo "cpu ${c##*cpu} $id"; done; '
+            + 'for l in /sys/class/hwmon/hwmon*/temp*_label; do read -r label < "$l"; case "$label" in "Core "*) echo "temp ${label#Core } ${l%_label}_input";; esac; done']
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const byId = {};
+                const sensors = {};
+                for (const line of text.trim().split("\n")) {
+                    const [kind, a, b] = line.split(" ");
+                    if (kind === "cpu")
+                        (byId[b] = byId[b] || []).push(Number(a));
+                    else if (kind === "temp")
+                        sensors[a] = b;
+                }
+                const cores = Object.keys(byId).map(Number).sort((a, b) => a - b)
+                    .map(id => ({ id: id, threads: byId[id].sort((a, b) => a - b) }));
+                stats.coreTemperaturePaths = cores.map(core => sensors[core.id] || "");
+                stats.cores = cores;
             }
         }
     }
