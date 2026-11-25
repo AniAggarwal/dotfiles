@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# wl-paste --watch hook: add the clipboard to cliphist only when it holds ordinary data.
+#
+# wl-paste sets CLIPBOARD_STATE for the hook. "data" is a normal copy. "sensitive" is a
+# password-manager copy (KeePassXC, `sec copy`): it never goes into history. "nil" and "clear"
+# mean the clipboard was emptied, e.g. the window that copied closed. `cliphist store` deletes
+# the newest entry on "clear", so a cleared clipboard would take an unrelated entry with it.
+# Skipping everything but "data" keeps every history entry until cliphist prunes it.
+[[ "${CLIPBOARD_STATE-}" == data ]] || exit 0
+exec cliphist store

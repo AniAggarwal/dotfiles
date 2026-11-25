@@ -60,7 +60,7 @@ hl.on("hyprland.start", function()
         "hyprpaper",
         scripts_path .. "/restore-wallpaper.sh",
         "systemctl --user start hypridle.service",
-        "wl-paste --watch cliphist store",
+        "wl-paste --watch " .. os.getenv("HOME") .. "/bin/cliphist-store",
         scripts_path .. "/start-dunst.sh",
         'gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"',
         scripts_path .. "/hpr-scratcher.py",
