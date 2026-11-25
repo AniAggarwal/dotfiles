@@ -76,7 +76,7 @@ Item {
     // °C at the bottom and top of every heat scale.
     readonly property var heatRange: [40, 100]
 
-    readonly property string look: [width, height, darkTone, foreground, background, accent, hot, system.cores.length].join()
+    readonly property string look: [width, height, darkTone, foreground, background, accent, hot, system?.cores.length ?? 0].join()
 
     // Each thread's recent peak load, falling back toward its current load.
     readonly property var peaks: new Float32Array(256)
@@ -98,7 +98,8 @@ Item {
     // out once per topology, not once per paint.
     readonly property var layout: cpuLayout()
     function cpuLayout() {
-        const cores = system.cores;
+        // `system` is null for a moment while the dial is torn down.
+        const cores = system?.cores ?? [];
         let threads = 0;
         for (const core of cores)
             threads += core.threads.length;
@@ -334,9 +335,9 @@ Item {
         id: readings
         anchors.fill: parent
 
-        readonly property int revision: face.system.cpuHistory.revision
+        readonly property int revision: face.system?.cpuHistory.revision ?? 0
         property int painted: -1
-        readonly property string look: face.look + face.system.gpuState
+        readonly property string look: face.look + (face.system?.gpuState ?? "")
 
         function refresh() {
             if (face.live && face.visible && painted !== revision) {
@@ -359,6 +360,8 @@ Item {
             ctx.translate(face.ox, face.oy);
             ctx.scale(face.k, face.k);
             const system = face.system;
+            if (!system)
+                return;
             const ink = face.ink;
             const signal = face.signal.toString();
             const limits = BarStyle.limits;
@@ -682,6 +685,8 @@ Item {
 
         function sync() {
             const s = face.system;
+            if (!s)
+                return;
             const critical = BarStyle.limits.temperature[1];
             cpu = s.cpu >= 0 ? Math.round(s.cpu) : "–";
             cpuHeat = s.cpuTemperature > 0 ? s.cpuTemperature + "°" : "";

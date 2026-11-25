@@ -83,7 +83,7 @@ ShellRoot {
 
     // The bar of the focused monitor, for requests that do not name a screen.
     function focusedBar() {
-        return bars.instances.find(bar => bar.modelData.name === Hyprland.focusedMonitor?.name) || bars.instances[0] || null;
+        return bars.instances.find(bar => bar.modelData?.name === Hyprland.focusedMonitor?.name) || bars.instances[0] || null;
     }
 
     Timer { id: mediaLinger; interval: 60000; onTriggered: root.recentPlayer = null }
@@ -366,7 +366,8 @@ ShellRoot {
                 muted: root.osdMuted
                 glyphs: root.osdGlyphs
                 label: root.osdLabel
-                visible: root.osdScreen === panel.modelData.name
+                // modelData is null for a moment while an unplugged screen's bar is torn down.
+                visible: root.osdScreen === panel.modelData?.name
                 topOffset: {
                     if (panel.fullscreen)
                         return BarStyle.topGap + BarStyle.popupGap;
@@ -374,7 +375,7 @@ ShellRoot {
                     const popup = host.current;
                     if (!popup)
                         return below;
-                    const left = (panel.modelData.width - implicitWidth) / 2;
+                    const left = ((panel.modelData?.width ?? 0) - implicitWidth) / 2;
                     const popupLeft = host.margins.left + popup.panelX;
                     if (popupLeft >= left + implicitWidth || popupLeft + popup.panelWidth <= left)
                         return below;
@@ -532,7 +533,7 @@ ShellRoot {
                                         labelFont: BarStyle.displayFont
                                         labelWidth: workspaceStrip.digitCell * modelData.name.length
                                         labelAlignment: Text.AlignHCenter
-                                        hint: "Workspace " + modelData.name + " on " + panel.modelData.name
+                                        hint: "Workspace " + modelData.name + " on " + (panel.modelData?.name ?? "")
                                         accent: status.accent
                                         foreground: urgent ? status.critical : active ? status.accent : status.secondary
                                         color: hovered && !active ? Qt.alpha(status.foreground, 0.09) : "transparent"
