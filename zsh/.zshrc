@@ -40,10 +40,6 @@ else
     export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
 fi
 
-# for UMOBJ store
-# OBJ_ACCESS_KEY_ID, OBJ_SECRET_ACCESS_KEY come from KeePassXC via ~/dev/research/.envrc
-export OBJ_SERVER="obj.umiacs.umd.edu"
-
 # For Ruby Gems
 export GEM_HOME="$(gem env user_gemhome)"
 export PATH="$PATH:$GEM_HOME/bin"
@@ -92,8 +88,8 @@ ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 ZSH_AUTOSUGGEST_ACCEPT_WIDGETS[$ZSH_AUTOSUGGEST_ACCEPT_WIDGETS[(i)vi-forward-char]]=()
 
 # Secrets are not exported globally. They live in KeePassXC (Machine Secrets) and load per tree
-# through direnv (~/dev/work/vamana/.envrc, ~/dev/research/.envrc; `use secret NAME...`), or per
-# command with `sec NAME... -- cmd`.
+# through direnv (an .envrc with `use secret NAME...`, kept outside this repo), or per command
+# with `sec NAME... -- cmd`.
 
 # Aliases
 [ -f ~/.aliases ] && source ~/.aliases

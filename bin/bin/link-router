@@ -24,7 +24,7 @@ set -uo pipefail
 BRAVE=/usr/bin/brave
 
 # Brave profile directories, by what they're for.
-WORK="Profile 4"   # "Vamana"
+WORK="Profile 4"   # work
 PERSONAL="Default" # "General"
 
 MODE="${LINK_ROUTER_MODE:-app}"

@@ -39,7 +39,7 @@
 
 ## Secrets
 - API keys and tokens are not in the shell environment by default. They live in KeePassXC and are read with `secret-tool lookup env NAME`.
-- Under `~/dev/work/vamana` and `~/dev/research`, direnv loads them, but only in interactive shells. From an agent's non-interactive shell, run commands that need them as `direnv exec . <cmd>` from inside that tree, or `sec NAME... -- <cmd>` anywhere.
+- In trees under `~/dev` that have a direnv `.envrc`, direnv loads them, but only in interactive shells. From an agent's non-interactive shell, run commands that need them as `direnv exec . <cmd>` from inside that tree, or `sec NAME... -- <cmd>` anywhere.
 - Never print, echo, log or commit a secret value, and never read files that hold secrets (`~/.ssh`, `~/.aws`, real `.env` files (`.env.example` is fine), `*.pem`, KeePassXC files). Refer to secrets by name.
 
 ## Messaging me

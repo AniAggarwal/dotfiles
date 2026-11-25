@@ -400,23 +400,20 @@ return {
 						},
 					},
 				},
-				{
-					name = "vamana",
-					path = "/home/ani/data/obsidian-vault/work/vamana/",
-					strict = true, -- Use workspace path directly, don't search for parent .obsidian
-					-- Override settings specific to this workspace
-					overrides = {
-						notes_subdir = "notes", -- new standard notes in a specific subdir
-						daily_notes = {
-							folder = "daily", -- Custom daily notes folder
-							date_format = "%Y-%m-%d",
-							-- template = "work_daily.md", -- specific template for work
+				-- Work vaults: each directory under ~/data/obsidian-vault/work/ (names stay out of this repo).
+				unpack(vim.tbl_map(function(dir)
+					return {
+						name = vim.fn.fnamemodify(dir, ":t"),
+						path = dir,
+						strict = true, -- Use workspace path directly, don't search for parent .obsidian
+						overrides = {
+							notes_subdir = "notes",
+							daily_notes = { folder = "daily", date_format = "%Y-%m-%d" },
+							attachments = { img_folder = "attachments" },
 						},
-						attachments = {
-							img_folder = "attachments",
-						},
-					},
-				},
+					}
+				end, vim.tbl_filter(function(d) return vim.fn.isdirectory(d) == 1 end,
+					vim.fn.glob(vim.fn.expand("~/data/obsidian-vault/work/*"), false, true)))),
 			},
 			ui = {
 				enable = false, -- using render-markdown.nvim instead
