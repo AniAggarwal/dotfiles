@@ -1,0 +1,19 @@
+# rofi-cliphist (rofi-tools) overrides. The picker opens on Ctrl+Alt+V, so the default Alt+d /
+# Alt+p / Alt+n delete keys fire if Alt is still down when typing starts: Alt+d deletes the
+# highlighted (newest) entry at once, without asking. These keys can't be hit that way.
+# Each section needs all three keys, or rofi-cliphist exits with an error.
+
+[delete_mode_config]
+title = "Delete"
+description = "Delete"
+shortcut = "Control+Shift+Delete"
+
+[delete_previous_config]
+title = "Delete newer"
+description = "Delete newer"
+shortcut = "Control+Shift+Page_Up"
+
+[delete_next_config]
+title = "Delete older"
+description = "Delete older"
+shortcut = "Control+Shift+Page_Down"
