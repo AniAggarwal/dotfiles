@@ -74,7 +74,8 @@ alias icat="kitty +kitten icat"
 alias kssh="kitty +kitten ssh"
 alias kpy="kitty +kitten clipboard"
 
-alias nv="kitty +kitten ssh -Y anirud@nexusvulcan.umiacs.umd.edu"
 
-alias jlab='micromamba run -n jupyter jupyter lab'
-alias nvitop='micromamba run -n utils nvitop'
+alias nvitop='uvx nvitop'
+
+# Machine-specific aliases (hosts, usernames), not in this repo.
+[ -f ~/.aliases.local ] && source ~/.aliases.local
