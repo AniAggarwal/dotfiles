@@ -10,10 +10,11 @@
 For each screen the wallpaper is cropped the way hyprpaper's "cover" mode does, then a clock
 box is placed where the image is calmest (low saliency and texture), nudged toward the
 rule-of-thirds points, away from the bar and from the stats window in the bottom-right
-corner. It also reports whether light or dark text reads better there.
+corner. It also reports whether light or dark text reads better there, and in the stats corner.
 
 Output (all boxes as fractions of the screen):
-    {"screens": {"eDP-1": {"clock": {"x": .., "y": .., "w": .., "h": ..}, "tone": "light"}}}
+    {"screens": {"eDP-1": {"clock": {"x": .., "y": .., "w": .., "h": ..}, "tone": "light",
+                           "stats": {"tone": "light"}}}}
 theme-apply.sh stores it next to the palette in the wallpaper's cache folder.
 """
 
@@ -125,6 +126,7 @@ def place(image: Image.Image, screen_w: int, screen_h: int) -> dict:
 
     y, x = np.unravel_index(np.argmin(cost), cost.shape)
     region = gray[y : y + box_h, x : x + box_w]
+    corner = gray[round(work_h * STATS_BOX[1]) :, round(WORK_WIDTH * STATS_BOX[0]) :]
     return {
         "clock": {
             "x": round(x / WORK_WIDTH, 4),
@@ -133,6 +135,7 @@ def place(image: Image.Image, screen_w: int, screen_h: int) -> dict:
             "h": CLOCK_FRACTION[1],
         },
         "tone": "dark" if float(region.mean()) > 0.5 else "light",
+        "stats": {"tone": "dark" if float(corner.mean()) > 0.5 else "light"},
     }
 
 

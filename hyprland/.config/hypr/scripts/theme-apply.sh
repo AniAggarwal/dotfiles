@@ -19,8 +19,9 @@ else
     echo "theme-apply: cache hit for $stem" >&2
 fi
 
-# Desktop clock placement for this wallpaper, computed once and kept with its palette.
-if [ ! -f "$target/layout.json" ]; then
+# Desktop clock placement and stats-corner tone for this wallpaper, computed once and kept with
+# its palette; a layout from before the stats tone existed is computed again.
+if ! grep -q '"stats"' "$target/layout.json" 2>/dev/null; then
     screens=$(hyprctl monitors -j | jq -r '.[] | "--screen=\(.name):\((.width / .scale) | round)x\((.height / .scale) | round)"')
     # shellcheck disable=SC2086
     (uv run --script "$(dirname "$0")/wallpaper-layout.py" "$wp" "$target/layout.json" $screens >/dev/null 2>&1 &)
