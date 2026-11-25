@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# Follow the journal and raise a desktop notification for each error-or-worse event.
+# Runs as a user service inside the graphical session, so notify-send finds the
+# session bus without help. Started by journal-notify.service.
+
+set -uo pipefail
+
+# Events whose MESSAGE matches this are dropped. Known-benign, high-frequency noise.
+# Keep additions narrow: match the specific message, not the whole unit.
+# polkitd logs "Error converting subject to JS object" at error level when a short-lived program
+# asks for a permission check and exits before polkit looks at it; nothing fails.
+IGNORE='org\.bluez\.Error\.Rejected|Hands-Free Voice gateway rejected|libdav1d|Access denied: org\.bluez'
+IGNORE+='|Error converting subject to JS object: (Process [0-9]+ terminated|GDBus\.Error:org\.freedesktop\.DBus\.Error\.NameHasNoOwner)'
+
+# Suppress a repeat of the same unit+message within this many seconds, so a
+# crash-looping service notifies once instead of hundreds of times.
+DEDUPE_WINDOW=300
+
+declare -A last_seen
+
+# --since now: only report what happens from startup onward, so a restart does
+# not replay the whole boot's errors as a notification storm.
+journalctl -f -p err -o json --since now |
+	while read -r line; do
+		msg=$(jq -r '.MESSAGE // empty | if type == "array" then implode else . end' <<<"$line")
+		[ -n "$msg" ] || continue
+
+		unit=$(jq -r '._SYSTEMD_UNIT // .SYSLOG_IDENTIFIER // .UNIT // "system"' <<<"$line")
+		prio=$(jq -r '.PRIORITY // "3"' <<<"$line")
+
+		[[ $msg =~ $IGNORE ]] && continue
+
+		# journalctl -f emits no timestamp we can trust as wall-clock cheaply;
+		# SECONDS is monotonic since script start and is all dedupe needs.
+		key="${unit}|${msg:0:120}"
+		prev=${last_seen[$key]:-}
+		if [ -n "$prev" ] && ((SECONDS - prev < DEDUPE_WINDOW)); then
+			continue
+		fi
+		last_seen[$key]=$SECONDS
+
+		# priority 0-2 (emerg/alert/crit) is urgent and stays on screen until
+		# dismissed; priority 3 (err) is normal and times out.
+		if ((prio <= 2)); then
+			urgency=critical
+			icon=dialog-error
+		else
+			urgency=normal
+			icon=dialog-warning
+		fi
+
+		notify-send \
+			--app-name=journal \
+			--urgency="$urgency" \
+			--icon="$icon" \
+			"$unit" \
+			"${msg:0:400}"
+	done

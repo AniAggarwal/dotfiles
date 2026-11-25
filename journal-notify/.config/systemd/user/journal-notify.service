@@ -1,0 +1,16 @@
+[Unit]
+Description=Desktop notifications for journal errors
+Documentation=man:journalctl(1)
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/journal-notify
+Restart=always
+RestartSec=5s
+# Never let this service's own failures become journal errors it then reports.
+StandardOutput=null
+
+[Install]
+WantedBy=graphical-session.target
