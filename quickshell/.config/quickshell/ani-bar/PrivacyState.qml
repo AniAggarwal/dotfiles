@@ -165,13 +165,15 @@ Scope {
 
     // Each source re-mutes itself if anything unmutes it, and a new source is muted on arrival.
     // Setting it muted changes nothing more once it is, so a source that fails to open cannot
-    // make this spin.
+    // make this spin. The mute is applied after the change settles, not inside it, since it
+    // feeds back into `state`.
     Instantiator {
         model: privacy.sources
         delegate: QtObject {
+            id: source
             required property PwNode modelData
             readonly property string state: [privacy.holdMute, modelData.ready, modelData.audio?.muted].join()
-            onStateChanged: privacy.holdMuted(modelData)
+            onStateChanged: Qt.callLater(() => { if (source.modelData) privacy.holdMuted(source.modelData); })
             Component.onCompleted: privacy.holdMuted(modelData)
         }
     }
