@@ -102,7 +102,10 @@ ShellRoot {
     // Dragging a window with the pointer is not announced: look again now and then, but only
     // while someone is there.
     Timer { interval: 20000; repeat: true; running: !status.asleep && !status.idle; onTriggered: Hyprland.refreshToplevels() }
-    Component.onCompleted: Hyprland.refreshToplevels()
+    Component.onCompleted: {
+        Hyprland.refreshToplevels();
+        writeKeepAwake();
+    }
 
     // qs ipc call popup toggle calendar: open or close a dropdown on the focused monitor.
     // Names: privacy, inbox, media, stats, system, notifications, network, audio, battery, calendar.
@@ -136,18 +139,17 @@ ShellRoot {
         }
     }
 
-    Process {
-        command: ["systemd-inhibit", "--no-ask-password", "--what=idle", "--mode=block",
-            "--who=Quickshell Keep Awake", "--why=Keep Awake is enabled", "sleep", "infinity"]
-        running: root.inhibitIdle
-        onExited: function(exitCode) {
-            if (root.inhibitIdle) {
-                root.inhibitIdle = false;
-                if (exitCode !== 0)
-                    Quickshell.execDetached(["notify-send", "Keep Awake", "Could not acquire the idle inhibitor."]);
-            }
-        }
+    // Keep Awake is a flag file that hypridle's steps check (hypr/scripts/idle-step.sh): the
+    // screen still locks, but never dims, turns off or suspends. Written at start too, since the
+    // toggle starts off and a crashed bar may have left the flag behind.
+    readonly property string keepAwakeFlag: Quickshell.env("XDG_RUNTIME_DIR") + "/ani-bar/keep-awake"
+    function writeKeepAwake() {
+        if (root.preview)
+            return;
+        Quickshell.execDetached(["sh", "-c", root.inhibitIdle ? 'mkdir -p "${1%/*}" && touch "$1"' : 'rm -f "$1"',
+            "sh", root.keepAwakeFlag]);
     }
+    onInhibitIdleChanged: writeKeepAwake()
 
     Timer { id: osdTimer; interval: 1400; onTriggered: root.osdScreen = "" }
 
