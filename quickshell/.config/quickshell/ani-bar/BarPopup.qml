@@ -5,8 +5,8 @@ import "BarStyle.js" as BarStyle
 // the motion; this item is only what goes inside the frame. Its children fill the padded panel.
 //
 // Hovering the chip shows it ("peek"); clicking the chip, or pressing anywhere inside it, pins it.
-// A pinned popup takes keyboard focus and closes on Escape or an outside click. An unpinned one
-// closes when the pointer leaves both the chip and the popup.
+// A pinned popup takes keyboard focus and also closes on Escape or an outside click. Either way it
+// closes when the pointer leaves both the chip and the popup, and hovering another chip swaps to it.
 //
 // Open it through the host: host.show(popup, chip, pin), host.toggle(popup, chip) or
 // host.hover(popup, chip, hovered). `visible` is true exactly while its content is on screen, so

@@ -23,7 +23,7 @@ ShellRoot {
     // drawn over the windows below the real bar, taking no space and leaving the session alone.
     readonly property string previewScreen: Quickshell.env("ANI_BAR_PREVIEW") || ""
     readonly property bool preview: previewScreen !== ""
-    property bool inhibitIdle: false
+    property alias inhibitIdle: kept.inhibitIdle
     property string osdKind
     property string osdScreen
     property int osdLevel
@@ -104,7 +104,6 @@ ShellRoot {
     Timer { interval: 20000; repeat: true; running: !status.asleep && !status.idle; onTriggered: Hyprland.refreshToplevels() }
     Component.onCompleted: {
         Hyprland.refreshToplevels();
-        writeKeepAwake();
     }
 
     // qs ipc call popup toggle calendar: open or close a dropdown on the focused monitor.
@@ -140,8 +139,15 @@ ShellRoot {
     }
 
     // Keep Awake is a flag file that hypridle's steps check (hypr/scripts/idle-step.sh): the
-    // screen still locks, but never dims, turns off or suspends. Written at start too, since the
-    // toggle starts off and a crashed bar may have left the flag behind.
+    // screen still locks, but never dims, turns off or suspends. The toggle survives a config
+    // reload but starts off in a new bar, and the flag is written once it is settled, since a
+    // crashed bar may have left one behind.
+    PersistentProperties {
+        id: kept
+        reloadableId: "keepAwake"
+        property bool inhibitIdle: false
+        onLoaded: root.writeKeepAwake()
+    }
     readonly property string keepAwakeFlag: Quickshell.env("XDG_RUNTIME_DIR") + "/ani-bar/keep-awake"
     function writeKeepAwake() {
         if (root.preview)
@@ -413,6 +419,8 @@ ShellRoot {
                             Item {
                                 id: trayIcon
                                 required property SystemTrayItem modelData
+                                // Read by the popup host, so its menu closes once the pointer leaves.
+                                readonly property bool hovered: trayMouse.containsMouse
                                 implicitWidth: BarStyle.trayIconSize + 8
                                 implicitHeight: BarStyle.chipHeight
 
@@ -448,8 +456,12 @@ ShellRoot {
                                     hoverEnabled: true
                                     acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
                                     cursorShape: Qt.PointingHandCursor
-                                    onContainsMouseChanged: tooltip.update(trayIcon, containsMouse,
-                                        trayIcon.modelData.tooltipTitle || trayIcon.modelData.title)
+                                    onContainsMouseChanged: {
+                                        tooltip.update(trayIcon, containsMouse,
+                                            trayIcon.modelData.tooltipTitle || trayIcon.modelData.title);
+                                        if (!containsMouse)
+                                            host.hover(trayMenu, trayIcon, false);
+                                    }
                                     onClicked: function(event) {
                                         const item = trayIcon.modelData;
                                         const menuWasOpen = host.current === trayMenu && host.anchor === trayIcon;

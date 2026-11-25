@@ -24,6 +24,11 @@ PanelWindow {
     property BarPopup current
     property Item anchor
     property bool pinned: false
+    // Pinned from the keyboard (a keybind), with the pointer elsewhere. Only then does the popup
+    // take a focus grab, so a click anywhere else closes it. Hyprland's grab holds on to the
+    // pointer and never tells the popup it left, so a popup pinned with the pointer closes on
+    // leaving instead, like a peek, and takes the keyboard directly.
+    property bool grabbed: false
     readonly property bool busy: expand.running || morph.running || collapse.running
     readonly property bool settled: visible && !!current && !busy
     readonly property bool hoverWithin: hover.hovered
@@ -101,8 +106,10 @@ PanelWindow {
     function show(target, item, pin) {
         stopTimers();
         if (current === target && anchor === item) {
-            if (pin && target.pinnable)
+            if (pin && target.pinnable && !pinned) {
                 pinned = true;
+                grabbed = !item.hovered && !hoverWithin;
+            }
             return;
         }
         const rect = rectOf(item);
@@ -112,6 +119,7 @@ PanelWindow {
         anchor = item;
         origin = rect;
         pinned = !!pin && target.pinnable;
+        grabbed = pinned && !item.hovered && !hoverWithin;
 
         if (!wasVisible) {
             present(target, item, rect);
@@ -156,6 +164,7 @@ PanelWindow {
         current = null;
         anchor = null;
         pinned = false;
+        grabbed = false;
         collapse.restart();
     }
 
@@ -167,12 +176,10 @@ PanelWindow {
             show(target, item, true);
     }
 
-    // Hover: peek after a short delay. While one popup is peeking, moving to another chip
-    // switches at once, like a menu bar. A pinned popup ignores hover until dismissed.
+    // Hover: peek after a short delay. While a popup is open, pinned or not, moving to another
+    // chip switches at once, like a menu bar, and leaving both chip and popup closes it.
     function hover(target, item, hovered) {
         if (hovered) {
-            if (pinned)
-                return;
             hoverClose.stop();
             if (current === target && anchor === item)
                 return;
@@ -189,7 +196,7 @@ PanelWindow {
                 pending = null;
                 pendingAnchor = null;
             }
-            if (anchor === item && current && !pinned)
+            if (anchor === item && current)
                 hoverClose.restart();
         }
     }
@@ -211,7 +218,8 @@ PanelWindow {
     }
     WlrLayershell.namespace: "ani-bar-popup"
     WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: pinned ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+    WlrLayershell.keyboardFocus: !pinned ? WlrKeyboardFocus.None
+        : grabbed ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.Exclusive
 
     onPinnedChanged: if (pinned && current) current.forceActiveFocus()
     onCurrentChanged: if (pinned && current) current.forceActiveFocus()
@@ -223,7 +231,7 @@ PanelWindow {
 
     HyprlandFocusGrab {
         windows: [host, host.bar]
-        active: host.visible && host.pinned
+        active: host.visible && host.grabbed
         onCleared: host.close()
     }
 
@@ -238,7 +246,8 @@ PanelWindow {
         id: hoverClose
         interval: 220
         onTriggered: {
-            if (!host.current || host.pinned || host.hoverWithin || host.anchor?.hovered)
+            // A drag that strays outside (a slider) closes nothing until the button is let go.
+            if (!host.current || host.hoverWithin || host.anchor?.hovered || pressing.active)
                 return;
             host.close();
         }
@@ -247,7 +256,7 @@ PanelWindow {
     onHoverWithinChanged: {
         if (hoverWithin)
             hoverClose.stop();
-        else if (current && !pinned)
+        else if (current)
             hoverClose.restart();
     }
 
@@ -345,6 +354,13 @@ PanelWindow {
         Keys.onEscapePressed: host.close()
 
         HoverHandler { id: hover }
+
+        PointHandler {
+            id: pressing
+            acceptedButtons: Qt.AllButtons
+            onActiveChanged: if (!active && host.current && !host.hoverWithin && !host.anchor?.hovered)
+                hoverClose.restart()
+        }
 
         // Passive: observes presses without stealing them from the controls inside.
         PointHandler {
