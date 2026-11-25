@@ -51,8 +51,12 @@ hl.on("hyprland.start", function()
         "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP",
         "systemctl --user start hyprpolkitagent",
         -- No detailed logs: the logger writes a line per file read, every sample. To debug a bug
-        -- or crash, restart the bar without the flag and reproduce it.
-        "/usr/bin/quickshell -n -d --no-detailed-logs -c ani-bar",
+        -- or crash, restart the bar without the flag and reproduce it. The log rules mute two
+        -- known-harmless warnings: Qt's text-input focus bookkeeping bug, and Hyprland events for a
+        -- workspace split-monitor-workspaces made before Quickshell listed it.
+        "/usr/bin/quickshell -n -d --no-detailed-logs"
+            .. " --log-rules 'qt.qpa.wayland.textinput.warning=false;quickshell.hyprland.ipc.warning=false'"
+            .. " -c ani-bar",
         "hyprpaper",
         scripts_path .. "/restore-wallpaper.sh",
         "systemctl --user start hypridle.service",
